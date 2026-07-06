@@ -2,7 +2,7 @@
 // 기수 탭(최신 기본) → 로고·기수명·소개·구성원 그리드. 기수가 늘어도 동일 템플릿 보존.
 import { useState } from 'react'
 import PageBanner from '../../components/common/PageBanner'
-import { AddButton, EditPencil } from '../../components/admin/EditControls'
+import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import PageBanner from '../../components/common/PageBanner'
 import GlassCard from '../../components/common/GlassCard'
 import Reveal from '../../components/common/Reveal'
-import { AddButton } from '../../components/admin/EditControls'
+import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 

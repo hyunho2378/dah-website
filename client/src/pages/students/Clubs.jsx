@@ -4,7 +4,7 @@ import PageBanner from '../../components/common/PageBanner'
 import GlassCard from '../../components/common/GlassCard'
 import Reveal from '../../components/common/Reveal'
 import Tag from '../../components/common/Tag'
-import { AddButton, EditPencil } from '../../components/admin/EditControls'
+import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 

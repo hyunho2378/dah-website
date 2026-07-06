@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react'
 import PageBanner from '../components/common/PageBanner'
 import BoardList from '../components/board/BoardList'
-import { AddButton } from '../components/admin/EditControls'
+import { AddButton } from '../components/content/EditControls'
 import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { notices } from '../data/notices'

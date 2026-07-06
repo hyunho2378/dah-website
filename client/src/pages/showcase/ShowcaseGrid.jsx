@@ -5,7 +5,7 @@ import GlassCard from '../../components/common/GlassCard'
 import Reveal from '../../components/common/Reveal'
 import Tag from '../../components/common/Tag'
 import Button from '../../components/common/Button'
-import { AddButton } from '../../components/admin/EditControls'
+import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 

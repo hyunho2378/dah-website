@@ -5,7 +5,7 @@ import PageBanner from '../../components/common/PageBanner'
 import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
 import RichBody from '../../components/editor/RichBody'
-import { EditPencil } from '../../components/admin/EditControls'
+import { EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 
