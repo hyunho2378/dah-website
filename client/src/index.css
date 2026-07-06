@@ -3,12 +3,32 @@
 @tailwind utilities;
 
 @layer base {
+  /* v2(11_DESIGN_V2 8절) 전역 가로 스크롤 박멸 */
+  html,
+  body {
+    overflow-x: clip; /* 자식 요소가 뷰포트 폭을 넘겨도 가로 스크롤 미발생 */
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   body {
     @apply bg-bg-base text-text-pri font-sans antialiased;
+    /* 국문 어절 보존(break-keep) + 긴 URL·영단어만 강제 줄바꿈(anywhere) */
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* 규칙(컴포넌트 준수): flex·grid 자식은 min-width:auto 기본값 탓에 콘텐츠가 넘쳐
+     가로 스크롤을 유발하므로 min-w-0 유틸을 붙인다. display 값 기반 전역 선택은
+     CSS로 불가하여 여기서 강제하지 않는다. */
+
+  /* 표·코드 블록만 자체 가로 스크롤 컨테이너로 격리 */
+  pre,
+  table {
+    overflow-x: auto;
+    max-width: 100%;
   }
 
   ::selection {

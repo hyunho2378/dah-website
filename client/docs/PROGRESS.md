@@ -20,6 +20,9 @@
 ## PHASE 2 — 검증
 - [ ] AGENT-REVIEW: CHECKLIST 전 항목 + App.jsx 조립 + vercel.json
 
+## PHASE 3 — v2 재설계 (우주 컨셉 · 글래스 · 백엔드 · CMS)
+- [x] PHASE 3-0 준비: v2 md 5개(10~14) docs 배치 / tokens glass·cosmos·Space Grotesk·displayXL 104 / tailwind glass·cosmos·5xl 매핑 / index.css 가로스크롤 박멸(overflow-x clip, break-keep) / server 스캐폴드(Express+pg+bcrypt+jwt+multer, /health) / logo.svg 슬롯
+
 ## 데이터 갭 (사용자 확인 필요)
 - [!] 교수 개별 사진: 미보유 → 이니셜 플레이스홀더로 v1 출시, 사진 확보 시 교체
 - [!] 수상 실적 원문 중 2021~2025 구간: source_content.md에서 확인 후 이관 (원문에 있는 것만)

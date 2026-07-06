@@ -5,6 +5,8 @@ import {
   layout,
   shadow,
   motion,
+  glass,
+  cosmos,
 } from './src/styles/tokens.js'
 
 const px = (n) => `${n}px`
@@ -36,7 +38,21 @@ export default {
       Object.entries(layout.breakpoints).map(([k, v]) => [k, px(v)])
     ),
     extend: {
-      colors,
+      colors: {
+        ...colors,
+        // v2 글래스 표면: bg-glass-bg / bg-glass-strong / border-glass-line
+        glass: { bg: glass.bg, strong: glass.bgStrong, line: glass.border },
+        // v2 우주 배경: bg-cosmos-depth0 / bg-cosmos-depth1 / text-cosmos-star
+        cosmos: { depth0: cosmos.depth0, depth1: cosmos.depth1, star: cosmos.star },
+      },
+      backdropBlur: {
+        glass: glass.blur,
+        'glass-mobile': glass.blurMobile,
+      },
+      backgroundImage: {
+        'glass-highlight': glass.highlight,
+        nebula: cosmos.nebula,
+      },
       fontFamily: {
         display: typography.family.display,
         sans: typography.family.sans,
@@ -64,6 +80,7 @@ export default {
         sm: px(layout.radius.sm),
         md: px(layout.radius.md),
         lg: px(layout.radius.lg),
+        glass: px(glass.radius),
         full: px(layout.radius.full),
       },
       boxShadow: {

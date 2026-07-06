@@ -31,13 +31,14 @@ export const colors = {
 
 export const typography = {
   family: {
-    display: "'Anton', 'Pretendard Variable', sans-serif",        // EN 초대형 캡스 전용
+    // v2(11_DESIGN_V2 3절): Anton 폐기 → Space Grotesk. 기하학적·우주 무드
+    display: "'Space Grotesk', 'Pretendard Variable', sans-serif", // EN 디스플레이
     sans: "'Pretendard Variable', Pretendard, -apple-system, sans-serif", // KR 전체 + EN 본문
     mono: "'IBM Plex Mono', monospace",                            // 넘버링, 라벨, 날짜
   },
   // 사이즈 [모바일, 데스크탑] px — Tailwind에서 clamp 또는 md: 브레이크로 매핑
   size: {
-    displayXL: [48, 128],  // 히어로 EN 캡스 (Anton)
+    displayXL: [48, 104],  // v2: 상한 128→104 (Space Grotesk에서 128은 과대)
     displayL: [40, 96],    // 최종 CTA, 페이지 타이틀 EN
     h1: [32, 56],          // 섹션 헤드 KR (Pretendard 800)
     h2: [24, 40],
@@ -50,7 +51,7 @@ export const typography = {
   },
   weight: { black: 900, extrabold: 800, bold: 700, semibold: 600, regular: 400 },
   leading: { tight: 1.05, snug: 1.2, normal: 1.5, relaxed: 1.7 },
-  tracking: { display: '-0.01em', normal: '0', label: '0.12em' },
+  tracking: { display: '-0.02em', normal: '0', label: '0.12em' }, // v2: display -0.02em
 };
 
 export const spacing = {
@@ -62,9 +63,29 @@ export const spacing = {
 };
 
 export const layout = {
-  breakpoints: { xs: 320, sm: 390, md: 768, lg: 1024, xl: 1280, '2xl': 1440, '3xl': 1920, '4xl': 2560 },
+  // v2(11_DESIGN_V2 7절): 5xl 3840 추가 (4K·32인치 대응)
+  breakpoints: { xs: 320, sm: 390, md: 768, lg: 1024, xl: 1280, '2xl': 1440, '3xl': 1920, '4xl': 2560, '5xl': 3840 },
   radius: { sm: 6, md: 10, lg: 16, full: 9999 },
   headerHeight: { default: 72, shrunk: 56 },
+};
+
+// v2(11_DESIGN_V2 2절): 유리 패널 표면 언어 (Apple HIG 글래스모피즘)
+export const glass = {
+  bg: 'rgba(255,255,255,0.06)',
+  bgStrong: 'rgba(255,255,255,0.10)',
+  border: 'rgba(255,255,255,0.14)',
+  highlight: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 40%)',
+  blur: '20px',        // backdrop-filter: blur(20px) saturate(160%)
+  blurMobile: '12px',
+  radius: 20,
+};
+
+// v2: 무한한 우주 배경 시스템
+export const cosmos = {
+  depth0: '#050607',   // 심우주 (페이지 최하층)
+  depth1: '#08090A',   // 기존 base 유지
+  nebula: 'radial-gradient(ellipse at var(--x) var(--y), rgba(255,255,255,0.04), transparent 60%)',
+  star: 'rgba(247,248,248,0.9)',
 };
 
 export const shadow = {
