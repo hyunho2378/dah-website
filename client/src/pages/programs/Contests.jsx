@@ -2,7 +2,8 @@
 // external_url 있으면 카드에서 바로 외부 접수(ArrowUpRight 표시), 없으면 상세 진입.
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
+import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import Reveal from '../../components/common/Reveal'
 import { AddButton } from '../../components/content/EditControls'
@@ -89,7 +90,7 @@ function Contests() {
         nebulaX="46%"
         nebulaY="14%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-16">
           <p className="font-mono text-caption-m text-text-sec">
             총 <span className="text-text-pri">{data?.total ?? items.length}</span>건
@@ -111,7 +112,7 @@ function Contests() {
             ))}
           </ul>
         )}
-      </section>
+      </Container>
     </>
   )
 }

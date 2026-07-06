@@ -1,7 +1,8 @@
-// src/routes/upload.js — 이미지 업로드 (12_BACKEND.md 0·1·6절)
-// multer 메모리 → sharp WebP 변환(원본 폐기) → Vercel Blob.
-// 리사이즈: 기본 최장변 1600 / usage=poster 2400 / usage=showcase 1920x1080(16:9 강제).
-// 역할·용도별 제한: 비로그인은 showcase·exhibition 용도만 허용 + rate limit.
+// src/routes/upload.js — 이미지·문서 업로드 (12_BACKEND.md 0·1·6절)
+// 이미지: multer 메모리 → sharp WebP 변환(원본 폐기) → Vercel Blob.
+// 문서(PDF·HWP): sharp 파이프라인 우회 → 원본 그대로 Blob/로컬 저장 (공지·자료실 첨부용).
+// 리사이즈(이미지): 기본 최장변 1600 / usage=poster 2400 / usage=showcase 1920x1080(16:9 강제).
+// 역할·용도별 제한: 비로그인은 showcase·exhibition 용도만 허용 + rate limit. 문서(usage=document)는 로그인 필요.
 // BLOB_READ_WRITE_TOKEN 미설정 시 로컬 폴백: server/uploads/ 저장 (개발용 — 프로덕션에서는 반드시 Blob).
 import { Router } from 'express'
 import multer from 'multer'
@@ -20,6 +21,19 @@ const MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 const PUBLIC_USAGES = ['showcase', 'exhibition'] // 비로그인 허용 용도 (쇼케이스 제출·전시회 접수)
 const WEBP_QUALITY = 82
 
+// 문서 첨부 허용 MIME (PDF·HWP). sharp 우회, 원본 그대로 저장.
+const DOCUMENT_MIMES = new Set([
+  'application/pdf',
+  'application/x-hwp',
+  'application/haansofthwp',
+])
+// MIME → 저장 확장자 (원본 확장자 유지)
+const DOCUMENT_EXT = {
+  'application/pdf': 'pdf',
+  'application/x-hwp': 'hwp',
+  'application/haansofthwp': 'hwp',
+}
+
 export const UPLOADS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads')
 
 const upload = multer({
@@ -27,7 +41,8 @@ const upload = multer({
   limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter: (req, file, cb) => {
     if (file.mimetype?.startsWith('image/')) return cb(null, true)
-    const err = new Error('only image uploads are allowed')
+    if (DOCUMENT_MIMES.has(file.mimetype)) return cb(null, true)
+    const err = new Error('only image or PDF/HWP document uploads are allowed')
     err.status = 400
     cb(err)
   },
@@ -49,6 +64,39 @@ router.post(
     const usage = String(req.body?.usage || req.query.usage || 'general')
     if (!req.user && !PUBLIC_USAGES.includes(usage)) {
       return res.status(403).json({ error: 'login required for this upload usage', allowed: PUBLIC_USAGES })
+    }
+
+    // ── 문서(PDF·HWP) 분기: sharp 우회, 원본 그대로 저장 ──
+    // usage=document 또는 MIME이 문서면 문서 처리. 문서는 비로그인 금지(위 PUBLIC_USAGES 검사에서 이미 차단).
+    const isDocument = usage === 'document' || DOCUMENT_MIMES.has(req.file.mimetype)
+    if (isDocument) {
+      if (!DOCUMENT_MIMES.has(req.file.mimetype)) {
+        return res.status(400).json({ error: 'document upload requires a PDF or HWP file', mimetype: req.file.mimetype })
+      }
+      const ext = DOCUMENT_EXT[req.file.mimetype]
+      const buf = req.file.buffer
+      const name = `document/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`
+      const originalName = req.file.originalname || `document.${ext}`
+
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        const { put } = await import('@vercel/blob')
+        const blob = await put(`dah/${name}`, buf, {
+          access: 'public',
+          contentType: req.file.mimetype,
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+        })
+        return res.status(201).json({
+          url: blob.url, name: originalName, type: req.file.mimetype, bytes: buf.length, format: ext, storage: 'blob',
+        })
+      }
+
+      const filePath = path.join(UPLOADS_DIR, name)
+      fs.mkdirSync(path.dirname(filePath), { recursive: true })
+      fs.writeFileSync(filePath, buf)
+      const url = `${req.protocol}://${req.get('host')}/uploads/${name}`
+      return res.status(201).json({
+        url, name: originalName, type: req.file.mimetype, bytes: buf.length, format: ext, storage: 'local',
+      })
     }
 
     // WebP 변환 + 리사이즈 (원본 버퍼는 저장하지 않음 = 원본 폐기)

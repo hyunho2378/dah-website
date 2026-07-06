@@ -1,6 +1,7 @@
 // /programs/lectures — 특강 (포스터 그리드)
 import { Link } from 'react-router-dom'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
+import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import Reveal from '../../components/common/Reveal'
 import { AddButton } from '../../components/content/EditControls'
@@ -56,7 +57,7 @@ function Lectures() {
         nebulaX="80%"
         nebulaY="34%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-16">
           <p className="font-mono text-caption-m text-text-sec">
             총 <span className="text-text-pri">{data?.total ?? items.length}</span>건
@@ -78,7 +79,7 @@ function Lectures() {
             ))}
           </ul>
         )}
-      </section>
+      </Container>
     </>
   )
 }

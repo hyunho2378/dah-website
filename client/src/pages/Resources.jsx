@@ -1,7 +1,8 @@
 // /resources — 자료실 (KPC 게시판 문법 + 첨부 다운로드 링크)
 // API: GET /content/resource?page=&q= — 정적 폴백 데이터 없음(빈 상태 P6).
 import { useState } from 'react'
-import PageBanner from '../components/common/PageBanner'
+import PageBanner from '../components/layout/PageBanner'
+import Container from '../components/layout/Container'
 import BoardList from '../components/board/BoardList'
 import { AddButton } from '../components/content/EditControls'
 import { useApi } from '../hooks/useApi'
@@ -65,7 +66,7 @@ function Resources() {
         nebulaX="28%"
         nebulaY="22%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         {offline && (
           <p className="mb-16 font-mono text-caption-m text-text-meta">
             실시간 동기화 대기 중
@@ -86,7 +87,7 @@ function Resources() {
           statusText={statusText}
           actions={<AddButton type="resource" to="/admin/posts/resource/new" />}
         />
-      </section>
+      </Container>
     </>
   )
 }

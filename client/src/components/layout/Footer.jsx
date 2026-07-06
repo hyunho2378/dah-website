@@ -2,54 +2,73 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { site } from '../../data/site.js'
 import { nav } from '../../data/nav.js'
+import Container from './Container'
 
-// COMPONENTS.md §2 Footer — 상단 헤어라인, lg 3열(학과 정보/페이지 링크/외부 링크), 모바일 1열
-// v2 스킨: 페이지 링크는 v2 메뉴 트리(data/nav.js), 헤어라인은 glass-line 톤.
-// 배경 없음 — StarField(우주)가 비쳐 보이는 것이 v2 세계관. blur 미사용(상한 3 보존)
+// F5(16_PHASE4) 실사이트화 — 상단 헤어라인 + 불투명 배경(bg-bg-elev)으로 StarField 차단.
+// 3열: (1) 학과 정보 (2) 사이트맵(nav.js 전 페이지) (3) 관련 사이트(외부 링크)
+// 최하단 바: 개인정보처리방침 | 이용약관 | © 2026 Hallym University DAH
+// blur 미사용(성능 상한 3 보존) — 불투명 배경이 우주 배경 비침을 대신 차단한다.
 const externalLinks = [
-  { label: 'Exhibition', key: 'exhibition' },
-  { label: 'Instagram', key: 'instagram' },
   { label: '한림대학교', key: 'hallym' },
+  { label: '전시회', key: 'exhibition' },
+  { label: '인스타그램', key: 'instagram' },
 ]
 
 function Footer() {
   return (
-    <footer className="border-t border-glass-line">
+    <footer className="relative z-10 border-t border-border-subtle bg-bg-elev">
       {/* lg 미만 하단 여백 확대: 하단 고정 GlassDock(56 + 마진)에 카피라이트가 가리지 않도록 */}
-      <div className="mx-auto max-w-container px-gutter-m pb-128 pt-64 md:px-gutter-t lg:px-gutter-d lg:py-80">
+      <Container className="pb-128 pt-64 lg:py-80">
         <div className="grid grid-cols-1 gap-48 lg:grid-cols-3 lg:gap-32">
+          {/* (1) 학과 정보 */}
           <div>
-            <p className="font-display text-h3-m leading-none text-text-pri">
+            <p className="font-display text-h3-m leading-none text-text-pri md:text-h3-d">
               DAH
             </p>
             <p className="mt-16 text-body-m text-text-pri md:text-body-d">
-              {site.nameKr}
+              한림대학교 {site.nameKr}
             </p>
             <p className="mt-4 text-small-m text-text-sec md:text-small-d">
               {site.nameEn}
             </p>
             <p className="mt-16 text-small-m text-text-meta md:text-small-d">
-              {site.address}
+              강원특별자치도 춘천시 한림대학길 1
             </p>
+            {/* 데이터 갭: site.js에 대표 문의 메일 없음 — 추가되면 아래에 노출한다.
+                site.mail 값이 생기면: <p>대표 문의: {site.mail}</p> */}
           </div>
 
-          <nav aria-label="페이지 링크">
-            <ul className="flex flex-col gap-12">
-              {nav.map((item) => (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    className="text-body-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-body-d"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
+          {/* (2) 사이트맵 — nav.js 전 페이지 */}
+          <nav aria-label="사이트맵">
+            <div className="flex flex-col gap-24">
+              {nav.map((section) => (
+                <div key={section.to}>
+                  <p className="font-display text-caption-m uppercase tracking-label text-text-meta md:text-caption-d">
+                    {section.labelEn}
+                  </p>
+                  <ul className="mt-8 flex flex-col gap-8">
+                    {section.children.map((child) => (
+                      <li key={child.to}>
+                        <Link
+                          to={child.to}
+                          className="text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d"
+                        >
+                          {child.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </nav>
 
-          <nav aria-label="외부 링크">
-            <ul className="flex flex-col gap-12">
+          {/* (3) 관련 사이트 — 외부 링크 */}
+          <nav aria-label="관련 사이트">
+            <p className="font-display text-caption-m uppercase tracking-label text-text-meta md:text-caption-d">
+              Related
+            </p>
+            <ul className="mt-8 flex flex-col gap-12">
               {externalLinks.map((item) => (
                 <li key={item.key}>
                   <a
@@ -59,7 +78,7 @@ function Footer() {
                     className="inline-flex items-center gap-8 text-body-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-body-d"
                   >
                     {item.label}
-                    <ArrowUpRight size={16} />
+                    <ArrowUpRight size={16} aria-hidden="true" />
                   </a>
                 </li>
               ))}
@@ -67,10 +86,25 @@ function Footer() {
           </nav>
         </div>
 
-        <p className="mt-64 border-t border-border-subtle pt-24 font-mono text-caption-m text-text-meta">
-          © 2026 Hallym University Digital Arts and Humanities
-        </p>
-      </div>
+        {/* 최하단 바 — 정책 내부 링크 + 카피라이트 */}
+        <div className="mt-64 flex flex-wrap items-center gap-x-12 gap-y-8 border-t border-border-subtle pt-24 font-mono text-caption-m text-text-meta md:text-caption-d">
+          <Link
+            to="/privacy"
+            className="transition-colors duration-fast ease-out hover:text-text-pri"
+          >
+            개인정보처리방침
+          </Link>
+          <span aria-hidden="true">|</span>
+          <Link
+            to="/terms"
+            className="transition-colors duration-fast ease-out hover:text-text-pri"
+          >
+            이용약관
+          </Link>
+          <span aria-hidden="true">|</span>
+          <span>© 2026 Hallym University DAH</span>
+        </div>
+      </Container>
     </footer>
   )
 }

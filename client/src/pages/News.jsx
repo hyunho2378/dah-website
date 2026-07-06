@@ -2,7 +2,8 @@
 // 태그 필터(대내/대외/공모전모집/특강모집) + 검색 + 페이지네이션, pinned 상단.
 // API: GET /content/notice?tag=&page=&q= / offline 시 src/data/notices 정적 폴백.
 import { useMemo, useState } from 'react'
-import PageBanner from '../components/common/PageBanner'
+import PageBanner from '../components/layout/PageBanner'
+import Container from '../components/layout/Container'
 import BoardList from '../components/board/BoardList'
 import { AddButton } from '../components/content/EditControls'
 import { useApi } from '../hooks/useApi'
@@ -25,8 +26,9 @@ function toRow(post, no) {
     author: post.author ?? null,
     date: post.date ?? (post.created_at ?? '').slice(0, 10) ?? null,
     pinned: Boolean(post.pinned),
-    to: post.url ? undefined : `/news/${post.id}`,
-    href: post.url ?? undefined,
+    // F8 내부 링크화: 기본 내부 상세로, external_url 있는 항목만 바로 외부
+    href: post.external_url ?? undefined,
+    to: post.external_url ? undefined : `/news/${post.id}`,
   }
 }
 
@@ -83,7 +85,7 @@ function News() {
         nebulaX="72%"
         nebulaY="18%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         <div role="group" aria-label="태그 필터" className="flex flex-wrap gap-8">
           {TAGS.map((t) => {
             const isActive = t === tag
@@ -129,7 +131,7 @@ function News() {
             actions={<AddButton type="notice" to="/admin/posts/notice/new" />}
           />
         </div>
-      </section>
+      </Container>
     </>
   )
 }

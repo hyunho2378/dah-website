@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { nav } from '../../data/nav'
 import { useAuth } from '../../context/AuthContext'
+import { useLoginModal } from '../../context/LoginModalContext'
 import { cosmos } from '../../styles/tokens'
+import Container from './Container'
 import Tag from '../common/Tag'
 import LangToggle from './LangToggle'
 import logoUrl from '../../assets/logo.svg'
@@ -23,6 +25,8 @@ function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [openIndex, setOpenIndex] = useState(null) // 메가메뉴 활성 1차 메뉴 index
   const { user } = useAuth()
+  const { openLogin } = useLoginModal()
+  const { pathname } = useLocation()
   const headerRef = useRef(null)
 
   // 스크롤 rAF 스로틀 (v1 유지: 80px 이후 높이 72→56)
@@ -53,6 +57,11 @@ function Header() {
     return () => window.removeEventListener('keydown', onKey)
   }, [openIndex])
 
+  // 라우트 이동 시 메가메뉴 닫기 (스크롤 복구는 아래 잠금 effect 클린업이 담당)
+  useEffect(() => {
+    setOpenIndex(null)
+  }, [pathname])
+
   const close = () => setOpenIndex(null)
 
   // 포커스가 헤더 밖으로 나가면 메가메뉴 닫기
@@ -62,20 +71,43 @@ function Header() {
 
   const glassed = scrolled || openIndex !== null
   const active = openIndex !== null ? nav[openIndex] : null
+  const menuOpen = Boolean(active && active.children.length > 0)
+
+  // 메가메뉴 열림 시 본문 스크롤 잠금 (storage 미사용) — 닫힘·라우트 이동 시 클린업으로 복구
+  useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [menuOpen])
 
   return (
-    <header
-      ref={headerRef}
-      onMouseLeave={close}
-      onBlur={onBlur}
-      className={`sticky top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
-        glassed
-          ? 'border-glass-line bg-glass-bg backdrop-blur-glass-mobile md:backdrop-blur-glass'
-          : 'border-transparent bg-transparent'
-      }`}
-    >
-      <div
-        className={`mx-auto flex max-w-container items-center justify-between px-gutter-m transition-[height] duration-base ease-out md:px-gutter-t lg:px-gutter-d ${
+    <>
+      {/* 열림 시 본문 딤 오버레이 — 헤더(z-50) 아래, 클릭 시 닫힘. lg 전용(메가메뉴가 lg+).
+          헤더의 backdrop-filter가 containing block을 만들어 fixed 자식을 가두므로 헤더 밖 형제로 렌더 */}
+      {menuOpen && (
+        <button
+          type="button"
+          aria-label="메뉴 닫기"
+          tabIndex={-1}
+          onClick={close}
+          className="fixed inset-0 z-40 hidden bg-black/40 lg:block"
+        />
+      )}
+      <header
+        ref={headerRef}
+        onMouseLeave={close}
+        onBlur={onBlur}
+        className={`sticky top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
+          glassed
+            ? 'border-glass-line bg-glass-bg backdrop-blur-glass-mobile md:backdrop-blur-glass'
+            : 'border-transparent bg-transparent'
+        }`}
+      >
+      <Container
+        className={`relative z-10 flex items-center justify-between transition-[height] duration-base ease-out ${
           scrolled ? 'h-header-s' : 'h-header-s lg:h-header'
         }`}
       >
@@ -127,19 +159,24 @@ function Header() {
               </Link>
             </span>
           ) : (
-            <Link to="/login" className={utilLinkClass}>
+            <button
+              type="button"
+              onClick={openLogin}
+              className={`cursor-pointer ${utilLinkClass}`}
+            >
               로그인
-            </Link>
+            </button>
           )}
         </div>
-      </div>
+      </Container>
 
       {/* 풀폭 메가메뉴 — KPC 방식. 즉답성 우선(11_DESIGN_V2 5절), 전환 애니메이션 없음 */}
-      {active && active.children.length > 0 && (
-        <div className="absolute inset-x-0 top-full hidden border-b border-glass-line bg-glass-bg backdrop-blur-glass lg:block">
-          <nav
+      {menuOpen && (
+        <div className="absolute inset-x-0 top-full z-10 hidden border-b border-glass-line bg-cosmos-depth1/[0.96] backdrop-blur-glass lg:block">
+          <Container
+            as="nav"
             aria-label={`${active.label} 하위 메뉴`}
-            className="mx-auto grid max-w-container grid-cols-4 gap-16 px-gutter-d py-32"
+            className="grid grid-cols-4 gap-16 py-32"
           >
             {active.children.map((child) => (
               <Link
@@ -156,10 +193,11 @@ function Header() {
                 </span>
               </Link>
             ))}
-          </nav>
+          </Container>
         </div>
       )}
-    </header>
+      </header>
+    </>
   )
 }
 

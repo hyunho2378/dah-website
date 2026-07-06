@@ -21,13 +21,10 @@ for (const [name, [m, d]] of Object.entries(typography.size)) {
   fontSize[`${kebab(name)}-m`] = px(m)
   fontSize[`${kebab(name)}-d`] = px(d)
 }
-// COMPONENTS.md 명시 단계 보강 — displayXL 반응형 중간값(§5), Stat 수치(§Stat.jsx)
+// Stat 수치 보강 (F1: displayXL 중간단계는 스케일 하향으로 폐기, m/d 2단계만)
 Object.assign(fontSize, {
-  'display-xl-sm': px(56),
-  'display-xl-md': px(80),
-  'display-xl-lg': px(104),
-  'stat-m': px(40),
-  'stat-d': px(72),
+  'stat-m': px(32),
+  'stat-d': px(48),
 })
 
 /** @type {import('tailwindcss').Config} */

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Container from './Container'
 
 // 10_IA_V2 5절 · 11_DESIGN_V2 4절 PageBanner — 전 서브페이지 공통 골격(KPC 문법)
 // 페이지명(명사형) + 브레드크럼(Link) + 우주 배경 변주
@@ -11,7 +12,7 @@ function PageBanner({ titleKo, titleEn, breadcrumb = [], nebulaX = '30%', nebula
       className="border-b border-border-subtle bg-nebula"
       style={{ '--x': nebulaX, '--y': nebulaY }}
     >
-      <div className="mx-auto max-w-container px-gutter-m pb-40 pt-48 md:px-gutter-t md:pb-64 md:pt-80 lg:px-gutter-d">
+      <Container className="pb-40 pt-48 md:pb-64 md:pt-80">
         {breadcrumb.length > 0 && (
           <nav aria-label="브레드크럼">
             <ol className="flex flex-wrap items-center gap-8 font-mono text-caption-m text-text-meta md:text-caption-d">
@@ -58,7 +59,7 @@ function PageBanner({ titleKo, titleEn, breadcrumb = [], nebulaX = '30%', nebula
         >
           {titleKo}
         </h1>
-      </div>
+      </Container>
     </section>
   )
 }

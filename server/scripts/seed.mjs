@@ -2,10 +2,15 @@
 // 실행: server/ 안에서 `node scripts/seed.mjs` (server/.env의 DATABASE_URL 사용)
 //
 // 멱등 방식 (명시): "truncate 후 삽입"
-//   - professors, mentors, curriculum, careers, portfolios: TRUNCATE 후 전량 삽입
-//   - posts: type IN ('notice','achievement')만 DELETE 후 삽입 (다른 type의 CMS 작성분 보존.
-//     재실행 시 어드민에서 수정한 notice·achievement는 초기화됨 — 시드는 최초 1회 용도)
+//   - professors, mentors, curriculum, careers, portfolios, council: TRUNCATE 후 전량 삽입
+//   - posts: 시드 소유 type(notice·achievement·lecture·contest·resource·club)만 DELETE 후 삽입
+//     (재실행 시 해당 type의 CMS 작성분은 초기화됨 — 시드는 최초 1회 용도)
+//   - exhibitions: DELETE 후 전량 삽입 (원문 아카이브가 진실)
+//   - showcase: 비로그인 제출 테이블 → 비어있을 때만 데모 1건 삽입(사용자 제출 보존)
 //   - site_settings, codesharing, users(owner): upsert
+//
+// F7·F8 추가 시드: council(운영위 LUCID + 역대), clubs(4종 → posts type=club),
+//   각 유형 최소 1건(notice·lecture·contest·exhibition·resource·club·showcase·careers·portfolio) 빈 화면 방지
 //
 // 매핑 규칙 (담당 지시문):
 //   curriculum track: track-1→design, track-2→ai, track-3→culture, common→common
@@ -59,6 +64,8 @@ async function main() {
       { history },
       { site, hero, newsbar, finalCta, about },
       { codeSharing },
+      { lucid, councilHistory },
+      { clubs },
     ] = await Promise.all([
       importData('professors.js'),
       importData('mentors.js'),
@@ -70,12 +77,14 @@ async function main() {
       importData('history.js'),
       importData('site.js'),
       importData('tracks.js'),
+      importData('council.js'),
+      importData('clubs.js'),
     ])
 
     await client.query('BEGIN')
 
-    // 1) 독립 테이블: truncate 후 삽입
-    await client.query('TRUNCATE professors, mentors, curriculum, careers, portfolios RESTART IDENTITY')
+    // 1) 독립 테이블: truncate 후 삽입 (원문·파일이 진실인 참조 테이블 — council 포함)
+    await client.query('TRUNCATE professors, mentors, curriculum, careers, portfolios, council RESTART IDENTITY')
 
     for (const [i, p] of professors.entries()) {
       // title_ko=role(원문 직함), links jsonb에 원문 부가정보(website·겸무 소속·주임 여부) 보존
@@ -121,18 +130,90 @@ async function main() {
     }
     console.log(`[seed] portfolios ${portfolios.length}건`)
 
-    // 2) posts: notice·achievement type만 리셋 후 삽입
-    const del = await client.query(`DELETE FROM posts WHERE type IN ('notice', 'achievement')`)
-    if (del.rowCount > 0) console.log(`[seed] 기존 posts(notice·achievement) ${del.rowCount}건 삭제 (시드 리셋)`)
+    // 2) posts: 시드 소유 type 리셋 후 삽입 (CMS 작성분과 섞이지 않게. 시드는 최초 1회 용도)
+    const SEED_POST_TYPES = ['notice', 'achievement', 'lecture', 'contest', 'resource', 'club']
+    const del = await client.query(`DELETE FROM posts WHERE type = ANY($1)`, [SEED_POST_TYPES])
+    if (del.rowCount > 0) console.log(`[seed] 기존 posts(${SEED_POST_TYPES.join('·')}) ${del.rowCount}건 삭제 (시드 리셋)`)
 
     for (const n of notices) {
+      // F8.1: 첫 게시물(notice-01, 2026 신규 캐릭터 공모전 결과 공지)은 대내 태그 + 상단 고정 + 공모전 정보 본문
+      const isFeatured = n.id === 'notice-01'
+      const tag = isFeatured ? '대내' : n.org
+      const body = isFeatured
+        ? { paragraphs: ['주최: 디지털인문예술전공 제1대 운영위원회 LUCID'] } // source 359~363행 원문
+        : null
       await client.query(
-        `INSERT INTO posts (type, title_ko, tag, external_url, published, created_at, updated_at)
-         VALUES ('notice', $1, $2, $3, TRUE, $4, $4)`,
-        [n.title, n.org, n.url, `${n.date}T09:00:00+09:00`]
+        `INSERT INTO posts (type, title_ko, body, tag, external_url, pinned, published, created_at, updated_at)
+         VALUES ('notice', $1, $2, $3, $4, $5, TRUE, $6, $6)`,
+        [n.title, body ? JSON.stringify(body) : null, tag, n.url, isFeatured, `${n.date}T09:00:00+09:00`]
       )
     }
-    console.log(`[seed] notices → posts ${notices.length}건`)
+    console.log(`[seed] notices → posts ${notices.length}건 (첫 게시물 대내·고정)`)
+
+    // 2-1) 특강(lecture) — source '특강' 절엔 "(연도별 사진)"만 있어 독립 원문 없음.
+    //      빈 화면 방지용 1건: '특강 안내' 공지(notice-09) 원문에서 파생 (제목·URL 원문 그대로).
+    const lectureSrc = notices.find((n) => n.id === 'notice-09')
+    if (lectureSrc) {
+      await client.query(
+        `INSERT INTO posts (type, title_ko, tag, external_url, published, created_at, updated_at)
+         VALUES ('lecture', $1, NULL, $2, TRUE, $3, $3)`,
+        [lectureSrc.title, lectureSrc.url, `${lectureSrc.date}T09:00:00+09:00`]
+      )
+      console.log('[seed] lecture → posts 1건 (특강 안내 공지 원문 파생)')
+    }
+
+    // 2-2) 공모전(contest) — source '공모전' 절 341~363행 원문 3건 (주최 원문 그대로)
+    const contests = [
+      {
+        title: '디지털인문예술 프로젝트 전시회 포스터 공모전',
+        host: ['한림대학교 인문사회 융합인재양성사업단 (L-HUSS)', '디지털인문예술전공'],
+      },
+      {
+        title: '도서관 장서표 디자인 공모전',
+        host: ['한림대학교 인문사회 융합인재양성사업단 (L-HUSS)', '디지털인문예술전공'],
+      },
+      {
+        title: '디지털인문예술전공 신규 캐릭터 공모전',
+        host: ['디지털인문예술전공 제1대 운영위원회 LUCID'],
+      },
+    ]
+    for (const c of contests) {
+      await client.query(
+        `INSERT INTO posts (type, title_ko, body, tag, published, created_at, updated_at)
+         VALUES ('contest', $1, $2, NULL, TRUE, $3, $3)`,
+        [c.title, JSON.stringify({ host: c.host }), `2026-01-01T09:00:00+09:00`]
+      )
+    }
+    console.log(`[seed] contests → posts ${contests.length}건`)
+
+    // 2-3) 자료실(resource) — source '자료실' 항목엔 독립 원문 없음(892행 언급뿐).
+    //      빈 화면 방지용 1건: 코드쉐어링 인정원(89행 승인과정 원문). 첨부(HWP) 파일은 원문 미제공 → attachments NULL.
+    await client.query(
+      `INSERT INTO posts (type, title_ko, body, tag, attachments, published, created_at, updated_at)
+       VALUES ('resource', $1, $2, NULL, NULL, TRUE, $3, $3)`,
+      [
+        '코드쉐어링 인정원',
+        JSON.stringify({
+          paragraphs: ['승인과정 : 타과 교과목 이수 → 학점 취득 → 코드쉐어링 인정원 작성 → 학과행정실 제출(통합스쿨 교학팀)'],
+        }),
+        `2026-01-01T09:00:00+09:00`,
+      ]
+    )
+    console.log('[seed] resource → posts 1건 (코드쉐어링 인정원 원문)')
+
+    // 2-4) 동아리(club) — clubs.js 4종 전부 posts(type=club). body에 분야·소개·활동·추천대상 원문 보존
+    for (const c of clubs) {
+      await client.query(
+        `INSERT INTO posts (type, title_ko, body, tag, published, created_at, updated_at)
+         VALUES ('club', $1, $2, $3, TRUE, now(), now())`,
+        [
+          c.name,
+          JSON.stringify({ field: c.field, intro: c.intro, activities: c.activities, targets: c.targets }),
+          c.field,
+        ]
+      )
+    }
+    console.log(`[seed] clubs → posts ${clubs.length}건`)
 
     for (const a of achievements) {
       await client.query(
@@ -181,6 +262,101 @@ async function main() {
       ]
     )
     console.log('[seed] codesharing 문서 upsert')
+
+    // 4-1) 운영위원회(council) — council.js 원문 (F7). TRUNCATE는 위 1)에서 완료.
+    //   LUCID(제1대 운영위원회) 1건 + 역대 학생회(councilHistory) 9건. members jsonb에 원문 보존.
+    await client.query(
+      `INSERT INTO council (ordinal, name, intro, members, year_label, sort)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        1,
+        'LUCID',
+        lucid.intro,
+        JSON.stringify({
+          kind: 'operating-committee',
+          title: lucid.title,
+          activity: lucid.activity,
+          committee: lucid.committee,
+          links: lucid.links,
+        }),
+        '2026',
+        0,
+      ]
+    )
+    for (const [i, h] of councilHistory.entries()) {
+      const ord = /^제(\d+)대$/.exec(h.ordinal)?.[1] // '제7대'→7, '임시학생회'→undefined
+      await client.query(
+        `INSERT INTO council (ordinal, name, intro, members, year_label, sort)
+         VALUES ($1, $2, NULL, $3, $4, $5)`,
+        [
+          ord ? Number(ord) : null,
+          h.name ?? h.ordinal, // 임시학생회는 name=null → ordinal 라벨을 name으로 (council.name NOT NULL)
+          JSON.stringify({ kind: 'student-council', ordinalLabel: h.ordinal, president: h.president, vicePresident: h.vicePresident }),
+          String(h.year),
+          i + 1,
+        ]
+      )
+    }
+    console.log(`[seed] council ${1 + councilHistory.length}건 (LUCID + 역대 ${councilHistory.length})`)
+
+    // 4-2) 전시회(exhibitions) — source '프로젝트 전시회' 절 295~339행 원문. 시드 소유 아카이브 → 전량 리셋.
+    await client.query('DELETE FROM exhibitions')
+    const exhibitions = [
+      {
+        semester_label: '제18회 디지털인문예술전공 프로젝트 전시회',
+        title: '「 Against the Flow 」',
+        intro:
+          '디지털 시대의 도시에서 모두는 어떤 디바이스를 통해 세상과 연결되어 있다. 휴대폰의 화면, 헤드폰 속의 소리.\n' +
+          '그러나 단 두 사람 "부모와 아이" 만은 어떤 디지털 매개도 거치지 않고, 군중과 반대 방향으로 서로의 손을 잡고 함께 걷는다.\n' +
+          '휴먼 터치는 시스템이 합성하지 못하는 인간과 인간 사이의 직접 연결이며, 글로벌 디지털 시스템과 로컬 신체 접촉이 한 횡단보도 위에서 교차하는 연결의 자리다.',
+      },
+      // [ 역대 전시회 ] 305~339행 — 제목 원문 그대로 (「그래서 우리는  DAH다」의 이중 공백 등 원문 유지)
+      { title: '「흐르는 경계: DAH」' },
+      { title: '「Pulse」' },
+      { title: '「NEXUS : 연결의 시작」' },
+      { title: '「Free-Child」' },
+      { title: '「무한」' },
+      { title: '「흐름」' },
+      { title: '「DAH Display : 공존」' },
+      { title: '「팔레트」' },
+      { title: '「샛별」' },
+      { title: '「모두 DAH와 함께」' },
+      { title: '「전시회, 우리들의 축제」' },
+      { title: '「내 손안에 작은 전시회」' },
+      { title: '「그래서 우리는  DAH다」' },
+      { title: '「DAH:다」' },
+      { title: '「2018-2 프로젝트 전시회」' },
+      { title: '「2018-1 프로젝트 전시회」' },
+      { title: '「2017-2 프로젝트 전시회」' },
+    ]
+    for (const e of exhibitions) {
+      await client.query(
+        `INSERT INTO exhibitions (semester_label, title, intro, published)
+         VALUES ($1, $2, $3, TRUE)`,
+        [e.semester_label ?? null, e.title, e.intro ?? null]
+      )
+    }
+    console.log(`[seed] exhibitions ${exhibitions.length}건`)
+
+    // 4-3) 쇼케이스(showcase) — 비로그인 제출 테이블. 사용자 제출분 보존을 위해 비어있을 때만 데모 1건 삽입.
+    //   원문 미제공 → 학생 성과 원문(2025 AI 에듀테크 소프트랩 해커톤 대상작) 파생. [판단 필요]
+    const scCount = await client.query('SELECT COUNT(*)::int AS c FROM showcase')
+    if (scCount.rows[0].c === 0) {
+      await client.query(
+        `INSERT INTO showcase (title, topic, creator, description, semester_label, status)
+         VALUES ($1, $2, $3, $4, $5, 'published')`,
+        [
+          '「AI 저수율 알리미 : 실시간 저수율 데이터로 하는 강릉 가뭄 대비」',
+          '2025 AI 에듀테크 소프트랩 해커톤 대상',
+          '김도희, 감주희, 박근영, 홍지윤',
+          '김도희, 감주희, 박근영, 홍지윤 학생이 2025년 개최된 AI 에듀테크 소프트랩 해커톤에서 대상을 수상했습니다.',
+          '2025',
+        ]
+      )
+      console.log('[seed] showcase 데모 1건 (학생 성과 원문 파생)')
+    } else {
+      console.log(`[seed] showcase 기존 ${scCount.rows[0].c}건 존재 — 데모 삽입 생략`)
+    }
 
     // 5) owner 계정 시드 (OWNER_EMAIL env, must_set_pw true — 최초 로그인 시 비밀번호 설정)
     const ownerEmail = process.env.OWNER_EMAIL?.trim().toLowerCase()

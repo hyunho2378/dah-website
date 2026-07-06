@@ -31,27 +31,30 @@ export const colors = {
 
 export const typography = {
   family: {
-    // v2(11_DESIGN_V2 3절): Anton 폐기 → Space Grotesk. 기하학적·우주 무드
-    display: "'Space Grotesk', 'Pretendard Variable', sans-serif", // EN 디스플레이
-    sans: "'Pretendard Variable', Pretendard, -apple-system, sans-serif", // KR 전체 + EN 본문
-    mono: "'IBM Plex Mono', monospace",                            // 넘버링, 라벨, 날짜
+    // F1(16_PHASE4): 폰트 전면 통일 — Pretendard 단일화 (Space Grotesk·IBM Plex Mono·Anton 폐기)
+    // display/sans/mono 전부 동일 패밀리. mono 사용처는 웨이트+letter-spacing으로 구분.
+    display: "'Pretendard Variable', Pretendard, -apple-system, sans-serif",
+    sans: "'Pretendard Variable', Pretendard, -apple-system, sans-serif",
+    mono: "'Pretendard Variable', Pretendard, -apple-system, sans-serif",
   },
-  // 사이즈 [모바일, 데스크탑] px — Tailwind에서 clamp 또는 md: 브레이크로 매핑
+  // 사이즈 [모바일, 데스크탑] px — F1.3 정보 사이트 기준 전면 하향
   size: {
-    displayXL: [48, 104],  // v2: 상한 128→104 (Space Grotesk에서 128은 과대)
-    displayL: [40, 96],    // 최종 CTA, 페이지 타이틀 EN
-    h1: [32, 56],          // 섹션 헤드 KR (Pretendard 800)
-    h2: [24, 40],
-    h3: [20, 28],
-    bodyL: [16, 18],
+    displayXL: [40, 64],
+    displayL: [32, 48],
+    h1: [26, 36],
+    h2: [20, 28],
+    h3: [17, 22],
+    bodyL: [16, 17],
     body: [15, 16],
     small: [13, 14],
     caption: [12, 12],
-    label: [11, 12],       // eyebrow, mono 라벨 (letter-spacing 0.12em, uppercase)
+    label: [11, 12],       // eyebrow, 라벨 (letter-spacing 0.06em)
   },
-  weight: { black: 900, extrabold: 800, bold: 700, semibold: 600, regular: 400 },
-  leading: { tight: 1.05, snug: 1.2, normal: 1.5, relaxed: 1.7 },
-  tracking: { display: '-0.02em', normal: '0', label: '0.12em' }, // v2: display -0.02em
+  weight: { black: 900, extrabold: 800, bold: 700, semibold: 600, medium: 500, regular: 400 },
+  // F1.3 행간: 헤드라인 1.25, 본문 1.7, 리스트 1.6 (+ 기존 키 호환 유지)
+  leading: { heading: 1.25, body: 1.7, list: 1.6, tight: 1.05, snug: 1.25, normal: 1.5, relaxed: 1.7 },
+  // F1.3 자간: 헤드라인 -0.02em(display), 본문 0(normal). label F1.2 → 0.06em
+  tracking: { display: '-0.02em', normal: '0', label: '0.06em' },
 };
 
 export const spacing = {

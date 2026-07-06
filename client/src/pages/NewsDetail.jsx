@@ -1,11 +1,13 @@
-// /news/:id — 공지 상세 (T1 게시글형: 리치 콘텐츠 + 공유 버튼)
+// /news/:id — 공지 상세 (T1 게시글형: 메타 + 리치 콘텐츠 + 첨부 뷰어 + 공유)
 // offline 폴백: src/data/notices에서 동일 id 검색 — 본문 없음, 원문 링크 안내.
 import { useParams } from 'react-router-dom'
-import PageBanner from '../components/common/PageBanner'
+import PageBanner from '../components/layout/PageBanner'
+import Container from '../components/layout/Container'
 import ShareButton from '../components/common/ShareButton'
 import Button from '../components/common/Button'
 import Tag from '../components/common/Tag'
 import RichBody from '../components/content/RichBody'
+import AttachmentViewer from '../components/content/AttachmentViewer'
 import { EditPencil } from '../components/content/EditControls'
 import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
@@ -23,6 +25,8 @@ function NewsDetail() {
   const title = post?.title_ko ?? post?.title ?? ''
   const tag = post?.tag ?? post?.org ?? null
   const date = post?.date ?? (post?.created_at ?? '').slice(0, 10)
+  const author = post?.author ?? null
+  const attachments = post?.attachments ?? post?.files ?? []
   useTitle(title || '공지사항')
 
   return (
@@ -39,7 +43,7 @@ function NewsDetail() {
         nebulaX="72%"
         nebulaY="18%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         {loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
         ) : !post ? (
@@ -52,16 +56,12 @@ function NewsDetail() {
         ) : (
           <article className="mx-auto flex min-w-0 max-w-container flex-col gap-32">
             <header className="flex flex-col gap-16 border-b border-border-subtle pb-32">
-              <div className="flex flex-wrap items-center gap-12">
+              <div className="flex flex-wrap items-center gap-12 font-mono text-caption-m text-text-meta">
                 {tag && <Tag>{tag}</Tag>}
                 {date && (
-                  <time
-                    dateTime={date}
-                    className="font-mono text-caption-m text-text-meta"
-                  >
-                    {date}
-                  </time>
+                  <time dateTime={date}>{date}</time>
                 )}
+                {author && <span>{author}</span>}
                 <EditPencil type="notice" to={`/admin/posts/notice/${id}/edit`} />
               </div>
               <h1 className="text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
@@ -82,6 +82,14 @@ function NewsDetail() {
                 )}
               </div>
             )}
+            {attachments.length > 0 && (
+              <section className="flex flex-col gap-16">
+                <h2 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
+                  첨부
+                </h2>
+                <AttachmentViewer attachments={attachments} />
+              </section>
+            )}
             <footer className="flex flex-wrap items-center justify-between gap-16 border-t border-border-subtle pt-32">
               <Button variant="secondary" href="/news">
                 목록으로 이동
@@ -90,7 +98,7 @@ function NewsDetail() {
             </footer>
           </article>
         )}
-      </section>
+      </Container>
     </>
   )
 }

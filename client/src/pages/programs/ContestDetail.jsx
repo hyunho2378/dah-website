@@ -1,7 +1,8 @@
 // /programs/contests/:id — 공모전 상세 (T2 포스터형)
 // 좌 포스터 2:3 / 우 메타 표 / RichBody / 하단 갤러리(원본 새탭) / 공유 / 외부 접수 버튼.
 import { useParams } from 'react-router-dom'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
+import Container from '../../components/layout/Container'
 import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
 import Tag from '../../components/common/Tag'
@@ -46,7 +47,7 @@ function ContestDetail() {
         nebulaX="46%"
         nebulaY="14%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         {loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
         ) : !item ? (
@@ -134,7 +135,7 @@ function ContestDetail() {
             )}
           </article>
         )}
-      </section>
+      </Container>
     </>
   )
 }

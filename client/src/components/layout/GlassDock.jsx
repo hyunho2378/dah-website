@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { MoreHorizontal, X } from 'lucide-react'
 import { nav } from '../../data/nav'
 import { useAuth } from '../../context/AuthContext'
+import { useLoginModal } from '../../context/LoginModalContext'
 import Tag from '../common/Tag'
 import LangToggle from './LangToggle'
 import logoUrl from '../../assets/logo.svg'
@@ -37,6 +38,7 @@ function GlassDock() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
   const { user } = useAuth()
+  const { openLogin } = useLoginModal()
   const dockRef = useRef(null)
   const triggerRef = useRef(null)
   const touchY = useRef(null)
@@ -145,9 +147,16 @@ function GlassDock() {
                   </Link>
                 </span>
               ) : (
-                <Link to="/login" onClick={close} className={utilLinkClass}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    close()
+                    openLogin()
+                  }}
+                  className={`cursor-pointer ${utilLinkClass}`}
+                >
                   로그인
-                </Link>
+                </button>
               )}
             </div>
           </div>

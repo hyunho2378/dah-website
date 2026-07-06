@@ -1,56 +1,37 @@
-import { Link } from 'react-router-dom'
-import { ArrowUpRight } from 'lucide-react'
+import Container from '../layout/Container'
+import Button from '../common/Button'
 import Reveal from '../common/Reveal'
 import { finalCta } from '../../data/site'
 
-// 반전 블록 전용 버튼: 공통 Button은 다크 표면 기준이라 여기서만 색을 뒤집는다.
-// border.subtle(백색 8%)의 반전 대응으로 text.invert 톤에 동일 비율 알파를 적용.
-const BTN_BASE =
-  'inline-flex cursor-pointer items-center gap-8 rounded-sm px-24 py-12 text-body-m font-semibold transition-colors duration-base ease-out focus-visible:outline-text-invert lg:text-body-d'
-const BTN_VARIANT = {
-  primary: 'bg-bg-base text-text-pri hover:bg-bg-elev',
-  secondary: 'border border-text-invert/10 text-text-invert hover:border-text-invert/20',
-}
-
-function CtaButton({ cta, variant }) {
-  const cls = `${BTN_BASE} ${BTN_VARIANT[variant]}`
-  const href = cta.href || cta.to
-
-  if (cta.external) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
-        {cta.label}
-        <ArrowUpRight size={16} aria-hidden="true" />
-      </a>
-    )
-  }
-  return (
-    <Link to={href} className={cls}>
-      {cta.label}
-    </Link>
-  )
-}
-
+// F4: 반전(화이트) 블록 제거 → 다크 배경 유지 한 줄 CTA(제목 + 버튼 2).
+// 버튼은 공통 Button(primary/secondary) 재사용.
 function FinalCTA() {
   if (!finalCta?.titleEn) return null
 
   return (
-    <section className="bg-bg-invert">
-      <div className="mx-auto w-full max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+    <section className="border-t border-border-subtle">
+      <Container className="py-section-m lg:py-section-d">
         <Reveal>
-          <h2 className="font-display text-display-l-m uppercase leading-tight tracking-display text-text-invert lg:text-display-l-d">
+          <h2 className="font-display text-display-l-m font-bold uppercase leading-heading tracking-display text-text-pri lg:text-display-l-d">
             {finalCta.titleEn}
           </h2>
-          <p className="mt-24 text-body-l-m font-regular text-text-invert lg:text-body-l-d">
+          <p className="mt-24 text-body-l-m leading-body text-text-sec lg:text-body-l-d">
             {finalCta.subKr}
           </p>
           <div className="mt-40 flex flex-wrap gap-16">
             {(finalCta.ctas || []).map((cta, i) => (
-              <CtaButton key={cta.label} cta={cta} variant={i === 0 ? 'primary' : 'secondary'} />
+              <Button
+                key={cta.label}
+                variant={i === 0 ? 'primary' : 'secondary'}
+                href={cta.href || cta.to}
+                external={Boolean(cta.external)}
+              >
+                {cta.label}
+              </Button>
             ))}
           </div>
         </Reveal>
-      </div>
+      </Container>
     </section>
   )
 }

@@ -9,13 +9,16 @@ const POST_COLUMNS = [
 const POST_JSONB = ['body', 'gallery']
 const POST_ORDER = 'pinned DESC, created_at DESC, id DESC'
 
-function postType(type, minRole) {
+function postType(type, minRole, opts = {}) {
+  // attachments: PDF·HWP 첨부 배열([{name,url,type,bytes}]). 공지·자료실 type만 화이트리스트에 포함.
+  const columns = opts.attachments ? [...POST_COLUMNS, 'attachments'] : POST_COLUMNS
+  const jsonb = opts.attachments ? [...POST_JSONB, 'attachments'] : POST_JSONB
   return {
     table: 'posts',
     postType: type,
     minRole,
-    columns: POST_COLUMNS,
-    jsonb: POST_JSONB,
+    columns,
+    jsonb,
     required: ['title_ko'],
     orderBy: POST_ORDER,
     publicWhere: 'published = TRUE',
@@ -26,11 +29,12 @@ function postType(type, minRole) {
 
 export const CONTENT_TYPES = {
   // ── posts 계열 (T1·T2·성좌·카드) ── 13_CMS 1절: 전부 manager+
-  notice: postType('notice', 'manager'),
+  // 공지·자료실만 attachments(PDF·HWP 첨부) 허용 (13_CMS 1절: 자료실 "첨부(Blob) 허용")
+  notice: postType('notice', 'manager', { attachments: true }),
   lecture: postType('lecture', 'manager'),
   contest: postType('contest', 'manager'),
   achievement: postType('achievement', 'manager'),
-  resource: postType('resource', 'manager'),
+  resource: postType('resource', 'manager', { attachments: true }),
   club: postType('club', 'manager'),
 
   // ── 독립 테이블 계열 ──

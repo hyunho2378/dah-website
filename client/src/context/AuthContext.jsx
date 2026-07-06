@@ -2,8 +2,9 @@
 // user는 메모리만 보관. 토큰은 httpOnly 쿠키 — JS가 읽지 않는다. storage 금지.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { api } from '../hooks/useApi'
+import { useLoginModal } from './LoginModalContext'
 
 const ROLE_RANK = { manager: 1, admin: 2, owner: 3 }
 
@@ -167,17 +168,43 @@ function ForbiddenView() {
 }
 
 /**
+ * AuthWall — 비로그인 가드 뷰 (F9, 16_PHASE4).
+ * /login 페이지가 폐기돼 리다이렉트 대신 로그인 모달을 연다.
+ * 현재 URL을 유지하므로 로그인 성공 시 RequireRole이 재평가되어 자식이 노출된다.
+ */
+function AuthWall() {
+  const { openLogin } = useLoginModal()
+
+  useEffect(() => {
+    openLogin()
+  }, [openLogin])
+
+  return (
+    <section className="mx-auto flex min-h-[60vh] w-full max-w-container flex-col items-center justify-center gap-16 px-gutter-m py-section-m text-center md:px-gutter-t lg:px-gutter-d">
+      <h1 className="text-h3-m font-bold text-text-pri md:text-h3-d">로그인 필요</h1>
+      <p className="text-body-m text-text-sec md:text-body-d">
+        이 페이지는 로그인 후 이용할 수 있습니다.
+      </p>
+      <button
+        type="button"
+        onClick={openLogin}
+        className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm border border-border-subtle px-24 text-body-m font-semibold text-text-pri transition duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus md:h-48"
+      >
+        로그인
+      </button>
+    </section>
+  )
+}
+
+/**
  * RequireRole — 라우트 가드 (14_ROUTES_V2).
- * 비로그인 → /login 리다이렉트(원래 경로 state 보존), 롤 미충족 → 403 뷰.
+ * 비로그인 → 로그인 모달 오픈(AuthWall, URL 유지), 롤 미충족 → 403 뷰.
  */
 export function RequireRole({ role = 'manager', children }) {
   const { user, loading, hasRole } = useAuth()
-  const location = useLocation()
 
   if (loading) return null
-  if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />
-  }
+  if (!user) return <AuthWall />
   if (!hasRole(role)) return <ForbiddenView />
   return children
 }

@@ -1,23 +1,18 @@
-// Login.jsx — 로그인 + 최초 온보딩 비밀번호 설정 플로우 (12_BACKEND 3절, 13_CMS_SPEC)
-// owner가 이메일·롤 사전 등록 → 대상자 첫 로그인 시 must_set_pw → 비밀번호 설정 후 자동 로그인.
+// LoginModal.jsx — 글래스 로그인 모달 (F9, 16_PHASE4)
+// 기존 /login 페이지를 대체. 이메일/비밀번호 + 최초 온보딩(must_set_pw) 비밀번호 설정 분기.
+// ESC·바깥 클릭 닫기, 포커스 트랩, 열림 시 본문 스크롤 잠금(storage 미사용).
+// 어드민 폼 프리미티브(FormControls) 재사용 — 별도 테마 금지(13_CMS_SPEC).
 
-import { useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useTitle } from '../hooks/useTitle'
-import {
-  ErrorText,
-  Field,
-  Input,
-  PrimaryButton,
-} from '../components/admin/FormControls'
+import { useEffect, useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { useLoginModal } from '../../context/LoginModalContext'
+import { ErrorText, Field, Input, PrimaryButton } from '../admin/FormControls'
 
-function Login() {
-  useTitle('로그인')
-  const { user, loading, login, setupPassword } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const from = location.state?.from || '/admin'
+function LoginModal() {
+  const { isOpen, closeLogin } = useLoginModal()
+  const { login, setupPassword } = useAuth()
+  const panelRef = useRef(null)
 
   const [mode, setMode] = useState('login') // 'login' | 'setup'
   const [email, setEmail] = useState('')
@@ -27,7 +22,55 @@ function Login() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  if (!loading && user) return <Navigate to={from} replace />
+  // 닫힘 시 폼 상태 초기화 (다음 오픈이 항상 login 단계에서 시작)
+  useEffect(() => {
+    if (isOpen) return
+    setMode('login')
+    setEmail('')
+    setPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setError(null)
+    setBusy(false)
+  }, [isOpen])
+
+  // 열림 시: 스크롤 잠금 + ESC 닫기 + 포커스 트랩 + 첫 필드 포커스
+  useEffect(() => {
+    if (!isOpen) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const firstInput = panelRef.current?.querySelector('input')
+    firstInput?.focus()
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        closeLogin()
+        return
+      }
+      if (e.key !== 'Tab' || !panelRef.current) return
+      const focusables = panelRef.current.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled])'
+      )
+      if (!focusables.length) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [isOpen, closeLogin])
+
+  if (!isOpen) return null
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -38,7 +81,7 @@ function Login() {
       if (data?.must_set_pw) {
         setMode('setup')
       } else {
-        navigate(from, { replace: true })
+        closeLogin()
       }
     } catch (err) {
       setError(err.hint ? `${err.message} — ${err.hint}` : err.message)
@@ -61,7 +104,7 @@ function Login() {
     setBusy(true)
     try {
       await setupPassword(email, newPassword)
-      navigate(from, { replace: true })
+      closeLogin()
     } catch (err) {
       setError(err.hint ? `${err.message} — ${err.hint}` : err.message)
     } finally {
@@ -70,14 +113,40 @@ function Login() {
   }
 
   return (
-    <section className="mx-auto flex min-h-[80svh] w-full max-w-container items-center justify-center px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d">
-      <div className="w-full max-w-sm rounded-glass border border-glass-line bg-glass-bg p-32 backdrop-blur-glass">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-gutter-m">
+      {/* 백드롭 — 클릭 시 닫힘 */}
+      <button
+        type="button"
+        aria-label="닫기"
+        tabIndex={-1}
+        onClick={closeLogin}
+        className="absolute inset-0 bg-black/60"
+      />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-modal-title"
+        className="relative w-full max-w-sm rounded-glass border border-glass-line bg-cosmos-depth1/[0.96] p-32 backdrop-blur-glass"
+      >
+        <button
+          type="button"
+          aria-label="닫기"
+          onClick={closeLogin}
+          className="absolute right-16 top-16 flex h-32 w-32 cursor-pointer items-center justify-center rounded-full text-text-sec transition-colors duration-fast ease-out hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+        >
+          <X size={18} aria-hidden="true" />
+        </button>
+
         <p className="font-mono text-label-m uppercase tracking-label text-text-meta">
           DAH ADMIN
         </p>
-        <h1 className="mt-8 text-h2-m font-bold text-text-pri md:text-h2-d">
+        <h2
+          id="login-modal-title"
+          className="mt-8 text-h2-m font-bold text-text-pri md:text-h2-d"
+        >
           {mode === 'login' ? '로그인' : '비밀번호 설정'}
-        </h1>
+        </h2>
         <p className="mt-8 text-small-m text-text-sec md:text-small-d">
           {mode === 'login'
             ? '등록된 계정으로 로그인합니다.'
@@ -138,8 +207,8 @@ function Login() {
           </form>
         )}
       </div>
-    </section>
+    </div>
   )
 }
 
-export default Login
+export default LoginModal

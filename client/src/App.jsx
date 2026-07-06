@@ -1,12 +1,14 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { LoginModalProvider } from './context/LoginModalContext'
 import { LangProvider } from './i18n/LangContext'
 import StarField from './components/cosmos/StarField'
 import ScrollToTop from './components/layout/ScrollToTop'
 import Header from './components/layout/Header'
 import GlassDock from './components/layout/GlassDock'
 import Footer from './components/layout/Footer'
+import LoginModal from './components/auth/LoginModal'
 
 import Home from './pages/Home'
 import About from './pages/About'
@@ -31,7 +33,8 @@ import ExhibitEdit from './pages/submit/ExhibitEdit'
 import News from './pages/News'
 import NewsDetail from './pages/NewsDetail'
 import Resources from './pages/Resources'
-import Login from './pages/Login'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
 import NotFound from './pages/NotFound'
 
 // 어드민(Tiptap 포함)은 코드 분할 — 공개 방문자는 다운로드하지 않는다
@@ -60,6 +63,8 @@ const PUBLIC_ROUTES = [
   { path: '/news', element: <News /> },
   { path: '/news/:id', element: <NewsDetail /> },
   { path: '/resources', element: <Resources /> },
+  { path: '/privacy', element: <Privacy /> },
+  { path: '/terms', element: <Terms /> },
 ]
 
 function App() {
@@ -67,6 +72,7 @@ function App() {
     <BrowserRouter>
       <LangProvider>
         <AuthProvider>
+          <LoginModalProvider>
           <StarField />
           <ScrollToTop />
           <Header />
@@ -88,7 +94,6 @@ function App() {
               <Route path="/showcase/submit" element={<ShowcaseSubmit />} />
               <Route path="/submit" element={<ExhibitSubmit />} />
               <Route path="/submit/edit" element={<ExhibitEdit />} />
-              <Route path="/login" element={<Login />} />
 
               {/* 관리 (지연 로드, 라우트별 RequireRole은 AdminRoutes 내부) */}
               <Route
@@ -117,6 +122,8 @@ function App() {
           </main>
           <Footer />
           <GlassDock />
+          <LoginModal />
+          </LoginModalProvider>
         </AuthProvider>
       </LangProvider>
     </BrowserRouter>

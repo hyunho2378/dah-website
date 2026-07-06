@@ -40,6 +40,10 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 CREATE INDEX IF NOT EXISTS idx_posts_type_published ON posts (type, published, pinned DESC, created_at DESC);
 
+-- 첨부 파일 배열 (PDF·HWP 등 문서). 형태: [{name, url, type, bytes}]. 공지·자료실 type에서 사용.
+-- 마이그레이션 안전: 기존 posts 테이블에도 컬럼 없으면 추가 (IF NOT EXISTS).
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS attachments JSONB;
+
 -- 교수진
 CREATE TABLE IF NOT EXISTS professors (
   id        SERIAL PRIMARY KEY,

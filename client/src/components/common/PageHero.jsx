@@ -2,10 +2,12 @@
 // 하단 헤어라인, 섹션 패딩 상단만 절반(48/80), 하단은 기본(96/160)
 // v2: 기존 페이지 호환용으로 유지(PageBanner와 별개). 헤어라인만 glass-line 톤 정돈.
 // props 시그니처 변경 금지.
+import Container from '../layout/Container'
+
 function PageHero({ eyebrow, titleKr, desc }) {
   return (
     <section className="border-b border-glass-line">
-      <div className="mx-auto max-w-container px-gutter-m pb-96 pt-48 md:px-gutter-t md:pb-160 md:pt-80 lg:px-gutter-d">
+      <Container className="pb-96 pt-48 md:pb-160 md:pt-80">
         <p className="font-mono text-label-m uppercase tracking-label text-text-sec md:text-label-d">
           {eyebrow}
         </p>
@@ -18,7 +20,7 @@ function PageHero({ eyebrow, titleKr, desc }) {
             {desc}
           </p>
         )}
-      </div>
+      </Container>
     </section>
   )
 }
