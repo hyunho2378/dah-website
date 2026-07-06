@@ -1,0 +1,94 @@
+// /resources — 자료실 (KPC 게시판 문법 + 첨부 다운로드 링크)
+// API: GET /content/resource?page=&q= — 정적 폴백 데이터 없음(빈 상태 P6).
+import { useState } from 'react'
+import PageBanner from '../components/common/PageBanner'
+import BoardList from '../components/board/BoardList'
+import { AddButton } from '../components/admin/EditControls'
+import { useApi } from '../hooks/useApi'
+import { useTitle } from '../hooks/useTitle'
+
+const PAGE_SIZE = 10
+const EMPTY_TEXT = '등록된 항목이 없습니다'
+const LOADING_TEXT = '불러오는 중'
+const ERROR_TEXT = '목록을 불러오지 못했습니다'
+
+function toAttachment(file) {
+  if (typeof file === 'string') return { name: '첨부파일', url: file }
+  return { name: file.name ?? file.filename ?? '첨부파일', url: file.url }
+}
+
+function toRow(post, no) {
+  const files = post.attachments ?? post.files ?? []
+  return {
+    id: post.id,
+    no,
+    tag: post.tag ?? null,
+    title: post.title_ko ?? post.title,
+    author: post.author ?? null,
+    date: post.date ?? (post.created_at ?? '').slice(0, 10) ?? null,
+    pinned: Boolean(post.pinned),
+    // 자료실은 상세 페이지 없음(14_ROUTES_V2) — 외부 링크만 허용, 첨부는 행 안에서 다운로드
+    href: post.external_url ?? undefined,
+    attachments: post.external_url ? [] : files.map(toAttachment),
+  }
+}
+
+function Resources() {
+  useTitle('자료실')
+  const [q, setQ] = useState('')
+  const [page, setPage] = useState(1)
+
+  const { data, loading, error, offline } = useApi('/content/resource', {
+    params: { page, q: q || undefined },
+  })
+
+  const total = data?.total ?? 0
+  const pageSize = data?.pageSize ?? PAGE_SIZE
+  const rows = (data?.items ?? []).map((post, idx) =>
+    toRow(post, total - (page - 1) * pageSize - idx)
+  )
+
+  const statusText = loading
+    ? LOADING_TEXT
+    : rows.length === 0
+      ? error && !offline
+        ? ERROR_TEXT
+        : EMPTY_TEXT
+      : null
+
+  return (
+    <>
+      <PageBanner
+        titleKo="자료실"
+        titleEn="RESOURCES"
+        breadcrumb={[{ label: '홈', to: '/' }, { label: '소식' }, { label: '자료실', to: '/resources' }]}
+        nebulaX="28%"
+        nebulaY="22%"
+      />
+      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+        {offline && (
+          <p className="mb-16 font-mono text-caption-m text-text-meta">
+            실시간 동기화 대기 중
+          </p>
+        )}
+        <BoardList
+          total={total}
+          items={rows}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onSearch={(next) => {
+            setQ(next)
+            setPage(1)
+          }}
+          searchValue={q}
+          searchPlaceholder="자료 검색"
+          statusText={statusText}
+          actions={<AddButton type="resource" to="/admin/posts/resource/new" />}
+        />
+      </section>
+    </>
+  )
+}
+
+export default Resources
