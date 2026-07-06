@@ -14,10 +14,10 @@ const CONTAINER =
 // 좌 카테고리 hover/focus → 우 글래스 패널 crossfade 200ms + 미세 translateY(11_DESIGN_V2 5절 명시값).
 // 모바일(lg 미만)은 세로 아코디언 폴백.
 const CATEGORIES = [
-  { key: 'exhibitions', no: '01', to: '/programs/exhibitions', api: '/exhibitions' },
+  { key: 'exhibitions', no: '01', to: '/programs/exhibitions', api: '/content/exhibitions' },
   { key: 'contests', no: '02', to: '/programs/contests', api: '/content/contest' },
   { key: 'lectures', no: '03', to: '/programs/lectures', api: '/content/lecture' },
-  { key: 'showcase', no: '04', to: '/showcase', api: '/showcase' },
+  { key: 'showcase', no: '04', to: '/showcase', api: '/content/showcase' },
 ]
 
 // API 응답(배열 또는 {items}) → 최신 3건 제목 리스트. 실패·미기동 시 빈 배열(P6: 리스트만 생략)

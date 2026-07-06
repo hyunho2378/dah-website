@@ -32,14 +32,21 @@ function sign(user, type, ttlSec) {
   )
 }
 
-function cookieOpts(maxAgeSec) {
+// cross-site(Vercel↔Render) 인증 쿠키: 프로덕션은 SameSite=None + Secure 필수.
+// 'lax'/'strict'면 브라우저가 cross-site 요청에 쿠키를 저장·전송하지 않는다.
+// 로컬(localhost, http)은 Secure 불가라 Lax 유지. (SameSite=None은 Secure 없으면 브라우저가 거부)
+function baseCookieOpts() {
+  const isProd = process.env.NODE_ENV === 'production'
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     path: '/',
-    maxAge: maxAgeSec * 1000,
   }
+}
+
+function cookieOpts(maxAgeSec) {
+  return { ...baseCookieOpts(), maxAge: maxAgeSec * 1000 }
 }
 
 export function setAuthCookies(res, user) {
@@ -48,8 +55,9 @@ export function setAuthCookies(res, user) {
 }
 
 export function clearAuthCookies(res) {
-  res.clearCookie(ACCESS_COOKIE, { path: '/' })
-  res.clearCookie(REFRESH_COOKIE, { path: '/' })
+  // 삭제 쿠키도 동일 속성(secure·sameSite)이어야 cross-site에서 확실히 덮어써진다
+  res.clearCookie(ACCESS_COOKIE, baseCookieOpts())
+  res.clearCookie(REFRESH_COOKIE, baseCookieOpts())
 }
 
 function resolveUser(req, res) {
