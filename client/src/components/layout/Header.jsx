@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { nav } from '../../data/nav'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../context/AuthContext'
 import { cosmos } from '../../styles/tokens'
 import Tag from '../common/Tag'
 import LangToggle from './LangToggle'

@@ -29,7 +29,10 @@
 - [x] AGENT-B3 어드민·에디터: /admin CRUD, Tiptap+렌더러, useApi·useAuth, 인라인 편집 버튼
 - [x] AGENT-B4 공개 A: 홈 v2, About 통합, 교육과정, 코드쉐어링, /en·i18n
 - [x] AGENT-B5 공개 B: 프로그램 3종, 운영위, 성좌, 진로, 쇼케이스, 접수 폼, 공지·자료실
-- [ ] AGENT-BR 리뷰: App 조립 + 검증 (h) Lighthouse 포함
+- [~] AGENT-BR 리뷰: App 조립 완료(StarField·Header·GlassDock·Footer·라우트 v2 전체·admin 코드분할·en 미러·v1 리다이렉트·v1 페이지 3종 정리). 검증 완료: 빌드, 서버 테스트 8/8, 비로그인 /admin 로그인 게이트, en 감지, 1920 가로스크롤 0(+정적 보증), 크로스 임포트 드리프트 3종 교정(EditControls·RichBody·useAuth). 잔여: 320px 실기기, 3840 상한, reduced-motion 에뮬레이션, Lighthouse
+- [!] /en PageBanner 타이틀 lang 미반영(국문 유지) — titleEn 전달 또는 PageBanner lang 연동 필요
+- [!] HWP·비이미지 첨부 업로드 서버 400(image/* 필터) — 문서 업로드 경로 필요
+- [!] 쿠키 SameSite=Lax — Vercel↔Render 크로스 사이트 배포 시 /api 프록시 또는 None 전환 결정 필요
 
 ## 데이터 갭 (사용자 확인 필요)
 - [!] 교수 개별 사진: 미보유 → 이니셜 플레이스홀더로 v1 출시, 사진 확보 시 교체
