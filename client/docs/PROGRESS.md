@@ -11,11 +11,11 @@
 - [x] tokens.js → tailwind.config.js 매핑 동작 확인
 
 ## PHASE 1 — 병렬 (02_PARALLEL_PROMPTS.md)
-- [ ] AGENT-1 데이터·기반: data/ 12파일 원문 이관, index.css, 훅
-- [ ] AGENT-2 코어 UI: common 9종, layout 3종, OrbitCanvas
-- [ ] AGENT-3 홈 섹션: home/ 9섹션 + Home.jsx
-- [ ] AGENT-4 서브 A: About, Tracks
-- [ ] AGENT-5 서브 B: People, Achievements, Careers, News, NotFound
+- [x] AGENT-1 데이터·기반: data/ 12파일 원문 이관, index.css, 훅
+- [x] AGENT-2 코어 UI: common 9종, layout 3종, OrbitCanvas
+- [x] AGENT-3 홈 섹션: home/ 9섹션 + Home.jsx
+- [x] AGENT-4 서브 A: About, Tracks
+- [x] AGENT-5 서브 B: People, Achievements, Careers, News, NotFound
 
 ## PHASE 2 — 검증
 - [ ] AGENT-REVIEW: CHECKLIST 전 항목 + App.jsx 조립 + vercel.json
