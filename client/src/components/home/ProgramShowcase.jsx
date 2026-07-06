@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import SectionLabel from '../common/SectionLabel'
 import Reveal from '../common/Reveal'
-import GlassCard from '../common/GlassCard'
 import ArrowLink from '../common/ArrowLink'
 import { useApi } from '../../hooks/useApi'
 import { useLang } from '../../i18n/LangContext'
@@ -35,7 +34,7 @@ function normalizeLatest(data) {
 
 function DetailPanel({ category, items, t }) {
   return (
-    <GlassCard className="h-full p-24 md:p-32">
+    <div className="relative h-full rounded-glass border border-glass-line bg-bg-elev p-24 backdrop-blur-glass-mobile md:p-32 md:backdrop-blur-glass">
       <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
         {category.no}
       </p>
@@ -59,7 +58,7 @@ function DetailPanel({ category, items, t }) {
       <div className="mt-24">
         <ArrowLink href={category.to}>{t('actions.viewMore')}</ArrowLink>
       </div>
-    </GlassCard>
+    </div>
   )
 }
 
@@ -81,7 +80,7 @@ function ProgramShowcase() {
   }
 
   return (
-    <section className="py-section-m lg:py-section-d">
+    <section className="bg-bg-base py-section-m lg:py-section-d">
       <div className={CONTAINER}>
         <Reveal>
           <SectionLabel index="01" text="PROGRAMS" />

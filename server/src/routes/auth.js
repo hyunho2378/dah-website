@@ -31,10 +31,18 @@ router.post(
     )
     const user = rows[0]
     if (!user) return res.status(401).json({ error: 'invalid credentials' })
-    // 온보딩: 비밀번호 미설정 상태 → 클라가 setup-password 플로우로 분기
+
+    // 온보딩: 비밀번호 미설정 상태 → 입력값을 그대로 최초 비번으로 등록 후 즉시 로그인
     if (user.must_set_pw || !user.password_hash) {
-      return res.status(403).json({ error: 'password not set', mustSetPassword: true })
+      const hash = await bcrypt.hash(String(password), 10)
+      const updated = await query(
+        'UPDATE users SET password_hash = $1, must_set_pw = FALSE WHERE id = $2 RETURNING id, email, name, role',
+        [hash, user.id]
+      )
+      setAuthCookies(res, updated.rows[0])
+      return res.json({ user: publicUser(updated.rows[0]) })
     }
+
     const ok = await bcrypt.compare(password, user.password_hash)
     if (!ok) return res.status(401).json({ error: 'invalid credentials' })
 

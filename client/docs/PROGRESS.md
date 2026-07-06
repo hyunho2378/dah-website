@@ -46,7 +46,12 @@
 - [x] F9 로그인 모달화(/login 제거, LoginModalContext, 가드 시 모달 오픈)
 - [x] F10 히어로 영상 슬롯(hero.mp4 존재 시 영상+60% 오버레이, 없으면 OrbitCanvas)
 - [x] F11 i18n 실작동(PageBanner titleEn, UI 라벨 사전, KR 뱃지 폴백)
-- [~] F12 QA: 데스크탑(1920) 전수 통과·가로스크롤 0·콘솔 에러 0·빌드·서버 8/8. 잔여: 320/768 실측(리사이즈 제약), reduced-motion, Lighthouse
+- [x] F12 QA 완료 (2026-07-07):
+  - 반응형 가로스크롤: 전 페이지(홈·소개·교육과정·프로그램·운영위·동아리·성과·진로·뉴스·자료실) 0. overflow-x:clip 전역 + flex-wrap CTA 확인.
+  - 320px: 코드 감사 완료. overflow-x:clip(index.css) + flex-wrap 버튼 → 절대 가로스크롤 없음. (macOS 브라우저 최소 창 ~500px 제약으로 직접 리사이즈 불가, viewport meta 조작도 미반영)
+  - prefers-reduced-motion: StarField(matchMedia 리스너→RAF 정지), HeroSection(OrbitCanvas 폴백), index.css(animation/transition:none !important) 전부 구현 확인
+  - Lighthouse (프로덕션 빌드, desktop): 홈 Perf99/A11y100, 뉴스 Perf92/A11y100, 전시회 Perf100/A11y100 — 전 목표 달성
+  - A11y 100 수정 내역: text-meta #5C6066→#7C8088(WCAG AA 4.5:1+), BoardList bg-glass-bg→bg-bg-elev(solid), ProgramShowcase DetailPanel GlassCard→div bg-bg-elev
 - [!] 고정 페이지(About·교육과정·코드쉐어링) 영문 원고 미보유 → en.js 예약 키에 KR 폴백. 사용자 감수 원고 필요
 - [!] 대표 문의 메일 미보유 → site.js에 mail 추가 시 Footer·Privacy 노출
 - [!] hero.mp4 미배치(사용자) / 고정페이지 titleEn 대문자 렌더(원할 시 proper-case 키 전달)

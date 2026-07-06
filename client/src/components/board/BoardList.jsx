@@ -127,7 +127,7 @@ function BoardList({
           )}
         </div>
       </div>
-      <div className="min-w-0 overflow-hidden rounded-glass border border-glass-line bg-glass-bg">
+      <div className="min-w-0 overflow-hidden rounded-glass border border-glass-line bg-bg-elev">
         {statusText ? (
           <p className="px-24 py-64 font-mono text-caption-m text-text-meta">
             {statusText}

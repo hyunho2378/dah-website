@@ -13,7 +13,7 @@ export const colors = {
   text: {
     pri: '#F7F8F8',       // 헤드라인, 본문 강조
     sec: '#8A8F98',       // 본문 보조, 설명
-    meta: '#5C6066',      // 캡션, 날짜, eyebrow 비활성
+    meta: '#7C8088',      // 캡션, 날짜, eyebrow 비활성 (WCAG AA 4.5:1+)
     invert: '#08090A',    // 화이트 필 버튼 위 텍스트
   },
   // 보더 (헤어라인 시스템)
