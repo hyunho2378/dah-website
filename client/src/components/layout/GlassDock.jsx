@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { MoreHorizontal, X } from 'lucide-react'
 import { nav } from '../../data/nav'
+import { useLang } from '../../i18n/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLoginModal } from '../../context/LoginModalContext'
 import Tag from '../common/Tag'
@@ -23,12 +24,14 @@ const flatChildren = nav
   .flatMap((item) => item.children)
   .sort((a, b) => b.to.length - a.to.length)
 
-function currentLabel(pathname) {
-  if (pathname === '/') return '홈'
+// 언어에 따라 label(KR)/labelEn 선택. 홈·미매칭 폴백은 사전 키로 조회
+function currentLabel(pathname, lang, t) {
+  if (pathname === '/') return t('nav.home')
   const hit = flatChildren.find(
     (c) => pathname === c.to || pathname.startsWith(`${c.to}/`)
   )
-  return hit ? hit.label : '메뉴'
+  if (!hit) return t('common.menu')
+  return lang === 'en' ? hit.labelEn : hit.label
 }
 
 const utilLinkClass =
@@ -37,6 +40,8 @@ const utilLinkClass =
 function GlassDock() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
+  const { lang, t } = useLang()
+  const navLabel = (item) => (lang === 'en' ? item.labelEn : item.label)
   const { user } = useAuth()
   const { openLogin } = useLoginModal()
   const dockRef = useRef(null)
@@ -119,7 +124,7 @@ function GlassDock() {
           style={{ transition: `grid-template-rows 320ms ${SPRING}` }}
         >
           <div inert={!open} className="min-h-0 overflow-hidden">
-            <nav aria-label="모바일 메뉴" className="flex flex-col px-8 pt-12">
+            <nav aria-label={t('aria.mobileMenu')} className="flex flex-col px-8 pt-12">
               {nav.map((item) => (
                 <Link
                   key={item.to}
@@ -128,7 +133,7 @@ function GlassDock() {
                   className="flex items-baseline justify-between gap-12 rounded-md px-12 py-12 transition-colors duration-fast ease-out hover:bg-glass-strong"
                 >
                   <span className="text-body-m font-semibold text-text-pri">
-                    {item.label}
+                    {navLabel(item)}
                   </span>
                   <span className="font-display text-caption-m uppercase tracking-label text-text-meta">
                     {item.labelEn}
@@ -143,7 +148,7 @@ function GlassDock() {
                 <span className="flex items-center gap-8">
                   <Tag>{user.role}</Tag>
                   <Link to="/admin" onClick={close} className={utilLinkClass}>
-                    관리
+                    {t('actions.admin')}
                   </Link>
                 </span>
               ) : (
@@ -155,7 +160,7 @@ function GlassDock() {
                   }}
                   className={`cursor-pointer ${utilLinkClass}`}
                 >
-                  로그인
+                  {t('actions.login')}
                 </button>
               )}
             </div>
@@ -167,14 +172,14 @@ function GlassDock() {
           ref={triggerRef}
           type="button"
           aria-expanded={open}
-          aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
+          aria-label={open ? t('aria.closeMenu') : t('aria.openMenu')}
           onClick={() => setOpen(!open)}
           className="flex h-header-s w-full cursor-pointer items-center justify-between gap-12 px-20"
         >
           <span className="flex min-w-0 items-center gap-12">
             <img src={logoUrl} alt="" className="h-20 w-auto" />
             <span className="truncate text-small-m text-text-pri">
-              {currentLabel(pathname)}
+              {currentLabel(pathname, lang, t)}
             </span>
           </span>
           {open ? (

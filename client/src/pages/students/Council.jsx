@@ -5,18 +5,49 @@ import PageBanner from '../../components/common/PageBanner'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import { lucid, councilHistory } from '../../data/council'
 
 const EMPTY_TEXT = '등록된 항목이 없습니다'
 
 const toMember = (member) =>
   typeof member === 'string' ? { name: member } : member
 
+// F7 폴백: 서버 오프라인·빈 응답 시 data/council.js 원문을 기수 아카이브로 렌더.
+// LUCID(현 운영위, 2026) + 역대 학생회(councilHistory)를 연도 내림차순으로.
+const FALLBACK_ITEMS = [
+  {
+    id: 'lucid',
+    name: lucid.title,
+    year: 2026,
+    year_label: '2026',
+    intro: lucid.intro,
+    members: (lucid.committee ?? []).flatMap((c) =>
+      Array.isArray(c.members)
+        ? c.members.map((m) => ({ name: m, role: c.role }))
+        : [{ name: c.name, role: c.role, majors: c.dept }]
+    ),
+  },
+  ...(councilHistory ?? []).map((h) => ({
+    id: `council-${h.year}`,
+    name: h.name ? `${h.ordinal} ${h.name}` : h.ordinal,
+    year: h.year,
+    year_label: String(h.year),
+    members: [
+      h.president ? { name: h.president, role: '회장' } : null,
+      h.vicePresident ? { name: h.vicePresident, role: '부회장' } : null,
+    ].filter(Boolean),
+  })),
+]
+
 function Council() {
   useTitle('운영위원회')
   const { data, loading, error, offline } = useApi('/content/council')
-  const items = [...(data?.items ?? [])].sort(
-    (a, b) => (b.ordinal ?? 0) - (a.ordinal ?? 0)
-  )
+  const remote = data?.items ?? []
+  // 원격 데이터 있으면 ordinal 내림차순, 없으면 원문 폴백(연도 내림차순)
+  const items =
+    remote.length > 0
+      ? [...remote].sort((a, b) => (b.ordinal ?? 0) - (a.ordinal ?? 0))
+      : FALLBACK_ITEMS
 
   const [selectedId, setSelectedId] = useState(null)
   const active = items.find((c) => c.id === selectedId) ?? items[0] ?? null
@@ -53,7 +84,7 @@ function Council() {
                       : 'border-transparent text-text-meta hover:text-text-sec'
                   }`}
                 >
-                  {c.ordinal ? `${c.ordinal}기` : c.name}
+                  {c.year_label ?? (c.ordinal ? `${c.ordinal}기` : c.name)}
                 </button>
               )
             })}

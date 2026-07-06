@@ -7,9 +7,18 @@ import Tag from '../../components/common/Tag'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import { clubs as staticClubs } from '../../data/clubs'
 
 const EMPTY_TEXT = '등록된 항목이 없습니다'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
+
+// F 폴백: 서버 오프라인·빈 응답 시 data/clubs.js 원문(동아리 4종)을 카드로 렌더
+const FALLBACK_CLUBS = (staticClubs ?? []).map((c) => ({
+  id: c.id,
+  title: c.name,
+  tag: c.field,
+  intro: c.intro,
+}))
 
 function ClubCard({ item }) {
   const title = item.title_ko ?? item.title
@@ -76,7 +85,7 @@ function ClubCard({ item }) {
 function Clubs() {
   useTitle('동아리')
   const { data, loading, error, offline } = useApi('/content/club')
-  const items = data?.items ?? []
+  const items = data?.items?.length ? data.items : FALLBACK_CLUBS
 
   return (
     <>

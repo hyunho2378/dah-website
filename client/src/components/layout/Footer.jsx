@@ -2,19 +2,19 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { site } from '../../data/site.js'
 import { nav } from '../../data/nav.js'
+import { useLang } from '../../i18n/LangContext'
 import Container from './Container'
 
 // F5(16_PHASE4) 실사이트화 — 상단 헤어라인 + 불투명 배경(bg-bg-elev)으로 StarField 차단.
 // 3열: (1) 학과 정보 (2) 사이트맵(nav.js 전 페이지) (3) 관련 사이트(외부 링크)
 // 최하단 바: 개인정보처리방침 | 이용약관 | © 2026 Hallym University DAH
 // blur 미사용(성능 상한 3 보존) — 불투명 배경이 우주 배경 비침을 대신 차단한다.
-const externalLinks = [
-  { label: '한림대학교', key: 'hallym' },
-  { label: '전시회', key: 'exhibition' },
-  { label: '인스타그램', key: 'instagram' },
-]
+// 표시 라벨은 사전(footer.links.*)에서 조회 — key로 site.links 및 사전 동시 참조
+const externalLinks = ['hallym', 'exhibition', 'instagram']
 
 function Footer() {
+  const { lang, t } = useLang()
+  const navLabel = (item) => (lang === 'en' ? item.labelEn : item.label)
   return (
     <footer className="relative z-10 border-t border-border-subtle bg-bg-elev">
       {/* lg 미만 하단 여백 확대: 하단 고정 GlassDock(56 + 마진)에 카피라이트가 가리지 않도록 */}
@@ -26,7 +26,7 @@ function Footer() {
               DAH
             </p>
             <p className="mt-16 text-body-m text-text-pri md:text-body-d">
-              한림대학교 {site.nameKr}
+              {t('footer.university')} {site.nameKr}
             </p>
             <p className="mt-4 text-small-m text-text-sec md:text-small-d">
               {site.nameEn}
@@ -39,7 +39,7 @@ function Footer() {
           </div>
 
           {/* (2) 사이트맵 — nav.js 전 페이지 */}
-          <nav aria-label="사이트맵">
+          <nav aria-label={t('aria.sitemap')}>
             <div className="flex flex-col gap-24">
               {nav.map((section) => (
                 <div key={section.to}>
@@ -53,7 +53,7 @@ function Footer() {
                           to={child.to}
                           className="text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d"
                         >
-                          {child.label}
+                          {navLabel(child)}
                         </Link>
                       </li>
                     ))}
@@ -64,20 +64,20 @@ function Footer() {
           </nav>
 
           {/* (3) 관련 사이트 — 외부 링크 */}
-          <nav aria-label="관련 사이트">
+          <nav aria-label={t('aria.relatedSites')}>
             <p className="font-display text-caption-m uppercase tracking-label text-text-meta md:text-caption-d">
               Related
             </p>
             <ul className="mt-8 flex flex-col gap-12">
-              {externalLinks.map((item) => (
-                <li key={item.key}>
+              {externalLinks.map((key) => (
+                <li key={key}>
                   <a
-                    href={site.links[item.key]}
+                    href={site.links[key]}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-8 text-body-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-body-d"
                   >
-                    {item.label}
+                    {t(`footer.links.${key}`)}
                     <ArrowUpRight size={16} aria-hidden="true" />
                   </a>
                 </li>
@@ -92,14 +92,14 @@ function Footer() {
             to="/privacy"
             className="transition-colors duration-fast ease-out hover:text-text-pri"
           >
-            개인정보처리방침
+            {t('footer.privacy')}
           </Link>
           <span aria-hidden="true">|</span>
           <Link
             to="/terms"
             className="transition-colors duration-fast ease-out hover:text-text-pri"
           >
-            이용약관
+            {t('footer.terms')}
           </Link>
           <span aria-hidden="true">|</span>
           <span>© 2026 Hallym University DAH</span>

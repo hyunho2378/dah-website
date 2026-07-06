@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { nav } from '../../data/nav'
+import { useLang } from '../../i18n/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLoginModal } from '../../context/LoginModalContext'
 import { cosmos } from '../../styles/tokens'
@@ -24,6 +25,9 @@ const utilLinkClass =
 function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [openIndex, setOpenIndex] = useState(null) // 메가메뉴 활성 1차 메뉴 index
+  const { lang, t } = useLang()
+  // nav.js는 label(KR)/labelEn을 함께 보유 — 현재 언어에 맞는 표시명 선택
+  const navLabel = (item) => (lang === 'en' ? item.labelEn : item.label)
   const { user } = useAuth()
   const { openLogin } = useLoginModal()
   const { pathname } = useLocation()
@@ -90,7 +94,7 @@ function Header() {
       {menuOpen && (
         <button
           type="button"
-          aria-label="메뉴 닫기"
+          aria-label={t('aria.closeMenu')}
           tabIndex={-1}
           onClick={close}
           className="fixed inset-0 z-40 hidden bg-black/40 lg:block"
@@ -125,7 +129,7 @@ function Header() {
           />
         </Link>
 
-        <nav aria-label="주 메뉴" className="hidden h-full items-center lg:flex">
+        <nav aria-label={t('aria.mainMenu')} className="hidden h-full items-center lg:flex">
           {nav.map((item, i) => (
             <NavLink
               key={item.to}
@@ -139,7 +143,7 @@ function Header() {
                 }`
               }
             >
-              {item.label}
+              {navLabel(item)}
             </NavLink>
           ))}
         </nav>
@@ -155,7 +159,7 @@ function Header() {
             <span className="flex items-center gap-8">
               <Tag>{user.role}</Tag>
               <Link to="/admin" className={utilLinkClass}>
-                관리
+                {t('actions.admin')}
               </Link>
             </span>
           ) : (
@@ -164,7 +168,7 @@ function Header() {
               onClick={openLogin}
               className={`cursor-pointer ${utilLinkClass}`}
             >
-              로그인
+              {t('actions.login')}
             </button>
           )}
         </div>
@@ -175,7 +179,7 @@ function Header() {
         <div className="absolute inset-x-0 top-full z-10 hidden border-b border-glass-line bg-cosmos-depth1/[0.96] backdrop-blur-glass lg:block">
           <Container
             as="nav"
-            aria-label={`${active.label} 하위 메뉴`}
+            aria-label={`${navLabel(active)} ${t('aria.submenu')}`}
             className="grid grid-cols-4 gap-16 py-32"
           >
             {active.children.map((child) => (
@@ -186,7 +190,7 @@ function Header() {
                 className="rounded-md border border-transparent p-16 transition-colors duration-fast ease-out hover:border-glass-line hover:bg-glass-strong"
               >
                 <span className="block text-body-d font-semibold text-text-pri">
-                  {child.label}
+                  {navLabel(child)}
                 </span>
                 <span className="mt-4 block font-display text-caption-d uppercase tracking-label text-text-meta">
                   {child.labelEn}

@@ -8,13 +8,18 @@ import BoardList from '../components/board/BoardList'
 import { AddButton } from '../components/content/EditControls'
 import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
+import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { notices } from '../data/notices'
 
-const TAGS = ['전체', '대내', '대외', '공모전모집', '특강모집']
+// 필터 값(value)은 API 파라미터로 그대로 전송 — 표시명(key)만 사전(news.tags.*)에서 조회
+const TAG_DEFS = [
+  { value: '전체', key: 'all' },
+  { value: '대내', key: 'internal' },
+  { value: '대외', key: 'external' },
+  { value: '공모전모집', key: 'contest' },
+  { value: '특강모집', key: 'lecture' },
+]
 const PAGE_SIZE = 10
-const EMPTY_TEXT = '등록된 항목이 없습니다'
-const LOADING_TEXT = '불러오는 중'
-const ERROR_TEXT = '목록을 불러오지 못했습니다'
 
 // API 게시글 → 게시판 행
 function toRow(post, no) {
@@ -37,7 +42,8 @@ function pinnedFirst(list) {
 }
 
 function News() {
-  useTitle('공지사항')
+  const { t } = useLang()
+  useTitle(t('quicklinks.notice'))
   const [tag, setTag] = useState('전체')
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
@@ -69,11 +75,11 @@ function News() {
   )
 
   const statusText = loading
-    ? LOADING_TEXT
+    ? t('common.loading')
     : rows.length === 0
       ? error && !useFallback
-        ? ERROR_TEXT
-        : EMPTY_TEXT
+        ? t('common.error')
+        : t('common.empty')
       : null
 
   return (
@@ -81,37 +87,45 @@ function News() {
       <PageBanner
         titleKo="공지사항"
         titleEn="NEWS"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '소식' }, { label: '공지사항', to: '/news' }]}
+        breadcrumb={[
+          { label: t('nav.home'), to: '/' },
+          { label: t('nav.news') },
+          { label: t('quicklinks.notice'), to: '/news' },
+        ]}
         nebulaX="72%"
         nebulaY="18%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
-        <div role="group" aria-label="태그 필터" className="flex flex-wrap gap-8">
-          {TAGS.map((t) => {
-            const isActive = t === tag
-            return (
-              <button
-                key={t}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => {
-                  setTag(t)
-                  setPage(1)
-                }}
-                className={`cursor-pointer rounded-full border px-12 py-4 font-mono text-caption-m transition-colors duration-fast ease-out ${
-                  isActive
-                    ? 'border-border-strong bg-glass-strong text-text-pri'
-                    : 'border-border-subtle text-text-sec hover:border-border-strong hover:text-text-pri'
-                }`}
-              >
-                {t}
-              </button>
-            )
-          })}
+        <div className="flex flex-wrap items-center justify-between gap-12">
+          <div role="group" aria-label={t('aria.tagFilter')} className="flex flex-wrap gap-8">
+            {TAG_DEFS.map((def) => {
+              const isActive = def.value === tag
+              return (
+                <button
+                  key={def.value}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    setTag(def.value)
+                    setPage(1)
+                  }}
+                  className={`cursor-pointer rounded-full border px-12 py-4 font-mono text-caption-m transition-colors duration-fast ease-out ${
+                    isActive
+                      ? 'border-border-strong bg-glass-strong text-text-pri'
+                      : 'border-border-subtle text-text-sec hover:border-border-strong hover:text-text-pri'
+                  }`}
+                >
+                  {t(`news.tags.${def.key}`)}
+                </button>
+              )
+            })}
+          </div>
+          {/* 공지 콘텐츠는 국문 원문 — 영문 페이지에서 Korean only 뱃지 병기(en 번역 부재) */}
+          <KoreanOnlyBadge />
         </div>
         {offline && (
           <p className="mt-16 font-mono text-caption-m text-text-meta">
-            실시간 동기화 대기 중
+            {t('common.offline')}
           </p>
         )}
         <div className="mt-32">
@@ -126,7 +140,7 @@ function News() {
               setPage(1)
             }}
             searchValue={q}
-            searchPlaceholder="공지 검색"
+            searchPlaceholder={t('news.searchPlaceholder')}
             statusText={statusText}
             actions={<AddButton type="notice" to="/admin/posts/notice/new" />}
           />

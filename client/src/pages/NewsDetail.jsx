@@ -11,23 +11,24 @@ import AttachmentViewer from '../components/content/AttachmentViewer'
 import { EditPencil } from '../components/content/EditControls'
 import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
+import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { notices } from '../data/notices'
-
-const NOT_FOUND_TEXT = '게시글을 찾을 수 없습니다'
 
 function NewsDetail() {
   const { id } = useParams()
+  const { t } = useLang()
   const { data, loading, offline } = useApi(`/content/notice/${id}`)
 
   const fallback = offline ? notices.find((n) => n.id === id) : null
   const post = data && !data.items ? data : fallback
 
+  // en 번역(title_en/body_en)이 있으면 영문 렌더, 없으면 국문 + Korean only 뱃지
   const title = post?.title_ko ?? post?.title ?? ''
   const tag = post?.tag ?? post?.org ?? null
   const date = post?.date ?? (post?.created_at ?? '').slice(0, 10)
   const author = post?.author ?? null
   const attachments = post?.attachments ?? post?.files ?? []
-  useTitle(title || '공지사항')
+  useTitle(title || t('quicklinks.notice'))
 
   return (
     <>
@@ -35,22 +36,22 @@ function NewsDetail() {
         titleKo="공지사항"
         titleEn="NEWS"
         breadcrumb={[
-          { label: '홈', to: '/' },
-          { label: '소식' },
-          { label: '공지사항', to: '/news' },
-          { label: title || '상세' },
+          { label: t('nav.home'), to: '/' },
+          { label: t('nav.news') },
+          { label: t('quicklinks.notice'), to: '/news' },
+          { label: title || t('actions.detail') },
         ]}
         nebulaX="72%"
         nebulaY="18%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : !post ? (
           <div className="flex flex-col items-start gap-24 py-64">
-            <p className="font-mono text-caption-m text-text-meta">{NOT_FOUND_TEXT}</p>
+            <p className="font-mono text-caption-m text-text-meta">{t('common.notFound')}</p>
             <Button variant="secondary" href="/news">
-              목록으로 이동
+              {t('common.backToList')}
             </Button>
           </div>
         ) : (
@@ -62,6 +63,7 @@ function NewsDetail() {
                   <time dateTime={date}>{date}</time>
                 )}
                 {author && <span>{author}</span>}
+                {!post.title_en && <KoreanOnlyBadge />}
                 <EditPencil type="notice" to={`/admin/posts/notice/${id}/edit`} />
               </div>
               <h1 className="text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
@@ -73,11 +75,11 @@ function NewsDetail() {
             ) : (
               <div className="flex flex-col items-start gap-24">
                 <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
-                  이 공지의 본문은 원문 페이지에서 확인할 수 있습니다.
+                  {t('news.bodyElsewhere')}
                 </p>
                 {post.url && (
                   <Button variant="secondary" href={post.url} external>
-                    원문 보기
+                    {t('common.viewOriginal')}
                   </Button>
                 )}
               </div>
@@ -85,14 +87,14 @@ function NewsDetail() {
             {attachments.length > 0 && (
               <section className="flex flex-col gap-16">
                 <h2 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-                  첨부
+                  {t('common.attachments')}
                 </h2>
                 <AttachmentViewer attachments={attachments} />
               </section>
             )}
             <footer className="flex flex-wrap items-center justify-between gap-16 border-t border-border-subtle pt-32">
               <Button variant="secondary" href="/news">
-                목록으로 이동
+                {t('common.backToList')}
               </Button>
               <ShareButton title={title} />
             </footer>
