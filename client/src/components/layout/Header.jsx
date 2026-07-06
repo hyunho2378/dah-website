@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { site, nav } from '../../data/site.js'
 import Button from '../common/Button.jsx'
+import LogoWordmark from '../common/LogoWordmark.jsx'
 import MobileMenu from './MobileMenu.jsx'
 
 // COMPONENTS.md §2 Header — sticky, 스크롤 80px 후 h 72→56 + blur + base/80 + 하단 헤어라인
@@ -42,9 +43,7 @@ function Header() {
         }`}
       >
         <Link to="/" className="flex items-baseline gap-12">
-          <span className="font-display text-h3-m leading-none text-text-pri">
-            DAH
-          </span>
+          <LogoWordmark size={20} className="text-text-pri" />
           <span className="hidden text-small-m text-text-sec md:block md:text-small-d">
             디지털인문예술전공
           </span>
