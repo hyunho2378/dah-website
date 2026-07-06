@@ -1,15 +1,18 @@
 import { ExternalLink } from 'lucide-react'
-import PageHero from '../components/common/PageHero'
+import PageBanner from '../components/layout/PageBanner'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
-import Card from '../components/common/Card'
+import GlassCard from '../components/common/GlassCard'
 import Divider from '../components/common/Divider'
 import ArrowLink from '../components/common/ArrowLink'
+import { EditPencil, AddButton } from '../components/content/EditControls'
 import { useTitle } from '../hooks/useTitle'
+import { useLang } from '../i18n/LangContext'
 import { professors } from '../data/professors'
 import { mentors } from '../data/mentors'
 
-const EMPTY_TEXT = '등록된 항목이 없습니다'
+// People v2 스킨 (10_IA_V2 2절 /about/people) — 내용 유지 + PageBanner·글래스 카드화.
+// 교수진·멘토단 편집(admin+, 13_CMS_SPEC 1절): 섹션 헤더에 연필·추가 버튼(비로그인 미렌더)
 
 // P9: 스태거 지연은 최대 6개까지만, 이후 0
 function staggerDelay(index) {
@@ -34,7 +37,7 @@ function ProfessorCard({ professor }) {
   const { nameKr, nameEn, role, affiliation, email, link } = professor
 
   return (
-    <Card>
+    <GlassCard hover className="h-full p-24 md:p-32">
       <div className="flex flex-col gap-16">
         <div
           className="flex aspect-square items-center justify-center rounded-md bg-bg-panel"
@@ -84,7 +87,7 @@ function ProfessorCard({ professor }) {
           )}
         </div>
       </div>
-    </Card>
+    </GlassCard>
   )
 }
 
@@ -92,7 +95,7 @@ function MentorCard({ mentor }) {
   const { name, company, role, companyUrl } = mentor
 
   return (
-    <Card>
+    <GlassCard hover className="h-full p-24 md:p-32">
       <div className="flex flex-col items-start gap-8">
         <h3 className="text-h3-m font-extrabold leading-snug text-text-pri md:text-h3-d">
           {name}
@@ -110,31 +113,42 @@ function MentorCard({ mentor }) {
           <p className="text-small-m text-text-sec md:text-small-d">{role}</p>
         )}
       </div>
-    </Card>
+    </GlassCard>
   )
 }
 
 function People() {
-  useTitle('사람')
+  const { t } = useLang()
+  useTitle(t('titles.people'))
 
   return (
     <>
-      <PageHero
-        eyebrow="PEOPLE"
-        titleKr="사람"
-        desc="디지털인문예술전공의 교수진과 산업 멘토단을 소개합니다."
+      <PageBanner
+        titleKo="교수진·멘토단"
+        titleEn="PEOPLE"
+        breadcrumb={[
+          { label: t('nav.home'), to: '/' },
+          { label: t('nav.about'), to: '/about' },
+          { label: t('titles.people'), to: '/about/people' },
+        ]}
+        nebulaX="40%"
+        nebulaY="70%"
       />
       <div className="mx-auto max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide">
         <section className="py-section-m lg:py-section-d">
           <Reveal>
             <SectionLabel index="01" text="FACULTY" />
-            <h2 className="mt-24 text-h2-m font-extrabold leading-snug text-text-pri md:text-h2-d">
-              교수진
-            </h2>
+            <div className="mt-24 flex flex-wrap items-center gap-12">
+              <h2 className="text-h2-m font-extrabold leading-snug text-text-pri md:text-h2-d">
+                {t('sections.faculty')}
+              </h2>
+              <EditPencil type="professors" to="/admin/professors" />
+              <AddButton type="professors" to="/admin/professors" />
+            </div>
           </Reveal>
           {professors.length === 0 ? (
             <p className="py-64 font-mono text-caption-m text-text-meta md:text-caption-d">
-              {EMPTY_TEXT}
+              {t('common.empty')}
             </p>
           ) : (
             <div className="mt-48 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
@@ -150,13 +164,17 @@ function People() {
         <section className="py-section-m lg:py-section-d">
           <Reveal>
             <SectionLabel index="02" text="INDUSTRY MENTORS" />
-            <h2 className="mt-24 text-h2-m font-extrabold leading-snug text-text-pri md:text-h2-d">
-              산업 멘토단
-            </h2>
+            <div className="mt-24 flex flex-wrap items-center gap-12">
+              <h2 className="text-h2-m font-extrabold leading-snug text-text-pri md:text-h2-d">
+                {t('sections.mentors')}
+              </h2>
+              <EditPencil type="mentors" to="/admin/mentors" />
+              <AddButton type="mentors" to="/admin/mentors" />
+            </div>
           </Reveal>
           {mentors.length === 0 ? (
             <p className="py-64 font-mono text-caption-m text-text-meta md:text-caption-d">
-              {EMPTY_TEXT}
+              {t('common.empty')}
             </p>
           ) : (
             <div className="mt-48 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">

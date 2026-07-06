@@ -1,10 +1,25 @@
 import OrbitCanvas from './OrbitCanvas'
 import Button from '../common/Button'
 import Reveal from '../common/Reveal'
-import { hero } from '../../data/site'
+import { EditPencil } from '../content/EditControls'
+import { useLang } from '../../i18n/LangContext'
+import { hero, site } from '../../data/site'
 
-function HeroSection() {
+// 홈 v2 #1 Hero (10_IA_V2 4절) — 기존 OrbitCanvas+카피 유지.
+// 버튼 2쌍은 site_settings.hero로 오버라이드(13_CMS_SPEC 1절 '히어로 버튼'),
+// settings 미수신(서버 슬립·오프라인) 시 아래 v2 기본값 렌더.
+function HeroSection({ settings }) {
+  const { t } = useLang()
+
   if (!hero) return null
+
+  const defaultCtas = [
+    { label: t('hero.ctaAbout'), to: '/about', external: false },
+    { label: t('hero.ctaExhibition'), href: site.links.exhibition, external: true },
+  ]
+  const remoteCtas = settings?.hero?.ctas
+  const ctas =
+    Array.isArray(remoteCtas) && remoteCtas.length > 0 ? remoteCtas : defaultCtas
 
   return (
     <section className="relative flex min-h-[calc(100svh-theme(spacing.header))] flex-col justify-center overflow-hidden">
@@ -32,8 +47,8 @@ function HeroSection() {
           <p className="mt-16 max-w-xl text-body-l-m leading-relaxed text-text-sec lg:text-body-l-d">
             {hero.body}
           </p>
-          <div className="mt-40 flex flex-wrap gap-16">
-            {(hero.ctas || []).map((cta, i) => (
+          <div className="mt-40 flex flex-wrap items-center gap-16">
+            {ctas.map((cta, i) => (
               <Button
                 key={cta.label}
                 variant={i === 0 ? 'primary' : 'secondary'}
@@ -43,6 +58,8 @@ function HeroSection() {
                 {cta.label}
               </Button>
             ))}
+            {/* 히어로 버튼 편집(owner·admin, site_settings) — 비로그인 미렌더는 EditPencil 내부 처리 */}
+            <EditPencil type="settings" to="/admin/settings" />
           </div>
         </Reveal>
       </div>

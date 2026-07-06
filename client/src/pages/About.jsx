@@ -1,12 +1,13 @@
-import PageHero from '../components/common/PageHero'
+import PageBanner from '../components/layout/PageBanner'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import { useTitle } from '../hooks/useTitle'
+import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { history } from '../data/history'
 import { motion } from '../styles/tokens'
 
-// source_content.md 원문 이관 — What is DAH / Why DAH / Mission·Vision
-// 원문에 없는 문장 창작 금지. 원문 갱신 시 이 상수만 수정한다.
+// About v2 (10_IA_V2 2절 /about) — 개요 + 미션·비전 + 연혁 타임라인 흡수 + 대학원 안내(원문 부재 시 미렌더)
+// source_content.md 원문 이관 — 원문에 없는 문장 창작 금지. 원문 갱신 시 이 상수만 수정한다.
 const WHAT_IS_DAH =
   '한림대학교 디지털인문예술전공은 AI와 디지털 트랜스포메이션과 같이 글로벌 혁신을 주도하는 디지털·정보통신기술, 인간을 위한 가치를 구현하는 디자인, 그리고 사람과 사회를 이해하는 인문사회학적 소양이 융합하여 미래의 주역이 될 인재를 양성하는 새로운 융합 프로그램입니다.'
 
@@ -39,7 +40,7 @@ const VISION = [
 const CONTAINER =
   'mx-auto w-full max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide'
 
-// About 전용 조각 — 연혁 타임라인 (COMPONENTS.md 4절)
+// About 전용 조각 — 연혁 타임라인 (COMPONENTS.md 4절 HistoryTimeline 이식)
 // 수직 타임라인: 좌측 헤어라인 세로선 + 좌 mono 날짜 + 우 내용
 function HistoryTimeline({ items }) {
   if (items.length === 0) return null
@@ -63,40 +64,49 @@ function HistoryTimeline({ items }) {
 }
 
 function About() {
-  useTitle('전공 소개')
+  const { t } = useLang()
+  useTitle(t('titles.about'))
 
   return (
     <>
-      <PageHero eyebrow="ABOUT" titleKr="전공 소개" />
+      <PageBanner
+        titleKo="전공 소개"
+        titleEn="ABOUT"
+        breadcrumb={[
+          { label: t('nav.home'), to: '/' },
+          { label: t('nav.about'), to: '/about' },
+        ]}
+        nebulaX="20%"
+        nebulaY="30%"
+      />
 
+      {/* About 정적 원문은 13_CMS_SPEC 1절 편집 매트릭스에 없음 → EditPencil 미배치(코드 수정 대상) */}
       <div className="pb-section-m md:pb-section-d">
-        {/* 01 What is DAH — P1 3단 위계: mono eyebrow → 대형 선언 헤드라인 */}
+        {/* 01 개요 — WHAT/WHY 기존 원문. en 원고 확보 전에는 국문 렌더 + Korean only 뱃지 */}
         <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
           <Reveal>
-            <SectionLabel index="01" text="WHAT IS DAH" />
+            <div className="flex flex-wrap items-center gap-12">
+              <SectionLabel index="01" text="OVERVIEW" />
+              <KoreanOnlyBadge />
+            </div>
             <h2 className="mt-24 max-w-4xl text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
               {WHAT_IS_DAH}
             </h2>
           </Reveal>
-        </section>
-
-        {/* 02 Why DAH */}
-        <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
-          <Reveal>
-            <SectionLabel index="02" text="WHY DAH" />
-            <h2 className="mt-24 max-w-4xl text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
+          <Reveal className="mt-64 md:mt-80">
+            <h3 className="max-w-4xl text-h3-m font-bold leading-snug tracking-display text-text-pri md:text-h3-d">
               {WHY_DAH.statement}
-            </h2>
+            </h3>
             <p className="mt-16 max-w-[640px] text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
               {WHY_DAH.lead}
             </p>
           </Reveal>
         </section>
 
-        {/* 03 Mission · Vision (3항) */}
+        {/* 02 미션·비전 */}
         <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
           <Reveal>
-            <SectionLabel index="03" text="MISSION & VISION" />
+            <SectionLabel index="02" text="MISSION & VISION" />
             <div className="mt-24 md:mt-32">
               <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
                 Mission
@@ -117,7 +127,7 @@ function About() {
               </p>
               <div className="mt-24 grid gap-32 md:grid-cols-3">
                 {VISION.map((item, i) => (
-                  <Reveal key={item.title} delay={i * motion.stagger}>
+                  <Reveal key={item.title} delay={i < 6 ? i * motion.stagger : 0}>
                     <div className="border-t border-border-subtle pt-24">
                       <h3 className="text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
                         {item.title}
@@ -133,13 +143,13 @@ function About() {
           )}
         </section>
 
-        {/* 04 연혁 타임라인 */}
+        {/* 03 연혁 타임라인 (구 /about 하위 독립 페이지 흡수 — 10_IA_V2 0절) */}
         {history.length > 0 && (
           <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
             <Reveal>
-              <SectionLabel index="04" text="HISTORY" />
+              <SectionLabel index="03" text="HISTORY" />
               <h2 className="mt-24 text-h1-m font-extrabold leading-tight tracking-display text-text-pri md:mt-32 md:text-h1-d">
-                연혁
+                {t('sections.history')}
               </h2>
             </Reveal>
             <div className="mt-48 md:mt-64">
@@ -147,6 +157,10 @@ function About() {
             </div>
           </section>
         )}
+
+        {/* 04 대학원 안내 — 데이터 갭: source_content.md에 대학원 안내 원문 없음
+            (진로 절의 대학원 진학 실적만 존재 — 이는 /students/careers 소관).
+            원문 확보 시 이 자리에 SectionLabel index="04" text="GRADUATE" 섹션 추가. 현재 미렌더. */}
       </div>
     </>
   )
