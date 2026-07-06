@@ -20,6 +20,25 @@
   }
 }
 
+@layer components {
+  /* DESIGN.md 4절 — 링크 언더라인 좌→우 draw (250ms).
+     텍스트 요소에 .link-underline 적용, 부모 a/버튼에 group 클래스가 있으면 hover 연동. */
+  .link-underline {
+    @apply relative;
+  }
+
+  .link-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-px w-0 bg-current transition-[width] duration-base ease-out;
+  }
+
+  .link-underline:hover::after,
+  .group:hover .link-underline::after,
+  .group:focus-visible .link-underline::after {
+    @apply w-full;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
