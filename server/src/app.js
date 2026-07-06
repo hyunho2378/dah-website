@@ -12,6 +12,7 @@ import uploadRoutes, { UPLOADS_DIR } from './routes/upload.js'
 import submitRoutes from './routes/submit.js'
 import settingsRoutes from './routes/settings.js'
 import exportRoutes from './routes/export.js'
+import adminExtraRoutes from './routes/adminExtra.js'
 
 export function createApp(options = {}) {
   if ('db' in options) setDb(options.db)
@@ -53,6 +54,7 @@ export function createApp(options = {}) {
   app.use('/submit', submitRoutes)
   app.use(settingsRoutes) // GET /settings/public, PUT /admin/settings
   app.use(exportRoutes) // GET /export/all
+  app.use(adminExtraRoutes) // /admin/users, /admin/exhibition/entries (13_CMS 6절)
 
   app.use((req, res) => res.status(404).json({ error: 'not found' }))
 
