@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 810" preserveAspectRatio="xMidYMid slice" fill="none">
+  <!-- OrbitCanvas 정적 대체 이미지 - 중심 우측 55%, 동심 궤도 3개 + 노드 12개 -->
+  <!-- 스트로크: tokens border.subtle rgba(255,255,255,0.08) / 노드: text.pri #F7F8F8 -->
+  <g stroke="rgba(255,255,255,0.08)" stroke-width="1">
+    <circle cx="792" cy="405" r="180" />
+    <circle cx="792" cy="405" r="300" />
+    <circle cx="792" cy="405" r="420" />
+    <line x1="961" y1="467" x2="1004" y2="617" />
+    <line x1="882" y1="249" x2="1052" y2="255" />
+    <line x1="642" y1="145" x2="582" y2="41" />
+    <line x1="532" y1="555" x2="522" y2="727" />
+  </g>
+  <g fill="#F7F8F8">
+    <circle cx="961" cy="467" r="2" fill-opacity="0.8" />
+    <circle cx="730" cy="574" r="1.5" fill-opacity="0.6" />
+    <circle cx="623" cy="343" r="2" fill-opacity="0.7" />
+    <circle cx="882" cy="249" r="1.5" fill-opacity="0.5" />
+    <circle cx="1004" cy="617" r="2" fill-opacity="0.8" />
+    <circle cx="532" cy="555" r="1.5" fill-opacity="0.6" />
+    <circle cx="642" cy="145" r="2" fill-opacity="0.7" />
+    <circle cx="1052" cy="255" r="1.5" fill-opacity="0.5" />
+    <circle cx="1206" cy="478" r="2" fill-opacity="0.8" />
+    <circle cx="522" cy="727" r="1.5" fill-opacity="0.6" />
+    <circle cx="378" cy="332" r="2" fill-opacity="0.7" />
+    <circle cx="582" cy="41" r="1.5" fill-opacity="0.5" />
+  </g>
+</svg>
