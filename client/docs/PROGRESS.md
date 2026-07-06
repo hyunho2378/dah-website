@@ -34,6 +34,23 @@
 - [!] HWP·비이미지 첨부 업로드 서버 400(image/* 필터) — 문서 업로드 경로 필요
 - [!] 쿠키 SameSite=Lax — Vercel↔Render 크로스 사이트 배포 시 /api 프록시 또는 None 전환 결정 필요
 
+## PHASE 4 — 전면 수정 배치 (16_PHASE4_FIXES)
+- [x] F1 폰트 Pretendard 단일화 + 스케일 하향(displayXL 40/64 등) + label 0.06em
+- [x] F2 Container 단일 컴포넌트 (Header·Footer·PageBanner·PageHero·페이지 정렬 통일)
+- [x] F3 메가메뉴 불투명(cosmos.depth1 96%+blur) + 딤 오버레이 + 스크롤 잠금
+- [x] F4 FinalCTA 반전 블록 제거 → 다크 한 줄 CTA
+- [x] F5 푸터 실사이트(3열+최하단 바) + /privacy·/terms
+- [x] F6 성좌 제거 → 연도 앵커 원문 리스트 + 홈 하이라이트 톤다운
+- [x] F7 운영위 LUCID 원문(data/council.js) + 서버 오프라인 폴백 렌더
+- [x] F8 상세 T1/T2 + PDF 뷰어(AttachmentViewer) + 시드 원문(공모전 공지 등 유형별 1건+) + attachments·문서 업로드
+- [x] F9 로그인 모달화(/login 제거, LoginModalContext, 가드 시 모달 오픈)
+- [x] F10 히어로 영상 슬롯(hero.mp4 존재 시 영상+60% 오버레이, 없으면 OrbitCanvas)
+- [x] F11 i18n 실작동(PageBanner titleEn, UI 라벨 사전, KR 뱃지 폴백)
+- [~] F12 QA: 데스크탑(1920) 전수 통과·가로스크롤 0·콘솔 에러 0·빌드·서버 8/8. 잔여: 320/768 실측(리사이즈 제약), reduced-motion, Lighthouse
+- [!] 고정 페이지(About·교육과정·코드쉐어링) 영문 원고 미보유 → en.js 예약 키에 KR 폴백. 사용자 감수 원고 필요
+- [!] 대표 문의 메일 미보유 → site.js에 mail 추가 시 Footer·Privacy 노출
+- [!] hero.mp4 미배치(사용자) / 고정페이지 titleEn 대문자 렌더(원할 시 proper-case 키 전달)
+
 ## 데이터 갭 (사용자 확인 필요)
 - [!] 교수 개별 사진: 미보유 → 이니셜 플레이스홀더로 v1 출시, 사진 확보 시 교체
 - [!] 수상 실적 원문 중 2021~2025 구간: source_content.md에서 확인 후 이관 (원문에 있는 것만)
