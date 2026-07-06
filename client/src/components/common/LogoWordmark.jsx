@@ -1,4 +1,4 @@
-// LogoWordmark — DAH 워드마크 (Anton 스타일 볼드 콘덴스드 캡스, 순수 SVG 아웃라인)
+// LogoWordmark — DAH 워드마크 (볼드 캡스 글리프, 순수 SVG 아웃라인)
 // 배경 없음. fill="currentColor"로 부모 text 색 상속 (Header가 text-text-pri → 흰색)
 // favicon.svg와 동일 지오메트리(배경 제거 버전).
 

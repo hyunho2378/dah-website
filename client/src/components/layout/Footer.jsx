@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
-import { site, nav } from '../../data/site.js'
+import { site } from '../../data/site.js'
+import { nav } from '../../data/nav.js'
 
 // COMPONENTS.md §2 Footer — 상단 헤어라인, lg 3열(학과 정보/페이지 링크/외부 링크), 모바일 1열
+// v2 스킨: 페이지 링크는 v2 메뉴 트리(data/nav.js), 헤어라인은 glass-line 톤.
+// 배경 없음 — StarField(우주)가 비쳐 보이는 것이 v2 세계관. blur 미사용(상한 3 보존)
 const externalLinks = [
   { label: 'Exhibition', key: 'exhibition' },
   { label: 'Instagram', key: 'instagram' },
@@ -11,8 +14,9 @@ const externalLinks = [
 
 function Footer() {
   return (
-    <footer className="border-t border-border-subtle">
-      <div className="mx-auto max-w-container px-gutter-m py-64 md:px-gutter-t lg:px-gutter-d lg:py-80">
+    <footer className="border-t border-glass-line">
+      {/* lg 미만 하단 여백 확대: 하단 고정 GlassDock(56 + 마진)에 카피라이트가 가리지 않도록 */}
+      <div className="mx-auto max-w-container px-gutter-m pb-128 pt-64 md:px-gutter-t lg:px-gutter-d lg:py-80">
         <div className="grid grid-cols-1 gap-48 lg:grid-cols-3 lg:gap-32">
           <div>
             <p className="font-display text-h3-m leading-none text-text-pri">

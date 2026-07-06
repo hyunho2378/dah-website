@@ -1,17 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { site, nav } from '../../data/site.js'
-import Button from '../common/Button.jsx'
-import LogoWordmark from '../common/LogoWordmark.jsx'
-import MobileMenu from './MobileMenu.jsx'
+import { nav } from '../../data/nav'
+import { useAuth } from '../../hooks/useAuth'
+import { cosmos } from '../../styles/tokens'
+import Tag from '../common/Tag'
+import LangToggle from './LangToggle'
+import logoUrl from '../../assets/logo.svg'
 
-// COMPONENTS.md §2 Header — sticky, 스크롤 80px 후 h 72→56 + blur + base/80 + 하단 헤어라인
-// scroll 리스너 rAF 스로틀
+// 10_IA_V2 1절 · 11_DESIGN_V2 헤더 재작업 — KPC 문법 이식
+// 데스크탑(lg+): 로고 SVG + 1차 메뉴 6 + 우측 유틸(EN 토글 + 로그인/역할 뱃지)
+//   호버·포커스 시 풀폭 메가메뉴(글래스 패널, 하위 페이지 그리드). ESC·포커스 이탈 시 닫힘
+// lg 미만: 로고 + 로그인만 있는 초슬림 바(하단 내비는 GlassDock 담당, BR이 App 조립)
+// 스크롤 80px 또는 메가메뉴 열림 시 투명 → 글래스화(backdrop-blur)
+// 성능 규칙(11_DESIGN_V2 2절): blur 상한 3 중 헤더 1계층(바+메가메뉴 패널).
+// will-change는 Header·GlassDock 2곳만 허용 — 여기서 1곳 사용
 const SHRINK_Y = 80
+
+const utilLinkClass =
+  'text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d'
 
 function Header() {
   const [scrolled, setScrolled] = useState(false)
+  const [openIndex, setOpenIndex] = useState(null) // 메가메뉴 활성 1차 메뉴 index
+  const { user } = useAuth()
+  const headerRef = useRef(null)
 
+  // 스크롤 rAF 스로틀 (v1 유지: 80px 이후 높이 72→56)
   useEffect(() => {
     let rafId = 0
     const onScroll = () => {
@@ -29,36 +43,66 @@ function Header() {
     }
   }, [])
 
+  // ESC로 메가메뉴 닫기 (키보드 접근)
+  useEffect(() => {
+    if (openIndex === null) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpenIndex(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [openIndex])
+
+  const close = () => setOpenIndex(null)
+
+  // 포커스가 헤더 밖으로 나가면 메가메뉴 닫기
+  const onBlur = (e) => {
+    if (headerRef.current && !headerRef.current.contains(e.relatedTarget)) close()
+  }
+
+  const glassed = scrolled || openIndex !== null
+  const active = openIndex !== null ? nav[openIndex] : null
+
   return (
     <header
-      className={`sticky top-0 z-50 border-b transition-colors duration-base ease-out ${
-        scrolled
-          ? 'border-border-subtle bg-bg-base/80 backdrop-blur'
+      ref={headerRef}
+      onMouseLeave={close}
+      onBlur={onBlur}
+      className={`sticky top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
+        glassed
+          ? 'border-glass-line bg-glass-bg backdrop-blur-glass-mobile md:backdrop-blur-glass'
           : 'border-transparent bg-transparent'
       }`}
     >
       <div
         className={`mx-auto flex max-w-container items-center justify-between px-gutter-m transition-[height] duration-base ease-out md:px-gutter-t lg:px-gutter-d ${
-          scrolled ? 'h-header-s' : 'h-header'
+          scrolled ? 'h-header-s' : 'h-header-s lg:h-header'
         }`}
       >
-        <Link to="/" className="flex items-baseline gap-12">
-          <LogoWordmark size={20} className="text-text-pri" />
-          <span className="hidden text-small-m text-text-sec md:block md:text-small-d">
-            디지털인문예술전공
-          </span>
+        <Link
+          to="/"
+          onMouseEnter={close}
+          className="group/logo flex shrink-0 items-center"
+        >
+          {/* 높이 28: 11_DESIGN_V2 9절 명시값. hover 시 stroke 미세 글로우(색은 tokens.cosmos.star) */}
+          <img
+            src={logoUrl}
+            alt="디지털인문예술전공 홈"
+            style={{ '--logo-glow': cosmos.star }}
+            className="h-[28px] w-auto transition-[filter] duration-base ease-out group-hover/logo:[filter:drop-shadow(0_0_8px_var(--logo-glow))]"
+          />
         </Link>
 
-        <nav
-          aria-label="주 메뉴"
-          className="hidden items-center gap-32 lg:flex"
-        >
-          {nav.map((item) => (
+        <nav aria-label="주 메뉴" className="hidden h-full items-center lg:flex">
+          {nav.map((item, i) => (
             <NavLink
               key={item.to}
               to={item.to}
+              aria-expanded={openIndex === i}
+              onMouseEnter={() => setOpenIndex(i)}
+              onFocus={() => setOpenIndex(i)}
               className={({ isActive }) =>
-                `text-body-m transition-colors duration-fast ease-out hover:text-text-pri md:text-body-d ${
+                `flex h-full items-center px-16 text-body-d transition-colors duration-fast ease-out hover:text-text-pri ${
                   isActive ? 'text-text-pri' : 'text-text-sec'
                 }`
               }
@@ -66,15 +110,55 @@ function Header() {
               {item.label}
             </NavLink>
           ))}
-          <Button variant="secondary" href={site.links.exhibition} external>
-            Exhibition
-          </Button>
         </nav>
 
-        <div className="lg:hidden">
-          <MobileMenu />
+        <div onMouseEnter={close} className="flex shrink-0 items-center gap-16">
+          {/* EN 토글은 데스크탑 유틸만 — lg 미만은 GlassDock 확장부에 노출 */}
+          <span className="hidden lg:block">
+            <LangToggle />
+          </span>
+          <span aria-hidden="true" className="hidden h-16 w-px bg-border-subtle lg:block" />
+          {/* 로그인 상태: 비로그인 = 로그인 링크만 / 로그인 = 역할 뱃지 + 관리 진입 (편집 UI 미렌더 원칙) */}
+          {user ? (
+            <span className="flex items-center gap-8">
+              <Tag>{user.role}</Tag>
+              <Link to="/admin" className={utilLinkClass}>
+                관리
+              </Link>
+            </span>
+          ) : (
+            <Link to="/login" className={utilLinkClass}>
+              로그인
+            </Link>
+          )}
         </div>
       </div>
+
+      {/* 풀폭 메가메뉴 — KPC 방식. 즉답성 우선(11_DESIGN_V2 5절), 전환 애니메이션 없음 */}
+      {active && active.children.length > 0 && (
+        <div className="absolute inset-x-0 top-full hidden border-b border-glass-line bg-glass-bg backdrop-blur-glass lg:block">
+          <nav
+            aria-label={`${active.label} 하위 메뉴`}
+            className="mx-auto grid max-w-container grid-cols-4 gap-16 px-gutter-d py-32"
+          >
+            {active.children.map((child) => (
+              <Link
+                key={child.to}
+                to={child.to}
+                onClick={close}
+                className="rounded-md border border-transparent p-16 transition-colors duration-fast ease-out hover:border-glass-line hover:bg-glass-strong"
+              >
+                <span className="block text-body-d font-semibold text-text-pri">
+                  {child.label}
+                </span>
+                <span className="mt-4 block font-display text-caption-d uppercase tracking-label text-text-meta">
+                  {child.labelEn}
+                </span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
     </header>
   )
 }
