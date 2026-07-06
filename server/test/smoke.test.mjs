@@ -123,6 +123,36 @@ test('(d) /auth/login 성공 → 쿠키 2개 세트 + /auth/me 200', async () =>
   assert.equal(me.body.user.email, 'owner@test.dev')
 })
 
+test('(e) must_set_pw 계정 최초 로그인 → 그 자리에서 비번 등록 + 즉시 로그인 (병합 플로우)', async () => {
+  const userRow = { id: 3, email: 'newowner@test.dev', name: 'New Owner', role: 'owner', password_hash: null, must_set_pw: true }
+  let updateCall = null
+  const app = createApp({
+    db: mockDb((text, params) => {
+      if (text.includes('FROM users WHERE email')) return { rows: [userRow] }
+      if (text.startsWith('UPDATE users SET password_hash')) {
+        updateCall = params
+        return { rows: [{ id: 3, email: 'newowner@test.dev', name: 'New Owner', role: 'owner' }] }
+      }
+      return { rows: [] }
+    }),
+  })
+
+  const login = await request(app)
+    .post('/auth/login')
+    .send({ email: 'newowner@test.dev', password: 'whateverPw1' })
+  assert.equal(login.status, 200)
+  assert.equal(login.body.user.email, 'newowner@test.dev')
+
+  // 입력한 비밀번호가 그대로(별도 검증 없이) bcrypt 해시되어 저장 요청됐는지 확인
+  assert.ok(updateCall)
+  const storedHash = updateCall[0]
+  assert.ok(await bcrypt.compare('whateverPw1', storedHash))
+
+  const cookies = login.headers['set-cookie']
+  assert.ok(cookies.some((c) => c.startsWith('dah_access=') && c.includes('HttpOnly')))
+  assert.ok(cookies.some((c) => c.startsWith('dah_refresh=') && c.includes('HttpOnly')))
+})
+
 test('(추가) 공개 GET /content/notice — KPC식 페이지네이션 형태 {items,total,page,pageSize}', async () => {
   const app = createApp({
     db: mockDb((text) => {
