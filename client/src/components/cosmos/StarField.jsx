@@ -124,6 +124,10 @@ function StarField() {
   return (
     <div aria-hidden="true" className="fixed inset-0 -z-10 bg-cosmos-depth0">
       <canvas ref={canvasRef} className="h-full w-full" />
+      {/* COSMOS-TONE 3·5절: 히어로 무드를 페이지 전체에 은은히 흘림.
+          좌상 보라 / 우하 청록 비대칭 성운(각 accent 상한 0.05). 정적 gradient — blur 미사용, reduced-motion 무관. */}
+      <div className="pointer-events-none absolute inset-0 bg-nebula-violet" />
+      <div className="pointer-events-none absolute inset-0 bg-nebula-teal" />
     </div>
   )
 }

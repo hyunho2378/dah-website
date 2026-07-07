@@ -56,6 +56,13 @@
 - [!] 대표 문의 메일 미보유 → site.js에 mail 추가 시 Footer·Privacy 노출
 - [!] hero.mp4 미배치(사용자) / 고정페이지 titleEn 대문자 렌더(원할 시 proper-case 키 전달)
 
+## PHASE 4 v2 — 재실행 배치 (16_PHASE4_FIXES v2: F6·F8·FOOTER·COSMOS-TONE)
+- [x] F6 학생 성과 (검증): data/achievements.js 41건(2026:13·2025:13·2024:1·2023:9·2020:2·2019:3) 원문 유지, /students/achievements 연도 앵커+수직 리스트(성좌 없음), 홈 AchievementsHighlight 최근 3건 제목 리스트 — 이미 반영 확인. seed.mjs가 achievements→posts(type='achievement') 41건 삽입(SELECT COUNT=41 예상, 로컬 DB 미기동으로 라이브 쿼리 미실행)
+- [x] F8 공지 상세 T1 본문 복구: seed.mjs notice-01 body가 {paragraphs} 스텁(RichBody 렌더 불가)이었음 → 사용자 제공 원문 그대로 Tiptap doc JSON 9문단(메달→1등/2등/3등 텍스트, 마지막 줄 전시 URL 링크 마크)으로 교체. T1/T2 상세·AttachmentViewer(PDF iframe 640/모바일 카드)·리스트 내부 링크는 기존 반영분 유지
+- [x] FOOTER 전면 축소: Footer.jsx 재작성 — 사이트맵(nav.js)·Related 섹션 제거. logo.svg(h-24/28) + 학과명 3줄 + 정책 링크(개인정보처리방침|이용약관) + 카피라이트 "© 2026 디지털인문예술전공. All rights reserved.". 세로 패딩 축소(lg:py-48, 모바일 pb-96은 GlassDock 가림 방지). 상단 헤어라인 + bg-bg-elev(StarField 차단). site/nav/useLang/ArrowUpRight import 제거
+- [x] COSMOS-TONE 히어로 톤 연결: (1) HeroSection 하단 페이드 96→240px + QuickLinks 상단 여백 pt-80 확대 (2) tokens.js cosmos.accentViolet rgba(139,127,232,0.05)·accentTeal rgba(64,180,160,0.05) 추가, star 오프화이트 rgba(242,242,252,0.9)로 미세 보라 (3) tailwind bg-nebula-violet(좌상)·bg-nebula-teal(우하) 정적 radial 글로우 → StarField 전역 성운 2겹(blur 미사용, reduced-motion 무관) (4) GlassCard 상단 하이라이트 1px 화이트10% + 하단 그림자, hover 시 보라/청록 글로우 0.06 상한 (5) 모노크롬 유지(텍스트·보더 미채색)
+- [x] 검증: `npm run build` 성공(2004 modules), nebula-violet·nebula-teal CSS 방출 확인, `node --check seed.mjs` 통과. 잔여: 로컬 Postgres 미기동 → achievement/notice 라이브 COUNT·렌더는 DB 연결 후 재확인 필요
+
 ## 데이터 갭 (사용자 확인 필요)
 - [!] 교수 개별 사진: 미보유 → 이니셜 플레이스홀더로 v1 출시, 사진 확보 시 교체
 - [!] 수상 실적 원문 중 2021~2025 구간: source_content.md에서 확인 후 이관 (원문에 있는 것만)

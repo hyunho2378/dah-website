@@ -88,7 +88,12 @@ export const cosmos = {
   depth0: '#050607',   // 심우주 (페이지 최하층)
   depth1: '#08090A',   // 기존 base 유지
   nebula: 'radial-gradient(ellipse at var(--x) var(--y), rgba(255,255,255,0.04), transparent 60%)',
-  star: 'rgba(247,248,248,0.9)',
+  // COSMOS-TONE 5절: 순백 대신 아주 살짝 보라 섞인 오프화이트(구분 안 될 정도)
+  star: 'rgba(242,242,252,0.9)',
+  // COSMOS-TONE 2절: 히어로 무드 이색조 글로우 — 배경 성운(radial glow)에만 사용.
+  // 텍스트·보더·아이콘 사용 금지(모노크롬 유지). 채도는 거의 안 보일 수준(상한 0.06).
+  accentViolet: 'rgba(139,127,232,0.05)',
+  accentTeal: 'rgba(64,180,160,0.05)',
 };
 
 export const shadow = {

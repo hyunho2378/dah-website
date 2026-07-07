@@ -39,7 +39,8 @@ function QuickLinks({ settings }) {
     <section aria-label={t('quicklinks.label')}>
       <div className="mx-auto w-full max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide">
         <Reveal>
-          <ul className="flex flex-wrap gap-12 py-24 md:gap-16 md:py-32">
+          {/* COSMOS-TONE 1절: 히어로 하단 페이드와 이어지도록 상단 여백 확대 */}
+          <ul className="flex flex-wrap gap-12 pb-24 pt-48 md:gap-16 md:pb-32 md:pt-80">
             {links.map(({ key, to, label, Icon }) => (
               <li key={key} className="min-w-0">
                 <Link to={to} className="group inline-flex">

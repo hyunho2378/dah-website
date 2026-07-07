@@ -135,13 +135,38 @@ async function main() {
     const del = await client.query(`DELETE FROM posts WHERE type = ANY($1)`, [SEED_POST_TYPES])
     if (del.rowCount > 0) console.log(`[seed] 기존 posts(${SEED_POST_TYPES.join('·')}) ${del.rowCount}건 삭제 (시드 리셋)`)
 
+    // F8.1: 첫 게시물(notice-01) 본문 — 사용자 제공 원문 그대로(요약·변경 금지).
+    //   메달 이모지만 "1등/2등/3등" 텍스트로 치환. RichBody(Tiptap doc JSON) 계약에 맞춰 문단화.
+    const p = (text) => ({ type: 'paragraph', content: [{ type: 'text', text }] })
+    const featuredBody = {
+      type: 'doc',
+      content: [
+        p('안녕하세요, 디지털인문예술전공 제1대 운영위원회 LUCID입니다.'),
+        p('2026 디지털인문예술전공 신규 캐릭터 공모전 결과를 안내드립니다.'),
+        p('소중한 투표에 참여해 주신 모든 분들께 진심으로 감사드립니다.'),
+        p('1등 디숭이 (12표) 김지연 / 20232319 / 디지털인문예술전공'),
+        p('2등 디푸 (11표) 이지현 / 20236632 / 디지털인문예술전공'),
+        p('3등 도도 (9표) 조영은 / 20242577 / 미디어커뮤니케이션전공'),
+        p('수상을 진심으로 축하드리며, 추후 수상자 분들께 개별 연락 드릴 예정입니다.'),
+        p('출품자 전원 정보 공개와 함께 전시 페이지에서 수상작을 확인하실 수 있습니다.'),
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'https://dah-new-character-contest.vercel.app',
+              marks: [{ type: 'link', attrs: { href: 'https://dah-new-character-contest.vercel.app' } }],
+            },
+          ],
+        },
+      ],
+    }
+
     for (const n of notices) {
-      // F8.1: 첫 게시물(notice-01, 2026 신규 캐릭터 공모전 결과 공지)은 대내 태그 + 상단 고정 + 공모전 정보 본문
+      // F8.1: 첫 게시물(notice-01, 2026 신규 캐릭터 공모전 결과 공지)은 대내 태그 + 상단 고정 + 원문 본문
       const isFeatured = n.id === 'notice-01'
       const tag = isFeatured ? '대내' : n.org
-      const body = isFeatured
-        ? { paragraphs: ['주최: 디지털인문예술전공 제1대 운영위원회 LUCID'] } // source 359~363행 원문
-        : null
+      const body = isFeatured ? featuredBody : null
       await client.query(
         `INSERT INTO posts (type, title_ko, body, tag, external_url, pinned, published, created_at, updated_at)
          VALUES ('notice', $1, $2, $3, $4, $5, TRUE, $6, $6)`,

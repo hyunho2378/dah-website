@@ -56,7 +56,8 @@ function HeroSection({ settings }) {
       <div className="absolute inset-0 -z-10" aria-hidden="true">
         <HeroBackground />
         <div className="absolute inset-x-0 top-0 h-96 bg-gradient-to-b from-bg-base to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-bg-base to-transparent" />
+        {/* COSMOS-TONE 1절: 히어로→다음 섹션 심리스 — base로 향하는 하단 페이드 240px(영상 경계 은폐) */}
+        <div className="absolute inset-x-0 bottom-0 h-[240px] bg-gradient-to-t from-bg-base to-transparent" />
       </div>
 
       <Container className="py-section-m lg:py-section-d">

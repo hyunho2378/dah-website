@@ -49,6 +49,9 @@ export default {
       backgroundImage: {
         'glass-highlight': glass.highlight,
         nebula: cosmos.nebula,
+        // COSMOS-TONE 3절: 섹션·전역 배경 성운 글로우(비대칭 배치용). 좌상 보라 / 우하 청록.
+        'nebula-violet': `radial-gradient(ellipse 60% 50% at 15% 0%, ${cosmos.accentViolet}, transparent 70%)`,
+        'nebula-teal': `radial-gradient(ellipse 55% 45% at 85% 100%, ${cosmos.accentTeal}, transparent 70%)`,
       },
       fontFamily: {
         display: typography.family.display,
