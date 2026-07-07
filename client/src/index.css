@@ -37,29 +37,24 @@
 
   :focus-visible {
     @apply outline outline-2 outline-offset-2 outline-border-focus;
+    /* K2-9: 포커스 링 진입을 미세하게 부드럽게 — 토큰(motion.duration.fast) 경유,
+       reduced-motion은 하단 전역 미디어쿼리가 무효화 */
+    transition: outline-offset theme('transitionDuration.fast') theme('transitionTimingFunction.out');
   }
 }
 
 @layer components {
-  /* H6 — 공지 상세 밝은 카드: RichBody(토큰 다크 텍스트 클래스)를 라이트 배경용으로 반전.
-     텍스트는 text.invert(#08090A), 구분선·표·코드 배경은 다크 톤 파생값. */
-  .rich-on-light :is(p, li, dd, td, span, em, s, u) {
-    @apply text-text-invert;
+  /* K2-3 — 공지 상세 다크 본문: RichBody 기본(p·li text-sec, 행간 1.7)을
+     본문 가독 기준(text.pri, 행간 1.8)으로 상향. 토큰 클래스 @apply 경유. */
+  .rich-bright :is(p, li, dd, td) {
+    @apply leading-[1.8] text-text-pri;
   }
-  .rich-on-light :is(h2, h3, strong, th, a, blockquote) {
-    @apply text-text-invert;
-  }
-  .rich-on-light :is(hr, blockquote, td, th, img, pre) {
-    @apply border-border-invert;
-  }
-  .rich-on-light li {
-    @apply marker:text-text-invert/50;
-  }
-  .rich-on-light :is(pre, code, th) {
-    @apply bg-text-invert/5;
-  }
-  .rich-on-light a {
-    @apply decoration-text-invert/40 hover:decoration-text-invert;
+
+  /* K2-9 — 페이지 전환 크로스페이드: App의 라우트 키 래퍼가 재마운트될 때
+     opacity 0→1(translate 금지). duration·ease는 motion 토큰 경유,
+     reduced-motion은 하단 전역 미디어쿼리(animation: none)가 처리. */
+  .page-fade {
+    animation: page-fade theme('transitionDuration.fast') theme('transitionTimingFunction.out') both;
   }
 
   /* DESIGN.md 4절 — 링크 언더라인 좌→우 draw (250ms).
@@ -77,6 +72,15 @@
   .group:hover .link-underline::after,
   .group:focus-visible .link-underline::after {
     @apply w-full;
+  }
+}
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

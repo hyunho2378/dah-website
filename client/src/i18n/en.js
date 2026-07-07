@@ -24,6 +24,7 @@ export const en = {
     mentors: 'Mentors',
     curriculum: 'Curriculum',
     codesharing: 'Code Sharing',
+    nanodegree: 'Nanodegree',
     exhibitions: 'Exhibitions',
     contests: 'Contests',
     lectures: 'Lectures',
@@ -50,13 +51,14 @@ export const en = {
     missionVision: 'Mission & Vision',
     history: 'History',
     graduate: 'Graduate Program',
-    roadmap: '4-Year Roadmap',
+    roadmap: 'Curriculum by Year',
     relatedCourses: 'Courses',
     procedure: 'Approval Process',
     departments: 'Eligible Departments',
     faculty: 'Faculty',
     mentors: 'Industry Mentors',
     codesharing: 'Code Sharing',
+    nanodegree: 'Nanodegree Programs',
     employment: 'Employment',
     portfolio: 'Student Portfolios',
     members: 'Members',
@@ -141,12 +143,20 @@ export const en = {
     compositionTitle: 'Committee Members',
   },
   curriculum: {
-    grade: 'Year',
+    // K2-11: table label "학년" → "수준"
+    grade: 'Level',
     gradeSuffix: 'Y',
     course: 'Course',
     credit: 'Credit-Lecture-Lab',
     sem1: 'Semester 1',
     sem2: 'Semester 2',
+  },
+  // K2-13: nanodegree render labels
+  nanodegree: {
+    cert: 'Certification',
+    programs: 'Programs',
+    courses: 'Recognized Courses',
+    partner: 'Partner Organization',
   },
   news: {
     searchPlaceholder: 'Search notices',
@@ -170,5 +180,6 @@ export const en = {
     address: '1 Hallymdaehak-gil, Chuncheon, Gangwon State, Republic of Korea',
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
+    consult: 'Consultation',
   },
 };

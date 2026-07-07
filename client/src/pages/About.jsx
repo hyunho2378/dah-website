@@ -2,6 +2,7 @@ import PageBanner from '../components/layout/PageBanner'
 import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
+import ArrowLink from '../components/common/ArrowLink'
 import { useTitle } from '../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { history } from '../data/history'
@@ -57,6 +58,61 @@ const COPY = {
 
 const MISSION_EN = 'We combine human insight and digital creativity to build a better future.'
 
+// K2-8 미션·비전 아이콘 3종 — 모노크롬 스트로크(인라인 SVG, 장식용 aria-hidden)
+// 공통: viewBox 24, fill none, stroke currentColor 1.5, 렌더 48px, 색은 텍스트 토큰만
+const visionIconProps = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: '1.5',
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': 'true',
+  className: 'h-48 w-48 text-text-sec',
+}
+
+// 1. 창의적 리더 — 사람 실루엣 + 머리 위 전구
+function IconLeader() {
+  return (
+    <svg {...visionIconProps}>
+      <path d="M9.75 4.75a2.25 2.25 0 0 1 4.5 0c0 .9-.5 1.45-1 1.95-.3.3-.5.6-.5 1.05h-1.5c0-.45-.2-.75-.5-1.05-.5-.5-1-1.05-1-1.95Z" />
+      <path d="M11 9.75h2" />
+      <path d="M5.75 3.5l1.1.85M18.25 3.5l-1.1.85" />
+      <circle cx="12" cy="13.75" r="2.25" />
+      <path d="M6.75 20.75c0-2.6 2.35-4 5.25-4s5.25 1.4 5.25 4" />
+    </svg>
+  )
+}
+
+// 2. 융합 지식 — 펼친 책 + 교차 궤도(원자 타원 2개)
+function IconKnowledge() {
+  return (
+    <svg {...visionIconProps}>
+      <ellipse cx="12" cy="12" rx="10" ry="4.25" transform="rotate(-18 12 12)" />
+      <ellipse cx="12" cy="12" rx="10" ry="4.25" transform="rotate(18 12 12)" />
+      <path d="M12 8.9c-1.3-.85-2.95-1.15-4.75-1.15v8.5c1.8 0 3.45.3 4.75 1.15 1.3-.85 2.95-1.15 4.75-1.15v-8.5c-1.8 0-3.45.3-4.75 1.15Z" />
+      <path d="M12 8.9v8.5" />
+    </svg>
+  )
+}
+
+// 3. 지속가능 생태계 — 지구(원 + 경위선) + 순환 화살표
+function IconEcosystem() {
+  return (
+    <svg {...visionIconProps}>
+      <circle cx="12" cy="12" r="6.25" />
+      <path d="M5.75 12h12.5" />
+      <path d="M12 5.75c2.1 1.75 3.1 3.85 3.1 6.25s-1 4.5-3.1 6.25c-2.1-1.75-3.1-3.85-3.1-6.25s1-4.5 3.1-6.25Z" />
+      <path d="M20.75 8.25A9.6 9.6 0 0 0 12 2.4" />
+      <path d="M20.75 5v3.25H17.5" />
+      <path d="M3.25 15.75A9.6 9.6 0 0 0 12 21.6" />
+      <path d="M3.25 19v-3.25H6.5" />
+    </svg>
+  )
+}
+
+const VISION_ICONS = [IconLeader, IconKnowledge, IconEcosystem]
+
 // About 전용 조각 — 연혁 타임라인 (수직: 좌측 헤어라인 세로선 + 좌 mono 날짜 + 우 내용)
 function HistoryTimeline({ items }) {
   if (items.length === 0) return null
@@ -103,15 +159,16 @@ function About() {
         <Container as="section" className="pt-section-m md:pt-section-d">
           <Reveal>
             <SectionLabel index="01" text="OVERVIEW" />
-            <p className="mt-32 max-w-[720px] text-h3-m font-medium leading-[1.8] text-text-pri md:mt-40 md:text-h3-d">
+            {/* K2-5: 리드·문단 max-w 720 → 960(가독 상한) — 절반 꺾임 해소 */}
+            <p className="mt-32 max-w-[960px] text-h3-m font-medium leading-[1.8] text-text-pri md:mt-40 md:text-h3-d">
               {copy.what}
             </p>
           </Reveal>
           <Reveal className="mt-64 border-t border-border-subtle pt-48 md:mt-96 md:pt-64">
-            <h2 className="max-w-[720px] text-h2-m font-bold leading-snug tracking-display text-text-pri md:text-h2-d">
+            <h2 className="max-w-[960px] text-h2-m font-bold leading-snug tracking-display text-text-pri md:text-h2-d">
               {copy.whyStatement}
             </h2>
-            <p className="mt-24 max-w-[720px] text-body-l-m leading-[1.8] text-text-sec md:mt-32 md:text-body-l-d">
+            <p className="mt-24 max-w-[960px] text-body-l-m leading-[1.8] text-text-sec md:mt-32 md:text-body-l-d">
               {copy.whyLead}
             </p>
           </Reveal>
@@ -128,7 +185,7 @@ function About() {
               <h2 className="mt-16 max-w-4xl text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:text-h2-d">
                 {MISSION_EN}
               </h2>
-              <p className="mt-24 max-w-[720px] text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
+              <p className="mt-24 max-w-[960px] text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
                 {copy.missionKr}
               </p>
             </div>
@@ -139,9 +196,17 @@ function About() {
               Vision
             </p>
             <div className="mt-24 grid gap-32 md:grid-cols-3">
-              {copy.vision.map((item, i) => (
+              {copy.vision.map((item, i) => {
+                const Icon = VISION_ICONS[i]
+                return (
                 <Reveal key={item.title} delay={i < 6 ? i * motion.stagger : 0}>
                   <div className="border-t border-border-subtle pt-24">
+                    {/* K2-8: 비전 항목 카드 상단 아이콘 */}
+                    {Icon && (
+                      <div className="mb-20">
+                        <Icon />
+                      </div>
+                    )}
                     <h3 className="text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
                       {item.title}
                     </h3>
@@ -150,7 +215,8 @@ function About() {
                     </p>
                   </div>
                 </Reveal>
-              ))}
+                )
+              })}
             </div>
           </div>
         </Container>
@@ -168,10 +234,16 @@ function About() {
               </h2>
             </Reveal>
             <div className="mt-48 md:mt-64">
-              <HistoryTimeline items={history} />
+              {/* K2-7: 최신 연도 최상단(내림차순) — 데이터 원문 순서(오름차순)는 유지, 렌더에서만 정렬 */}
+              <HistoryTimeline items={[...history].sort((a, b) => b.date.localeCompare(a.date))} />
             </div>
           </Container>
         )}
+
+        {/* K1-9.5: 전공소개 하단 상담 신청 텍스트 링크 */}
+        <Container as="section" className="pt-section-m md:pt-section-d">
+          <ArrowLink href="/consult">{t('footer.consult')}</ArrowLink>
+        </Container>
       </div>
     </>
   )

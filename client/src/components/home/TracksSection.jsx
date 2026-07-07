@@ -25,7 +25,8 @@ function TracksSection() {
           </h2>
         </Reveal>
 
-        <div className="mt-64 grid gap-24 md:grid-cols-3">
+        {/* K2-14: 1→3열 급전환 대신 auto-fill — 300px = 3열 기준 카드폭(약 360px) 근사 하한 */}
+        <div className="mt-64 grid gap-24 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))]">
           {tracks.map((track, i) => (
             <Reveal key={track.id} delay={i < 6 ? i * motion.stagger : 0}>
               <GlassCard hover className="flex h-full flex-col p-24 md:p-32">

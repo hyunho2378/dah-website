@@ -43,7 +43,13 @@ export function switchHref(pathname) {
 // 어드민·제출 플로우(국문 전용)와 이미 프리픽스된 경로는 그대로 둔다.
 export function localizeTo(lang, to) {
   if (lang !== 'en' || typeof to !== 'string' || !to.startsWith('/')) return to
-  if (to === '/en' || to.startsWith('/en/') || to.startsWith('/admin') || to.startsWith('/submit'))
+  if (
+    to === '/en' ||
+    to.startsWith('/en/') ||
+    to.startsWith('/admin') ||
+    to.startsWith('/submit') ||
+    to.startsWith('/consult')
+  )
     return to
   return to === '/' ? '/en' : `/en${to}`
 }

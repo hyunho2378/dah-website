@@ -107,38 +107,30 @@ function Council() {
           </p>
         ) : (
           <div className="mt-48 flex min-w-0 flex-col gap-48">
-            {/* T4 헤더: 로고 + 기수명 + 소개 */}
-            <div className="flex flex-col items-start gap-24 md:flex-row md:gap-48">
-              <div className="flex h-96 w-96 shrink-0 items-center justify-center overflow-hidden rounded-glass border border-glass-line bg-glass-bg p-8">
-                {active.logo_url ? (
+            {/* T4 헤더 (K2-4): 로고(박스 없이 이미지만, 1.5배 h-144) + 타이틀 한 줄 수직 중앙 정렬.
+                타이틀은 "{연도} {기수라벨 포함 이름}" 한 줄 합성. 로고 없으면 미표시(빈 박스 금지). */}
+            <div className="flex min-w-0 flex-col gap-24">
+              <div className="flex min-w-0 flex-wrap items-center gap-24 md:gap-32">
+                {active.logo_url && (
                   <img
                     src={active.logo_url}
                     alt={`${active.name} 로고`}
                     loading="lazy"
-                    className="h-full w-full object-contain"
+                    className="h-96 w-auto shrink-0 object-contain md:h-144"
                   />
-                ) : (
-                  <span className="font-mono text-caption-m text-text-meta">
-                    {active.ordinal ? `${active.ordinal}기` : 'LOGO'}
-                  </span>
                 )}
-              </div>
-              <div className="flex min-w-0 flex-col gap-12">
-                <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-                  {active.year_label}
-                </p>
-                <div className="flex flex-wrap items-center gap-12">
+                <div className="flex min-w-0 flex-wrap items-center gap-12">
                   <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
-                    {active.name}
+                    {[active.year_label, active.name].filter(Boolean).join(' ')}
                   </h2>
                   <EditPencil type="council" to="/admin/council" />
                 </div>
-                {introText && (
-                  <p className="max-w-[760px] whitespace-pre-line text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
-                    {introText}
-                  </p>
-                )}
               </div>
+              {introText && (
+                <p className="max-w-[960px] whitespace-pre-line text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
+                  {introText}
+                </p>
+              )}
             </div>
 
             {/* J6: 구성 — eyebrow + 제목 + 부서별 행 리스트(좌 라벨 / 우 이름, 헤어라인) */}

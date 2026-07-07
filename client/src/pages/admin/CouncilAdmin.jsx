@@ -31,9 +31,13 @@ function toPayload(form) {
   }
 }
 
-// 아카이브형 — 최신 기수 우선 (서버 orderBy와 동일)
+// K1-8: 공개 페이지와 동일 — 연도 라벨 숫자 내림차순 (2026 LUCID 최상단, 서버 orderBy와 동일)
 function sortFn(a, b) {
-  return (b.ordinal ?? 0) - (a.ordinal ?? 0) || (a.sort ?? 0) - (b.sort ?? 0) || (a.id ?? 0) - (b.id ?? 0)
+  return (
+    (Number(b.year_label) || 0) - (Number(a.year_label) || 0) ||
+    (a.sort ?? 0) - (b.sort ?? 0) ||
+    (a.id ?? 0) - (b.id ?? 0)
+  )
 }
 
 function CouncilAdmin() {

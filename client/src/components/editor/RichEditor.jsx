@@ -104,6 +104,7 @@ function ToolDivider() {
 function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
   const [urlMode, setUrlMode] = useState(null) // null | 'link' | 'embed'
   const [urlValue, setUrlValue] = useState('')
+  const [linkText, setLinkText] = useState('') // K1-4: 링크 표시 이름 (본문 생 URL 노출 금지)
   const [urlError, setUrlError] = useState(null)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef(null)
@@ -148,6 +149,7 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
 
   const openUrlInput = (mode) => {
     setUrlError(null)
+    setLinkText('')
     if (urlMode === mode) {
       setUrlMode(null)
       return
@@ -156,17 +158,40 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
     setUrlValue(mode === 'link' ? editor.getAttributes('link').href || '' : '')
   }
 
+  // K1-4: 선택 텍스트가 있으면 그 텍스트에 링크, 없으면 표시 이름 필수 (생 URL 삽입 금지)
+  const hasSelection = !editor.state.selection.empty
+  const onExistingLink = editor.isActive('link')
+  const canApplyLink =
+    urlMode !== 'link' ||
+    (urlValue.trim()
+      ? hasSelection || onExistingLink || linkText.trim() !== ''
+      : onExistingLink)
+
   const applyUrl = () => {
     const url = urlValue.trim()
     setUrlError(null)
     if (urlMode === 'link') {
+      if (!canApplyLink) return
       if (!url) {
+        // URL을 비우면 기존 링크 해제
         editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      } else if (!hasSelection && !onExistingLink) {
+        // 선택 없음 — 표시 이름 텍스트를 삽입하고 링크 적용
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'text',
+            text: linkText.trim(),
+            marks: [{ type: 'link', attrs: { href: url } }],
+          })
+          .run()
       } else {
         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
       }
       setUrlMode(null)
       setUrlValue('')
+      setLinkText('')
       return
     }
     // 임베드 3종 판별 — 유튜브 / 피그마 / 구글 슬라이드
@@ -337,9 +362,9 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
         )}
       </div>
 
-      {/* URL 입력 행 — 링크·임베드 공용 */}
+      {/* URL 입력 행 — 링크(URL+표시 이름 2필드)·임베드 공용 */}
       {urlMode && (
-        <div className="flex items-center gap-8 rounded-sm border border-glass-line bg-glass-bg px-12 py-4 backdrop-blur-glass-mobile">
+        <div className="flex flex-wrap items-center gap-8 rounded-sm border border-glass-line bg-glass-bg px-12 py-4 backdrop-blur-glass-mobile">
           <input
             type="url"
             value={urlValue}
@@ -357,7 +382,29 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
             aria-label={urlMode === 'link' ? '링크 URL' : '임베드 URL'}
             className="h-32 min-w-0 flex-1 bg-transparent font-mono text-small-m text-text-pri outline-none placeholder:text-text-meta"
           />
-          <ToolButton label="적용" onClick={applyUrl}>
+          {urlMode === 'link' && (
+            <input
+              type="text"
+              value={linkText}
+              onChange={(e) => setLinkText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  applyUrl()
+                }
+                if (e.key === 'Escape') setUrlMode(null)
+              }}
+              placeholder={
+                hasSelection || onExistingLink
+                  ? '선택한 텍스트에 적용됩니다'
+                  : '표시 이름 (필수)'
+              }
+              disabled={hasSelection || onExistingLink}
+              aria-label="링크 표시 이름"
+              className="h-32 min-w-0 flex-1 bg-transparent text-small-m text-text-pri outline-none placeholder:text-text-meta disabled:opacity-40"
+            />
+          )}
+          <ToolButton label="적용" onClick={applyUrl} disabled={!canApplyLink}>
             <Check size={16} />
           </ToolButton>
           <ToolButton label="닫기" onClick={() => setUrlMode(null)}>

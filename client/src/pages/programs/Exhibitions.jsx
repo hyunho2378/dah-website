@@ -78,7 +78,9 @@ function Exhibitions() {
             {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
-          <ul className="mt-32 grid grid-cols-2 gap-16 md:grid-cols-3 md:gap-24 lg:grid-cols-4">
+          <ul className="mt-32 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
+            {/* K2-14: 포스터 그리드 유동화 — 220px는 기존 lg 4열 카드폭(약 260px) 근사 하한,
+                40vw 상한으로 모바일 2열 유지. 열 수가 뷰포트에 연속 대응(급전환 없음) */}
             {items.map((item, index) => (
               <Reveal as="li" key={item.id} delay={staggerDelay(index)} className="min-w-0">
                 <PosterCard item={item} />

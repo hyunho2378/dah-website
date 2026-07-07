@@ -83,6 +83,16 @@ export const CONTENT_TYPES = {
     orderBy: 'id ASC',
     searchCols: [],
   },
+  nanodegree: {
+    table: 'nanodegree',
+    minRole: 'admin',
+    singleton: true, // 단일 문서 (id=1 고정, codesharing과 동일 패턴)
+    columns: ['body'],
+    jsonb: ['body'],
+    required: [],
+    orderBy: 'id ASC',
+    searchCols: [],
+  },
   council: {
     table: 'council',
     minRole: 'admin',

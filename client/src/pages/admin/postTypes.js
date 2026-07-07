@@ -5,12 +5,13 @@ export const POST_TYPES = {
   notice: {
     label: '공지사항',
     template: 't1',
-    tags: ['대내', '대외', '공모전모집', '특강모집'],
+    tags: true, // K1-1: 공용 태그 저장소(GET /tags) 사용 — 하드코딩 배열 없음
+    attachments: true, // 공지도 문서 첨부 허용 (content-config notice attachments)
   },
   resource: {
     label: '자료실',
     template: 't1',
-    attachments: true, // 첨부(Blob) — gallery jsonb에 [{ name, url }]로 저장
+    attachments: true, // 첨부(Blob) — attachments jsonb에 [{ name, url }]로 저장 (K1-3)
   },
   club: {
     label: '동아리',

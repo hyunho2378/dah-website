@@ -81,17 +81,16 @@ export function Toggle({ checked = false, onChange, label, disabled = false }) {
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange && onChange(!checked)}
-      // H7.2: 켜짐 = 내부 전체 화이트 채움 + 어두운 노브, 꺼짐 = 아웃라인만
-      className={`inline-flex h-24 w-40 shrink-0 cursor-pointer items-center rounded-sm border px-4 transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
-        checked
-          ? 'justify-end border-bg-invert bg-bg-invert'
-          : 'justify-start border-border-strong bg-transparent'
+      // K1-5 알약형: 트랙·노브 rounded-full. 켜짐 = 트랙 화이트 + 어두운 노브, 꺼짐 = 아웃라인 + 회색 노브.
+      // 크기 완전 고정(h-24 w-40, border 두께 상태 무관 1px) — 노브만 translate로 이동, 주변 불변.
+      className={`relative inline-flex h-24 w-40 shrink-0 cursor-pointer items-center rounded-full border transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
+        checked ? 'border-bg-invert bg-bg-invert' : 'border-border-strong bg-transparent'
       }`}
     >
       <span
         aria-hidden="true"
-        className={`h-16 w-16 rounded-sm transition duration-fast ease-out ${
-          checked ? 'bg-text-invert' : 'bg-text-meta'
+        className={`absolute left-4 top-1/2 h-16 w-16 -translate-y-1/2 rounded-full transition duration-fast ease-out ${
+          checked ? 'translate-x-16 bg-text-invert' : 'translate-x-0 bg-text-meta'
         }`}
       />
     </button>

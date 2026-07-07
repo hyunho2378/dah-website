@@ -11,14 +11,15 @@ import { useTitle } from '../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { notices } from '../data/notices'
 
-// 필터 값(value)은 API 파라미터로 그대로 전송 — 표시명(key)만 사전(news.tags.*)에서 조회
-const TAG_DEFS = [
-  { value: '전체', key: 'all' },
-  { value: '대내', key: 'internal' },
-  { value: '대외', key: 'external' },
-  { value: '공모전모집', key: 'contest' },
-  { value: '특강모집', key: 'lecture' },
-]
+// 필터 값(value)은 API 파라미터로 그대로 전송 — 알려진 태그는 표시명만 사전(news.tags.*) 조회,
+// 그 외 서버 태그는 원문 그대로 표시.
+// K1 데이터 계약: GET /tags → { items: ['태그명', …] }. 빈 배열·미응답이면 '전체'만 표시.
+const KNOWN_TAG_KEYS = {
+  대내: 'internal',
+  대외: 'external',
+  공모전모집: 'contest',
+  특강모집: 'lecture',
+}
 const PAGE_SIZE = 10
 
 // API 게시글 → 게시판 행
@@ -54,6 +55,16 @@ function News() {
       tag: tag === '전체' ? undefined : tag,
     },
   })
+
+  // 공개 태그 목록 — 서버 태그가 없으면 '전체'만
+  const tagsRes = useApi('/tags')
+  const serverTags = (
+    Array.isArray(tagsRes.data?.items) ? tagsRes.data.items : []
+  ).filter((v) => typeof v === 'string' && v)
+  const tagDefs = [
+    { value: '전체', key: 'all' },
+    ...serverTags.map((value) => ({ value, key: KNOWN_TAG_KEYS[value] ?? null })),
+  ]
 
   // 정적 폴백: 클라이언트 측 필터·검색·페이지네이션
   const fallback = useMemo(() => {
@@ -96,7 +107,7 @@ function News() {
       <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-12">
           <div role="group" aria-label={t('aria.tagFilter')} className="flex flex-wrap gap-8">
-            {TAG_DEFS.map((def) => {
+            {tagDefs.map((def) => {
               const isActive = def.value === tag
               return (
                 <button
@@ -113,7 +124,7 @@ function News() {
                       : 'border-border-subtle text-text-sec hover:border-border-strong hover:text-text-pri'
                   }`}
                 >
-                  {t(`news.tags.${def.key}`)}
+                  {def.key ? t(`news.tags.${def.key}`) : def.value}
                 </button>
               )
             })}

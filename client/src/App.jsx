@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LoginModalProvider } from './context/LoginModalContext'
 import { LangProvider } from './i18n/LangContext'
@@ -15,6 +15,7 @@ import About from './pages/About'
 import People from './pages/People'
 import Curriculum from './pages/Curriculum'
 import CodeSharing from './pages/CodeSharing'
+import Nanodegree from './pages/Nanodegree'
 import Exhibitions from './pages/programs/Exhibitions'
 import ExhibitionDetail from './pages/programs/ExhibitionDetail'
 import Contests from './pages/programs/Contests'
@@ -30,6 +31,7 @@ import ShowcaseDetail from './pages/showcase/ShowcaseDetail'
 import ShowcaseSubmit from './pages/showcase/ShowcaseSubmit'
 import ExhibitSubmit from './pages/submit/ExhibitSubmit'
 import ExhibitEdit from './pages/submit/ExhibitEdit'
+import Consult from './pages/Consult'
 import News from './pages/News'
 import NewsDetail from './pages/NewsDetail'
 import Resources from './pages/Resources'
@@ -40,6 +42,17 @@ import NotFound from './pages/NotFound'
 // 어드민(Tiptap 포함)은 코드 분할 — 공개 방문자는 다운로드하지 않는다
 const AdminRoutes = lazy(() => import('./pages/AdminRoutes'))
 
+// K2-9: 페이지 전환 크로스페이드 — pathname 키로 재마운트 → .page-fade(opacity 0→1,
+// motion 토큰 duration-fast, translate 금지). reduced-motion은 index.css 전역 미디어쿼리가 무효화.
+function PageFade({ children }) {
+  const { pathname } = useLocation()
+  return (
+    <div key={pathname} className="page-fade">
+      {children}
+    </div>
+  )
+}
+
 // 공개 콘텐츠 라우트 — ko 원본과 /en 미러 1:1 (14_ROUTES_V2).
 // 접수·제출·로그인 플로우는 국문만(v2 스코프)이라 미러에서 제외.
 const PUBLIC_ROUTES = [
@@ -48,6 +61,7 @@ const PUBLIC_ROUTES = [
   { path: '/about/people', element: <People /> },
   { path: '/curriculum', element: <Curriculum /> },
   { path: '/curriculum/codesharing', element: <CodeSharing /> },
+  { path: '/curriculum/nanodegree', element: <Nanodegree /> },
   { path: '/programs/exhibitions', element: <Exhibitions /> },
   { path: '/programs/exhibitions/:id', element: <ExhibitionDetail /> },
   { path: '/programs/contests', element: <Contests /> },
@@ -77,6 +91,7 @@ function App() {
           <ScrollToTop />
           <Header />
           <main className="relative">
+            <PageFade>
             <Routes>
               {PUBLIC_ROUTES.map(({ path, element }) => (
                 <Route key={path} path={path} element={element} />
@@ -90,10 +105,11 @@ function App() {
                 />
               ))}
 
-              {/* 제출·접수 플로우 (국문만) */}
+              {/* 제출·접수·상담 플로우 (국문만, 폼 문안 원문 보존) */}
               <Route path="/showcase/submit" element={<ShowcaseSubmit />} />
               <Route path="/submit" element={<ExhibitSubmit />} />
               <Route path="/submit/edit" element={<ExhibitEdit />} />
+              <Route path="/consult" element={<Consult />} />
 
               {/* 관리 (지연 로드, 라우트별 RequireRole은 AdminRoutes 내부) */}
               <Route
@@ -119,6 +135,7 @@ function App() {
 
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </PageFade>
           </main>
           <Footer />
           <GlassDock />

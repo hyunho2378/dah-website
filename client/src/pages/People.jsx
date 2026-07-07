@@ -157,7 +157,7 @@ function People() {
               {t('common.empty')}
             </p>
           ) : (
-            <div className="mt-48 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
+            <div className="mt-48 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
               {professors.map((professor, index) => (
                 <Reveal key={professor.id} delay={staggerDelay(index)}>
                   <ProfessorCard professor={professor} lang={lang} />
@@ -183,7 +183,7 @@ function People() {
               {t('common.empty')}
             </p>
           ) : (
-            <div className="mt-48 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
+            <div className="mt-48 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
               {mentors.map((mentor, index) => (
                 <Reveal key={mentor.id} delay={staggerDelay(index)}>
                   <MentorCard mentor={mentor} />

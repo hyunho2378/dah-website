@@ -55,7 +55,8 @@ function CodeSharing() {
             <p className="mt-24 max-w-4xl text-h3-m font-bold leading-snug tracking-display text-text-pri md:mt-32 md:text-h3-d">
               {definition}
             </p>
-            <p className="mt-16 max-w-[640px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+            {/* K2-5: 문단 max-w 640 → 960(가독 상한) — 절반 꺾임 해소 */}
+            <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
               {note}
             </p>
             {/* 글래스 다운로드 버튼 — 파일 슬롯 예약(파일명 고정: codesharing-form.hwp) */}
@@ -103,7 +104,7 @@ function CodeSharing() {
                 {t('sections.departments')} {codeSharing.departments.length}
               </h2>
               {limitNote && (
-                <p className="mt-16 max-w-[640px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
                   {limitNote}
                 </p>
               )}

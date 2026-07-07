@@ -1,8 +1,9 @@
-// src/routes/upload.js — 이미지·문서 업로드 (12_BACKEND.md 0·1·6절)
+// src/routes/upload.js — 이미지·문서 업로드 (12_BACKEND.md 0·1·6절, Phase 9 K1-2 형식 확대)
 // 이미지: multer 메모리 → sharp WebP 변환(원본 폐기) → Vercel Blob.
-// 문서(PDF·HWP): sharp 파이프라인 우회 → 원본 그대로 Blob/로컬 저장 (공지·자료실 첨부용).
+// 문서(hwp·hwpx·pdf·docx·xlsx·pptx·zip): sharp 파이프라인 우회 → 원본 그대로 Blob/로컬 저장.
+// 판정: 확장자+mimetype 병행, 확장자 블록리스트(exe·sh·bat·js·cmd·msi) 우선. 용량 상한 20MB.
 // 리사이즈(이미지): 기본 최장변 1600 / usage=poster 2400 / usage=showcase 1920x1080(16:9 강제).
-// 역할·용도별 제한: 비로그인은 showcase·exhibition 용도만 허용 + rate limit. 문서(usage=document)는 로그인 필요.
+// 역할·용도별 제한: 비로그인은 showcase·exhibition 용도(이미지)만 허용 + rate limit. 문서는 로그인 필요.
 // BLOB_READ_WRITE_TOKEN 미설정 시 로컬 폴백: server/uploads/ 저장 (개발용 — 프로덕션에서는 반드시 Blob).
 import { Router } from 'express'
 import multer from 'multer'
@@ -17,21 +18,30 @@ import { wrap } from './content.js'
 
 const router = Router()
 
-const MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 const PUBLIC_USAGES = ['showcase', 'exhibition'] // 비로그인 허용 용도 (쇼케이스 제출·전시회 접수)
 const WEBP_QUALITY = 82
 
-// 문서 첨부 허용 MIME (PDF·HWP). sharp 우회, 원본 그대로 저장.
-const DOCUMENT_MIMES = new Set([
-  'application/pdf',
-  'application/x-hwp',
-  'application/haansofthwp',
-])
-// MIME → 저장 확장자 (원본 확장자 유지)
-const DOCUMENT_EXT = {
-  'application/pdf': 'pdf',
-  'application/x-hwp': 'hwp',
-  'application/haansofthwp': 'hwp',
+// 확장자 화이트리스트 (K1-2). 이미지는 WebP 파이프, 문서는 원본 그대로.
+const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+const DOC_EXTS = ['hwp', 'hwpx', 'pdf', 'docx', 'xlsx', 'pptx', 'zip']
+// 실행 계열 블록리스트 — 화이트리스트·mimetype 판정보다 우선
+const BLOCKED_EXTS = ['exe', 'sh', 'bat', 'js', 'cmd', 'msi']
+
+// 저장 시 Content-Type (브라우저 mimetype이 비거나 octet-stream일 때 폴백)
+const DOC_CONTENT_TYPES = {
+  hwp: 'application/x-hwp',
+  hwpx: 'application/haansofthwpx',
+  pdf: 'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  zip: 'application/zip',
+}
+
+function extOf(filename) {
+  const m = /\.([A-Za-z0-9]+)$/.exec(String(filename || ''))
+  return m ? m[1].toLowerCase() : ''
 }
 
 export const UPLOADS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads')
@@ -40,9 +50,20 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter: (req, file, cb) => {
+    const ext = extOf(file.originalname)
+    // 1) 블록리스트 우선 — mimetype이 무엇이든 차단
+    if (BLOCKED_EXTS.includes(ext)) {
+      const err = new Error(`blocked file type: .${ext}`)
+      err.status = 400
+      return cb(err)
+    }
+    // 2) 확장자 화이트리스트
+    if (IMAGE_EXTS.includes(ext) || DOC_EXTS.includes(ext)) return cb(null, true)
+    // 3) mimetype 병행 — 확장자가 불명확한 이미지(heic 등)는 sharp 파이프로 수용
     if (file.mimetype?.startsWith('image/')) return cb(null, true)
-    if (DOCUMENT_MIMES.has(file.mimetype)) return cb(null, true)
-    const err = new Error('only image or PDF/HWP document uploads are allowed')
+    const err = new Error(
+      `unsupported file type — allowed: ${[...IMAGE_EXTS, ...DOC_EXTS].join(', ')}`
+    )
     err.status = 400
     cb(err)
   },
@@ -66,14 +87,23 @@ router.post(
       return res.status(403).json({ error: 'login required for this upload usage', allowed: PUBLIC_USAGES })
     }
 
-    // ── 문서(PDF·HWP) 분기: sharp 우회, 원본 그대로 저장 ──
-    // usage=document 또는 MIME이 문서면 문서 처리. 문서는 비로그인 금지(위 PUBLIC_USAGES 검사에서 이미 차단).
-    const isDocument = usage === 'document' || DOCUMENT_MIMES.has(req.file.mimetype)
-    if (isDocument) {
-      if (!DOCUMENT_MIMES.has(req.file.mimetype)) {
-        return res.status(400).json({ error: 'document upload requires a PDF or HWP file', mimetype: req.file.mimetype })
+    // ── 문서 분기: 이미지가 아니면 sharp 우회, 원본 그대로 저장 ──
+    // 이미지 판정: 확장자 우선, 확장자 불명 시 mimetype 병행 (K1-2)
+    const srcExt = extOf(req.file.originalname)
+    const isImage =
+      IMAGE_EXTS.includes(srcExt) ||
+      (!DOC_EXTS.includes(srcExt) && req.file.mimetype?.startsWith('image/'))
+    if (!isImage) {
+      // 문서는 로그인 필요 (비로그인 공개 용도는 이미지 제출 전용)
+      if (!req.user) {
+        return res.status(403).json({ error: 'login required for document uploads' })
       }
-      const ext = DOCUMENT_EXT[req.file.mimetype]
+      const ext = DOC_EXTS.includes(srcExt) ? srcExt : 'bin'
+      const contentType =
+        DOC_CONTENT_TYPES[ext] ||
+        (req.file.mimetype && req.file.mimetype !== 'application/octet-stream'
+          ? req.file.mimetype
+          : 'application/octet-stream')
       const buf = req.file.buffer
       const name = `document/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`
       const originalName = req.file.originalname || `document.${ext}`
@@ -82,11 +112,11 @@ router.post(
         const { put } = await import('@vercel/blob')
         const blob = await put(`dah/${name}`, buf, {
           access: 'public',
-          contentType: req.file.mimetype,
+          contentType,
           token: process.env.BLOB_READ_WRITE_TOKEN,
         })
         return res.status(201).json({
-          url: blob.url, name: originalName, type: req.file.mimetype, bytes: buf.length, format: ext, storage: 'blob',
+          url: blob.url, name: originalName, type: contentType, bytes: buf.length, format: ext, storage: 'blob',
         })
       }
 
@@ -95,7 +125,7 @@ router.post(
       fs.writeFileSync(filePath, buf)
       const url = `${req.protocol}://${req.get('host')}/uploads/${name}`
       return res.status(201).json({
-        url, name: originalName, type: req.file.mimetype, bytes: buf.length, format: ext, storage: 'local',
+        url, name: originalName, type: contentType, bytes: buf.length, format: ext, storage: 'local',
       })
     }
 

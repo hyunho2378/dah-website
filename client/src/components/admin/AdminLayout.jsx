@@ -36,6 +36,7 @@ const NAV_GROUPS = [
       { to: '/admin/mentors', label: '멘토' },
       { to: '/admin/curriculum', label: '교과목' },
       { to: '/admin/codesharing', label: '코드쉐어링' },
+      { to: '/admin/nanodegree', label: '나노디그리' },
       { to: '/admin/council', label: '운영위원회' },
       { to: '/admin/careers', label: '취업 현황' },
     ],
@@ -46,6 +47,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/admin/exhibition', label: '전시회 설정' },
       { to: '/admin/settings', label: '사이트 설정' },
+      { to: '/admin/consultations', label: '상담 신청' },
     ],
   },
   {

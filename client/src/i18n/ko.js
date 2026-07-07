@@ -26,6 +26,7 @@ export const ko = {
     mentors: '멘토',
     curriculum: '교육과정',
     codesharing: '코드쉐어링',
+    nanodegree: '나노디그리',
     exhibitions: '전시회',
     contests: '공모전',
     lectures: '특강',
@@ -52,13 +53,14 @@ export const ko = {
     missionVision: '미션과 비전',
     history: '연혁',
     graduate: '대학원 안내',
-    roadmap: '4년 로드맵',
+    roadmap: '학년별 교육 과정',
     relatedCourses: '관련 교과목',
     procedure: '승인 절차',
     departments: '인정 학과',
     faculty: '교수진',
     mentors: '산업 멘토',
     codesharing: '코드쉐어링',
+    nanodegree: '나노디그리 과정',
     employment: '취업 현황',
     portfolio: '재학생 포트폴리오',
     members: '구성원',
@@ -145,12 +147,20 @@ export const ko = {
     compositionTitle: '운영위원회 구성',
   },
   curriculum: {
-    grade: '학년',
+    // K2-11: 표 라벨 "학년" → "수준" (로드맵 축 라벨 gradeSuffix는 유지)
+    grade: '수준',
     gradeSuffix: '학년',
     course: '과목명',
     credit: '학점-강의-실습',
     sem1: '1학기',
     sem2: '2학기',
+  },
+  // K2-13: 나노디그리 렌더 라벨(원문 표기 그대로)
+  nanodegree: {
+    cert: '인증기준',
+    programs: '운영과정',
+    courses: '인정 교과목',
+    partner: '유관 기관',
   },
   news: {
     searchPlaceholder: '공지 검색',
@@ -174,5 +184,6 @@ export const ko = {
     address: '강원특별자치도 춘천시 한림대학길 1',
     privacy: '개인정보처리방침',
     terms: '이용약관',
+    consult: '상담 신청',
   },
 };

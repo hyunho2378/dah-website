@@ -159,6 +159,45 @@
   - 서버 전 파일 node --check 통과, client npm run build 성공
 - [!] 실사이트 육안 검증(사용자 수행) 체크리스트: 어드민 교수진 편집 폼 프리필 / 접수 스위치 on→버튼 상시 / EN 내비 유지+1440 버튼 고정 / EN 콘텐츠(트랙·운영위·코드쉐어링·교수 직함·교육과정) / 운영위 구성 행 디자인 / 공지 밝은 타이틀·본문 카드+원문 보기 없음 / 동아리 중앙 카드 / 홈 FinalCTA 없음 / 교육과정 표(1·2학기 2열)+로드맵 학기 / 성과 설명 펼침 / 총 N건 없음 / 390px 가로 스크롤 0
 
+## PHASE 9 — 병렬 2에이전트 배치 (21_PHASE9_FIXES, K1 어드민·백엔드 / K2 공개·디자인)
+### AGENT-K1 (완료)
+- [x] K1-1 공지 태그 시스템: site_settings key 'tags'(JSONB 문자열배열) 저장소. server/src/routes/tags.js — GET /tags(공개 {items:[]}) / POST·DELETE /admin/tags(manager+, 삭제 시 UPDATE posts SET tag=NULL WHERE tag=$1). PostForm TagField(기존 선택+인라인 생성+삭제). postTypes notice 하드코딩 태그 제거(tags:true)
+- [x] K1-2 자료실 형식 확대: upload.js 허용 hwp·hwpx·pdf·docx·xlsx·pptx·zip·jpg·jpeg·png·webp·gif, 차단 exe·sh·bat·js·cmd·msi(블록리스트 우선), 확장자+mimetype 병행, 20MB. 이미지=WebP 파이프, 비이미지=원본(HWP 동작)
+- [x] K1-3 이미지 섹션 분리: PostForm 본문 에디터와 별도 "이미지" 섹션(gallery=이미지 URL 배열, 다중·순서·삭제), 문서 첨부는 attachments=[{name,url}]. emptyForm/fromItem/toPayload 정합
+- [x] K1-4 링크 이름: RichEditor 링크 삽입 URL+표시 이름 2필드, 생 URL 삽입 금지(표시 이름 필수/선택 텍스트에 링크). 기존 글 불변
+- [x] K1-5 Toggle 알약형: 트랙·노브 rounded-full, 켜짐 화이트 채움+어두운 노브/꺼짐 아웃라인, h-24 w-40 border 고정, 노브만 translate → 주변 불변
+- [x] K1-6 인라인 수정: EntityCrud 수정 시 해당 행이 그 자리에서 폼으로 교체(목록 안 밀림), 저장·취소 시 행 복귀
+- [x] K1-7 드래그 핸들: 화살표 제거 → GripVertical + HTML5 DnD 자체구현, 드롭 시 sort 재계산·순차 PUT. orderable=false 미표시
+- [x] K1-8 어드민 운영위 정렬: CouncilAdmin sortFn year_label 숫자 내림차순(2026 LUCID 최상단)
+- [x] K1-9 상담 시스템: consultations 테이블 + server/src/routes/consult.js(POST /consult 공개·검증·DB 저장 항상 + SMTP·텔레그램 알림 env 기반 fire-and-forget, GET/PUT admin). nodemailer 설치. Consult.jsx 공개 폼(원문 그대로, /privacy 내부 링크). ConsultationsAdmin(SYSTEM 그룹). 통합자: /consult 라우트(App 국문 standalone+localizeTo 제외), Footer·About 하단 링크
+- [x] K1-10 나노디그리 백엔드: nanodegree 싱글턴 테이블+content-config, NanodegreeAdmin(STRUCTURE 그룹, codesharing 패턴)
+
+### AGENT-K2 (완료)
+- [x] K2-1 프로그램 마스터-디테일 높이 정합(items-stretch, 패널 h-full)
+- [x] K2-2 구 트랙명 전면 교체(KR·EN, tracks.js summary/summaryEn): 미래융합디자인→디자인, AI디지털인문학→AI, 문화예술콘텐츠→엔터컬쳐 트랙. 전역 grep 잔존 0건(원문 데이터 제외)
+- [x] K2-3 공지 상세 다크 회귀+가독성: 밝은 카드 제거→다크, 본문 text-pri·행간 1.8(.rich-bright), 메타 대비, 제목·본문 헤어라인, 이미지 갤러리(gallery)
+- [x] K2-4 운영위 표기·로고: 타이틀 "{year_label} {name}" 한 줄, 로고 박스 제거·1.5배·수직 중앙
+- [x] K2-5 강제 줄바꿈 해제: About·Curriculum·CodeSharing·Council·히어로 max-w 상향(960급)
+- [x] K2-6 useTitle "디지털인문예술전공 - 페이지명"(하이픈)
+- [x] K2-7 연혁 최신순(렌더 정렬 내림차순)
+- [x] K2-8 미션·비전 SVG 아이콘 3종(모노크롬 스트로크)
+- [x] K2-9 마이크로 인터랙션: 페이지 크로스페이드(.page-fade opacity, translate 금지), Button press 감광, 포커스 링 전환, 전부 motion 토큰·reduced-motion 무효
+- [x] K2-10 푸터: 좌 로고+학과명 한 줄, 우 정책·상담·TEL 033-248-3556·de46141@hallym.ac.kr, 저작권 유지
+- [x] K2-11 교육과정 표: 학점 컬럼 nowrap(잘림 해소), 라벨 "학년"→"수준"(en Level), 표 높이 자연화
+- [x] K2-12 로드맵: 제목 "학년별 교육 과정", 블록 겹침 재계산(높이·간격·텍스트 말줄임)
+- [x] K2-13 나노디그리 공개: data/nanodegree.js 원문+En, Nanodegree.jsx(/curriculum/nanodegree, DB body 우선 폴백 정적), Curriculum 섹션+nav 전공 소개 하위 링크
+- [x] K2-14 반응형 유동화: 타이포 clamp(-d 값), 카드 그리드 auto-fill minmax, 히어로 % 유동
+
+### K3-1 통합 마무리 (완료)
+- [x] 충돌 확인: K1/K2 파일 소유 계약 무충돌(server·admin·editor=K1 / App·public·i18n·tokens=K2). 공용 Toggle(K1)·tokens/index.css(K2) 겹침 없음
+- [x] /consult 라우트 등록(App 국문 standalone, localizeTo 예외), About 하단 상담 링크 추가(K1-9.5 완결)
+- [x] migrate-phase9.mjs 배포 Neon 실행: 공지 태그 19건 초기화, tags '[]', nanodegree 4과정 시드, consultations 테이블. 검증: nanodegree programs 4·tags []·consultations 0·curriculum credit 38
+- [x] EN 반영: 나노디그리 render 라벨·데이터 En 필드 완비. 상담·태그 UI는 국문(어드민·접수 플로우 v2 스코프). t() 106키 ko/en 누락 0
+- [x] npm run build 성공, em dash 소스 0, 서버 전 파일 node --check 통과
+- [x] 커밋·푸시 예정(아래 배포 절), Render 재배포 시 npm install(nodemailer). 신규 env(선택): SMTP_HOST/PORT/USER/PASS·CONSULT_NOTIFY_TO·TELEGRAM_BOT_TOKEN/CHAT_ID — 없으면 알림 스킵·DB 저장은 항상
+- [!] 실사이트 육안(사용자): 공지 글쓰기 태그 선택·생성 / 자료실 hwp 업로드 / 이미지·첨부 분리 / 링크 표시 이름 / 어드민 인라인 수정·드래그 정렬 / 상담 /consult 제출→알림 / 나노디그리 페이지·어드민 / 공지 상세 다크 가독 / 운영위 로고 1.5배 / 반응형 연속 축소
+- [!] achievement 유형은 이미지 섹션 제외(성좌 전용) — 의도적. nanodegree DB body는 KR 3필드만 저장(EN은 파일 렌더)
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

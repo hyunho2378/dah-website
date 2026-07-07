@@ -8,11 +8,13 @@ import { isConfigured, setDb } from './db.js'
 import authRoutes from './routes/auth.js'
 import contentRoutes from './routes/content.js'
 import adminRoutes from './routes/admin.js'
-import uploadRoutes, { UPLOADS_DIR } from './routes/upload.js'
+import uploadRoutes, { UPLOADS_DIR, MAX_UPLOAD_BYTES } from './routes/upload.js'
 import submitRoutes from './routes/submit.js'
 import settingsRoutes from './routes/settings.js'
 import exportRoutes from './routes/export.js'
 import adminExtraRoutes from './routes/adminExtra.js'
+import tagsRoutes from './routes/tags.js'
+import consultRoutes from './routes/consult.js'
 
 export function createApp(options = {}) {
   if ('db' in options) setDb(options.db)
@@ -55,6 +57,8 @@ export function createApp(options = {}) {
   app.use(settingsRoutes) // GET /settings/public, PUT /admin/settings
   app.use(exportRoutes) // GET /export/all
   app.use(adminExtraRoutes) // /admin/users, /admin/exhibition/entries (13_CMS 6절)
+  app.use(tagsRoutes) // GET /tags, POST /admin/tags, DELETE /admin/tags/:name (Phase 9 K1-1)
+  app.use(consultRoutes) // POST /consult, GET /admin/consultations (Phase 9 K1-9)
 
   app.use((req, res) => res.status(404).json({ error: 'not found' }))
 
@@ -68,7 +72,7 @@ export function createApp(options = {}) {
       })
     }
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(413).json({ error: 'file too large', maxBytes: 15 * 1024 * 1024 })
+      return res.status(413).json({ error: 'file too large', maxBytes: MAX_UPLOAD_BYTES })
     }
     if (err.type === 'entity.parse.failed') {
       return res.status(400).json({ error: 'invalid JSON body' })

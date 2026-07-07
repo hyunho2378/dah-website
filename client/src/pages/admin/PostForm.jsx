@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Paperclip, Plus, Trash2 } from 'lucide-react'
+import { Paperclip, Plus, Trash2, X } from 'lucide-react'
 import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import RichEditor from '../../components/editor/RichEditor'
@@ -18,7 +18,6 @@ import {
   Input,
   PageHead,
   PrimaryButton,
-  Select,
   TextArea,
   Toggle,
 } from '../../components/admin/FormControls'
@@ -31,7 +30,117 @@ const ICON_BTN =
 const nul = (v) => (v === '' || v === undefined ? null : v)
 const dateOf = (v) => (v ? String(v).slice(0, 10) : '')
 
-/** 첨부 목록 — 자료실 gallery jsonb [{ name, url }] (postTypes.js 계약) */
+/** 태그 선택·관리 — 공용 태그 저장소 (GET /tags, K1-1). 칩 클릭 선택 + 인라인 생성·삭제 */
+function TagField({ value, onChange }) {
+  const { data, refetch } = useApi('/tags')
+  const tags = data?.items || []
+  const [name, setName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const create = async () => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    setBusy(true)
+    setError(null)
+    try {
+      await api.post('/admin/tags', { name: trimmed })
+      onChange(trimmed)
+      setName('')
+      refetch()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const removeTag = async (tag) => {
+    if (
+      !window.confirm(
+        `"${tag}" 태그를 삭제하시겠습니까? 이 태그가 지정된 게시물의 태그가 해제됩니다.`
+      )
+    )
+      return
+    setBusy(true)
+    setError(null)
+    try {
+      await api.del(`/admin/tags/${encodeURIComponent(tag)}`)
+      if (value === tag) onChange('')
+      refetch()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-8">
+      {tags.length > 0 ? (
+        <ul className="flex flex-wrap gap-8">
+          {tags.map((tag) => (
+            <li
+              key={tag}
+              className={`inline-flex items-center overflow-hidden rounded-sm border transition duration-fast ease-out ${
+                value === tag
+                  ? 'border-bg-invert bg-bg-invert'
+                  : 'border-border-subtle bg-transparent hover:border-border-strong'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => onChange(value === tag ? '' : tag)}
+                aria-pressed={value === tag}
+                className={`cursor-pointer py-4 pl-12 pr-8 text-small-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-focus ${
+                  value === tag ? 'text-text-invert' : 'text-text-sec hover:text-text-pri'
+                }`}
+              >
+                {tag}
+              </button>
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                disabled={busy}
+                aria-label={`${tag} 태그 삭제`}
+                className={`cursor-pointer py-4 pr-8 transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
+                  value === tag ? 'text-text-invert' : 'text-text-meta hover:text-text-pri'
+                }`}
+              >
+                <X size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="font-mono text-caption-m text-text-meta">
+          등록된 태그가 없습니다. 새 태그를 생성하세요.
+        </p>
+      )}
+      <div className="flex items-center gap-8">
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              create()
+            }
+          }}
+          placeholder="새 태그 이름"
+          aria-label="새 태그 이름"
+        />
+        <GhostButton onClick={create} disabled={busy || !name.trim()}>
+          <Plus size={16} aria-hidden="true" />
+          생성
+        </GhostButton>
+      </div>
+      <ErrorText>{error}</ErrorText>
+    </div>
+  )
+}
+
+/** 첨부 목록 — 문서 첨부 attachments jsonb [{ name, url }] (K1-3: gallery와 분리) */
 function AttachmentsField({ value = [], onChange }) {
   const inputRef = useRef(null)
   const [busy, setBusy] = useState(false)
@@ -87,6 +196,7 @@ function AttachmentsField({ value = [], onChange }) {
       <input
         ref={inputRef}
         type="file"
+        accept=".hwp,.hwpx,.pdf,.docx,.xlsx,.pptx,.zip,.jpg,.jpeg,.png,.webp,.gif"
         onChange={handleFile}
         className="hidden"
         tabIndex={-1}
@@ -96,7 +206,7 @@ function AttachmentsField({ value = [], onChange }) {
   )
 }
 
-/** 이미지 갤러리 — 전시회 gallery jsonb [url] */
+/** 이미지 갤러리 — gallery jsonb [url] (이미지 URL 문자열 배열, K1-3 데이터 계약) */
 function GalleryField({ value = [], onChange, usage = 'exhibition' }) {
   const inputRef = useRef(null)
   const [busy, setBusy] = useState(false)
@@ -193,7 +303,7 @@ function emptyForm(template) {
     case 'portfolio':
       return { student_no: '', name: '', majors: '', link: '', sort: 0 }
     default:
-      // t1 · t2 공용 (posts)
+      // t1 · t2 공용 (posts). gallery = 이미지 URL 배열, attachments = [{name,url}] 문서 (K1-3 분리)
       return {
         title_ko: '',
         title_en: '',
@@ -204,6 +314,7 @@ function emptyForm(template) {
         event_start: '',
         event_end: '',
         gallery: [],
+        attachments: [],
         published: true,
         pinned: false,
       }
@@ -258,7 +369,11 @@ function fromItem(template, item) {
         external_url: item.external_url || '',
         event_start: dateOf(item.event_start),
         event_end: dateOf(item.event_end),
-        gallery: Array.isArray(item.gallery) ? item.gallery : [],
+        // K1-3: gallery는 이미지 URL 문자열만 (과거 gallery에 저장된 [{name,url}] 첨부는 제외)
+        gallery: Array.isArray(item.gallery)
+          ? item.gallery.filter((g) => typeof g === 'string')
+          : [],
+        attachments: Array.isArray(item.attachments) ? item.attachments : [],
         published: Boolean(item.published),
         pinned: Boolean(item.pinned),
       }
@@ -304,6 +419,8 @@ function toPayload(template, config, form) {
         title_en: nul(form.title_en),
         tag: nul(form.tag),
         body: form.body,
+        // K1-3: gallery = 이미지 URL 배열 (전 유형), attachments = [{name,url}] 문서 첨부
+        gallery: form.gallery,
         published: form.published,
         pinned: form.pinned,
       }
@@ -313,7 +430,7 @@ function toPayload(template, config, form) {
         payload.event_start = nul(form.event_start)
         payload.event_end = nul(form.event_end)
       }
-      if (config.attachments) payload.gallery = form.gallery
+      if (config.attachments) payload.attachments = form.attachments
       return payload
     }
   }
@@ -406,16 +523,11 @@ function PostForm() {
           )}
 
           {template === 't1' && config.tags && (
-            <Field label="태그">
-              <Select
-                value={form.tag}
-                onChange={setInput('tag')}
-                options={[
-                  { value: '', label: '태그 선택' },
-                  ...config.tags.map((t) => ({ value: t, label: t })),
-                ]}
-              />
-            </Field>
+            <div className="md:col-span-2">
+              <Field label="태그" hint="클릭해 선택, 다시 클릭해 해제합니다">
+                <TagField value={form.tag} onChange={set('tag')} />
+              </Field>
+            </div>
           )}
 
           {template === 't2' && (
@@ -522,10 +634,19 @@ function PostForm() {
             </>
           )}
 
+          {/* K1-3: 본문과 분리된 이미지 섹션 — 상세 갤러리용 (전 posts 유형) */}
+          {(template === 't1' || template === 't2') && (
+            <div className="md:col-span-2">
+              <Field label="이미지" hint="상세 페이지 갤러리에 표시됩니다">
+                <GalleryField value={form.gallery} onChange={set('gallery')} usage="general" />
+              </Field>
+            </div>
+          )}
+
           {config.attachments && (
             <div className="md:col-span-2">
               <Field label="첨부 파일">
-                <AttachmentsField value={form.gallery} onChange={set('gallery')} />
+                <AttachmentsField value={form.attachments} onChange={set('attachments')} />
               </Field>
             </div>
           )}

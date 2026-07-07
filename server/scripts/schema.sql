@@ -190,6 +190,25 @@ CREATE TABLE IF NOT EXISTS portfolios (
   sort       INTEGER NOT NULL DEFAULT 0
 );
 
+-- 상담 신청 (Phase 9. POST /consult 공개 접수 → 어드민 열람·읽음 처리)
+CREATE TABLE IF NOT EXISTS consultations (
+  id         SERIAL PRIMARY KEY,
+  company    TEXT,
+  name       TEXT NOT NULL,
+  contact    TEXT NOT NULL,
+  message    TEXT,
+  agreed     BOOLEAN NOT NULL,
+  is_read    BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 나노디그리 (단일 행 문서. id=1 고정 — codesharing과 동일 싱글턴 패턴)
+-- body jsonb: { intro, cert, programs: [{ name, courses, partner, rule, note? }] }
+CREATE TABLE IF NOT EXISTS nanodegree (
+  id   INTEGER PRIMARY KEY CHECK (id = 1),
+  body JSONB
+);
+
 -- ─── 초기 데이터 ───────────────────────────────────────────────
 
 -- 전시회 접수 2026-2 일정 초기값 (12_BACKEND.md 5절. 11-24 00:00부터 신규·수정 전면 차단)
@@ -208,4 +227,9 @@ ON CONFLICT (id) DO NOTHING;
 -- 코드쉐어링 단일 행 자리 (내용은 seed.mjs가 tracks.js 원문으로 채움)
 INSERT INTO codesharing (id, body, depts, hwp_url)
 VALUES (1, NULL, NULL, NULL)
+ON CONFLICT (id) DO NOTHING;
+
+-- 나노디그리 단일 행 자리 (내용은 migrate-phase9.mjs가 data/nanodegree.js 원문으로 채움)
+INSERT INTO nanodegree (id, body)
+VALUES (1, NULL)
 ON CONFLICT (id) DO NOTHING;

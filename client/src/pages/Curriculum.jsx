@@ -8,6 +8,7 @@ import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
 import { tracks } from '../data/tracks'
 import { curriculum } from '../data/curriculum'
+import { nanodegree } from '../data/nanodegree'
 import { motion } from '../styles/tokens'
 
 // 교육과정 (J10, 20_PHASE8) — 표 형식 전환.
@@ -36,22 +37,23 @@ function SemesterTable({ trackKey, semester, lang, t }) {
       </p>
       <table className="w-full border-collapse text-left">
         <thead>
+          {/* K2-11: 헤더 셀 whitespace-nowrap + 학점-강의-실습 컬럼 w-128로 잘림 제거 */}
           <tr className="border-b border-border-subtle">
             <th
               scope="col"
-              className="w-64 px-16 py-8 font-mono text-caption-m font-medium text-text-meta"
+              className="w-64 whitespace-nowrap px-16 py-8 font-mono text-caption-m font-medium text-text-meta"
             >
               {t('curriculum.grade')}
             </th>
             <th
               scope="col"
-              className="px-8 py-8 font-mono text-caption-m font-medium text-text-meta"
+              className="whitespace-nowrap px-8 py-8 font-mono text-caption-m font-medium text-text-meta"
             >
               {t('curriculum.course')}
             </th>
             <th
               scope="col"
-              className="w-96 px-16 py-8 text-right font-mono text-caption-m font-medium text-text-meta"
+              className="w-128 whitespace-nowrap px-16 py-8 text-right font-mono text-caption-m font-medium text-text-meta"
             >
               {t('curriculum.credit')}
             </th>
@@ -98,13 +100,15 @@ function LaneSection({ trackKey, lang, t }) {
           {displayName}
         </h2>
         {summary && (
-          <p className="mt-16 max-w-[720px] text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
+          // K2-5: 트랙 요약 max-w 720 → 960(가독 상한)
+          <p className="mt-16 max-w-[960px] text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
             {summary}
           </p>
         )}
       </Reveal>
-      {/* J10·J13: 데스크탑 2열(1학기|2학기), 모바일 세로 스택 */}
-      <div className="mt-32 grid grid-cols-1 gap-16 md:mt-48 md:grid-cols-2 md:gap-24">
+      {/* J10·J13: 데스크탑 2열(1학기|2학기), 모바일 세로 스택.
+          K2-11: items-start — 표 높이는 각자 행 수만큼만(등고 강제 없음) */}
+      <div className="mt-32 grid grid-cols-1 items-start gap-16 md:mt-48 md:grid-cols-2 md:gap-24">
         <SemesterTable trackKey={trackKey} semester={1} lang={lang} t={t} />
         <SemesterTable trackKey={trackKey} semester={2} lang={lang} t={t} />
       </div>
@@ -113,14 +117,35 @@ function LaneSection({ trackKey, lang, t }) {
 }
 
 // 4년 로드맵 다이어그램 — 학기(1·2학기) 서브컬럼에 과목 배치, 공통기초 최상단
+// K2-12 겹침 진단: 블록 자체는 레인 계산상 겹치지 않으나, 긴 과목명(예: "AI 서비스 기획과
+// 프로토타이핑")이 블록 폭(semW-12)을 넘겨 이웃 블록·레인 라벨을 시각적으로 침범했다.
+// 해결: (1) 문자폭 추정 기반 말줄임 + <title>로 전체명 제공 (2) labelH·rowH 여유 상향
+// (3) lanePad 증가. 전 블록 y+h < 다음 레인 top이 구조식으로 보장된다(아래 y 누적식).
+const BLOCK_FONT = 9
+
+// 문자폭 추정(px): 한글 등 전각 ≈ 폰트 크기, ASCII 등 반각 ≈ 0.6배
+function estCharW(ch) {
+  return ch.charCodeAt(0) > 0x2000 ? BLOCK_FONT : BLOCK_FONT * 0.6
+}
+
+// 블록 내부 폭(maxW)을 넘는 과목명을 말줄임 — 전체명은 <title>이 담당
+function fitBlockName(name, maxW) {
+  let w = 0
+  for (let i = 0; i < name.length; i += 1) {
+    w += estCharW(name[i])
+    if (w > maxW - BLOCK_FONT) return `${name.slice(0, Math.max(1, i))}…`
+  }
+  return name
+}
+
 function buildDiagramLayout(lanes, items) {
   const W = 960
   const colW = W / 4
   const semW = colW / 2
   const axisH = 40
-  const labelH = 24
-  const rowH = 24
-  const lanePad = 12
+  const labelH = 28
+  const rowH = 28
+  const lanePad = 20
   let y = axisH
   const laneBoxes = []
   for (const lane of lanes) {
@@ -137,12 +162,14 @@ function buildDiagramLayout(lanes, items) {
     cells.forEach((sems, yi) => {
       sems.forEach((semItems, si) => {
         semItems.forEach((course, ri) => {
+          const w = semW - 12
           blocks.push({
             key: `${lane.key}-${yi}-${si}-${course.name}-${ri}`,
             name: course.name,
+            display: fitBlockName(course.name, w - 12),
             x: yi * colW + si * semW + 6,
             y: top + labelH + ri * rowH,
-            w: semW - 12,
+            w,
             h: rowH - 6,
           })
         })
@@ -278,6 +305,8 @@ function Curriculum() {
                     </text>
                     {lane.blocks.map((b) => (
                       <g key={b.key}>
+                        {/* K2-12: 블록 폭 초과 과목명은 말줄임(display), 전체명은 title 툴팁 */}
+                        <title>{b.name}</title>
                         <rect
                           x={b.x}
                           y={b.y}
@@ -291,11 +320,11 @@ function Curriculum() {
                         <text
                           x={b.x + 6}
                           y={b.y + b.h / 2 + 3.5}
-                          fontSize="9"
+                          fontSize={BLOCK_FONT}
                           fill="currentColor"
                           className="font-sans text-text-sec"
                         >
-                          {b.name}
+                          {b.display}
                         </text>
                       </g>
                     ))}
@@ -306,17 +335,32 @@ function Curriculum() {
           </Container>
         )}
 
-        {/* 코드쉐어링 — 분리 페이지 안내 */}
+        {/* 코드쉐어링·나노디그리 — 분리 페이지 안내 (K2-13: 같은 위계로 나란히) */}
         <Container as="section" className="pt-section-m md:pt-section-d">
-          <Reveal delay={motion.stagger}>
-            <SectionLabel index="06" text="CODE SHARING" />
-            <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
-              {t('sections.codesharing')}
-            </h2>
-            <div className="mt-24">
-              <ArrowLink href="/curriculum/codesharing">{t('actions.detail')}</ArrowLink>
-            </div>
-          </Reveal>
+          <div className="grid grid-cols-1 gap-48 md:grid-cols-2 md:gap-24">
+            <Reveal delay={motion.stagger}>
+              <SectionLabel index="06" text="CODE SHARING" />
+              <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
+                {t('sections.codesharing')}
+              </h2>
+              <div className="mt-24">
+                <ArrowLink href="/curriculum/codesharing">{t('actions.detail')}</ArrowLink>
+              </div>
+            </Reveal>
+            <Reveal delay={motion.stagger * 2}>
+              <SectionLabel index="07" text="NANODEGREE" />
+              <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
+                {t('sections.nanodegree')}
+              </h2>
+              {/* 요약 1줄 — 원문 intro 그대로(EN은 대역) */}
+              <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                {lang === 'en' && nanodegree.introEn ? nanodegree.introEn : nanodegree.intro}
+              </p>
+              <div className="mt-24">
+                <ArrowLink href="/curriculum/nanodegree">{t('actions.detail')}</ArrowLink>
+              </div>
+            </Reveal>
+          </div>
         </Container>
       </div>
     </>

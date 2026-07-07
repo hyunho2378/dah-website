@@ -2,7 +2,7 @@
 // 교수진·멘토단·교과목·운영위·진로 어드민이 공유. API: /admin/content/:type (B1 계약).
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useApi, api } from '../../hooks/useApi'
 import ImageUpload from './ImageUpload'
 import {
@@ -172,6 +172,9 @@ function EntityCrud({
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  // K1-7: HTML5 DnD 정렬 상태
+  const [dragIndex, setDragIndex] = useState(null)
+  const [overIndex, setOverIndex] = useState(null)
 
   const raw = data?.items || (Array.isArray(data) ? data : [])
   const items = [...raw].sort(
@@ -221,21 +224,65 @@ function EntityCrud({
     }
   }
 
-  // 정렬 — 이웃과 sort 값 스왑
-  const move = async (index, dir) => {
-    const target = items[index]
-    const neighbor = items[index + dir]
-    if (!target || !neighbor) return
-    const a = target.sort ?? index
-    const b = neighbor.sort ?? index + dir
+  // K1-7: 드롭 시 변경된 순서대로 sort 재계산 — 값이 달라진 행만 순차 PUT
+  const clearDrag = () => {
+    setDragIndex(null)
+    setOverIndex(null)
+  }
+
+  const handleDrop = async (targetIndex) => {
+    const from = dragIndex
+    clearDrag()
+    if (from === null || from === targetIndex) return
+    const next = [...items]
+    const [moved] = next.splice(from, 1)
+    next.splice(targetIndex, 0, moved)
     try {
-      await api.put(`/admin/content/${type}/${target.id}`, { sort: b })
-      await api.put(`/admin/content/${type}/${neighbor.id}`, { sort: a })
-      refetch()
+      for (const [i, it] of next.entries()) {
+        if (it.sort !== i) await api.put(`/admin/content/${type}/${it.id}`, { sort: i })
+      }
     } catch (err) {
       window.alert(err.message)
     }
+    refetch()
   }
+
+  // K1-6: 공용 폼 패널 — '추가'는 목록 상단, '수정'은 해당 행 자리에서 렌더
+  const formPanel = form && (
+    <form
+      onSubmit={save}
+      className="flex w-full flex-col gap-16 rounded-glass border border-glass-line bg-glass-bg p-24 backdrop-blur-glass-mobile"
+    >
+      <div className="flex items-center justify-between gap-16">
+        <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">
+          {editing === 'new' ? '항목 추가' : '항목 수정'}
+        </h3>
+        <button type="button" onClick={close} aria-label="닫기" className={ICON_BTN}>
+          <X size={16} />
+        </button>
+      </div>
+      <div className="grid grid-cols-1 gap-16 md:grid-cols-2">
+        {fields.map((f) => (
+          <div key={f.key} className={f.span2 ? 'md:col-span-2' : ''}>
+            <Field label={f.label} hint={f.hint}>
+              <FieldControl
+                field={f}
+                value={form[f.key]}
+                onChange={(v) => setForm((prev) => ({ ...prev, [f.key]: v }))}
+              />
+            </Field>
+          </div>
+        ))}
+      </div>
+      <ErrorText>{saveError}</ErrorText>
+      <div className="flex items-center gap-8">
+        <PrimaryButton type="submit" disabled={busy}>
+          {busy ? '저장 중' : '저장'}
+        </PrimaryButton>
+        <GhostButton onClick={close}>취소</GhostButton>
+      </div>
+    </form>
+  )
 
   return (
     <section className="flex flex-col gap-24">
@@ -258,71 +305,54 @@ function EntityCrud({
       {loading && <p className="font-mono text-caption-m text-text-meta">불러오는 중</p>}
       {!loading && !items.length && <EmptyNote />}
 
-      {editing !== null && form && (
-        <form
-          onSubmit={save}
-          className="flex flex-col gap-16 rounded-glass border border-glass-line bg-glass-bg p-24 backdrop-blur-glass-mobile"
-        >
-          <div className="flex items-center justify-between gap-16">
-            <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">
-              {editing === 'new' ? '항목 추가' : '항목 수정'}
-            </h3>
-            <button type="button" onClick={close} aria-label="닫기" className={ICON_BTN}>
-              <X size={16} />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 gap-16 md:grid-cols-2">
-            {fields.map((f) => (
-              <div key={f.key} className={f.span2 ? 'md:col-span-2' : ''}>
-                <Field label={f.label} hint={f.hint}>
-                  <FieldControl
-                    field={f}
-                    value={form[f.key]}
-                    onChange={(v) => setForm((prev) => ({ ...prev, [f.key]: v }))}
-                  />
-                </Field>
-              </div>
-            ))}
-          </div>
-          <ErrorText>{saveError}</ErrorText>
-          <div className="flex items-center gap-8">
-            <PrimaryButton type="submit" disabled={busy}>
-              {busy ? '저장 중' : '저장'}
-            </PrimaryButton>
-            <GhostButton onClick={close}>취소</GhostButton>
-          </div>
-        </form>
-      )}
+      {editing === 'new' && formPanel}
 
       {items.length > 0 && (
         <ul className="flex flex-col">
           {items.map((item, i) => {
+            // K1-6: 수정 중인 행은 그 자리에서 폼으로 교체 — 목록이 밀리지 않는다
+            if (editing === item.id && form) {
+              return (
+                <li key={item.id} className="border-b border-border-subtle py-12 first:border-t">
+                  {formPanel}
+                </li>
+              )
+            }
             const d = display(item)
+            const draggable = orderable && editing === null
             return (
               <li
                 key={item.id}
-                className="flex min-w-0 items-center gap-12 border-b border-border-subtle py-12 first:border-t"
+                draggable={draggable}
+                onDragStart={draggable ? () => setDragIndex(i) : undefined}
+                onDragOver={
+                  draggable
+                    ? (e) => {
+                        e.preventDefault()
+                        if (dragIndex !== null) setOverIndex(i)
+                      }
+                    : undefined
+                }
+                onDrop={
+                  draggable
+                    ? (e) => {
+                        e.preventDefault()
+                        handleDrop(i)
+                      }
+                    : undefined
+                }
+                onDragEnd={draggable ? clearDrag : undefined}
+                className={`flex min-w-0 items-center gap-12 border-b border-border-subtle py-12 transition duration-fast ease-out first:border-t ${
+                  dragIndex === i ? 'opacity-40' : ''
+                } ${overIndex === i && dragIndex !== null && dragIndex !== i ? 'bg-glass-bg' : ''}`}
               >
                 {orderable && (
-                  <span className="flex flex-col">
-                    <button
-                      type="button"
-                      onClick={() => move(i, -1)}
-                      disabled={i === 0}
-                      aria-label="위로 이동"
-                      className={ICON_BTN}
-                    >
-                      <ChevronUp size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => move(i, 1)}
-                      disabled={i === items.length - 1}
-                      aria-label="아래로 이동"
-                      className={ICON_BTN}
-                    >
-                      <ChevronDown size={16} />
-                    </button>
+                  <span
+                    aria-label="드래그하여 순서 이동"
+                    title="드래그하여 순서 이동"
+                    className="flex h-32 w-24 shrink-0 cursor-grab items-center justify-center text-text-meta"
+                  >
+                    <GripVertical size={16} />
                   </span>
                 )}
                 {d.thumb && (

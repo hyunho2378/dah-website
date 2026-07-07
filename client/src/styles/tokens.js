@@ -39,6 +39,10 @@ export const typography = {
     mono: "'Pretendard Variable', Pretendard, -apple-system, sans-serif",
   },
   // 사이즈 [모바일, 데스크탑] px — F1.3 정보 사이트 기준 전면 하향
+  // K2-14 유동 타이포 원리: tailwind.config.js가 각 사이즈의 -d 클래스를
+  // clamp(모바일px, calc(모바일px + (데스크탑-모바일) * ((100vw - 390px) / (1440 - 390))), 데스크탑px)
+  // 로 재정의한다. 390~1440px 구간에서 뷰포트 선형 보간되어 브레이크포인트 점프가 없고,
+  // 아래 배열값 [m, d]가 보간의 양 끝점이 된다. 호출부(-m/-d 클래스)는 변경 불필요.
   size: {
     displayXL: [40, 64],
     displayL: [32, 48],
@@ -59,8 +63,8 @@ export const typography = {
 };
 
 export const spacing = {
-  // 4pt 배수
-  scale: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128, 160],
+  // 4pt 배수 (K2-4: 운영위 로고 1.5배 스케일용 144 추가)
+  scale: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128, 144, 160],
   section: { mobile: 96, desktop: 160 },   // 섹션 수직 패딩
   container: { desktop: 1280, wide: 1440 }, // 콘텐츠 최대폭
   gutter: { mobile: 16, tablet: 24, desktop: 32 },

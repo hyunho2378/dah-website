@@ -110,7 +110,9 @@ function Clubs() {
             {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
-          <ul className="mt-32 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
+          <ul className="mt-32 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
+            {/* K2-14: 카드 그리드 유동화 — 300px = 기존 lg 3열 카드폭(약 360px) 근사 하한,
+                min(…,100%)으로 320px 초협폭 오버플로 방지 */}
             {items.map((item, index) => (
               <Reveal as="li" key={item.id} delay={staggerDelay(index)} className="min-w-0">
                 <ClubCard item={item} />

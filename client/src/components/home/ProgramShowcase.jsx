@@ -31,8 +31,9 @@ function normalizeLatest(data) {
 }
 
 function DetailPanel({ category, items, t }) {
+  // K2-1: 패널 높이 = 좌측 리스트 높이 — h-full + flex-col, 부족분은 VIEW MORE 위(mt-auto) 여백으로
   return (
-    <div className="relative h-full rounded-glass border border-glass-line bg-bg-elev p-24 backdrop-blur-glass-mobile md:p-32 md:backdrop-blur-glass">
+    <div className="relative flex h-full flex-col rounded-glass border border-glass-line bg-bg-elev p-24 backdrop-blur-glass-mobile md:p-32 md:backdrop-blur-glass">
       <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
         {category.no}
       </p>
@@ -53,7 +54,7 @@ function DetailPanel({ category, items, t }) {
           ))}
         </ul>
       )}
-      <div className="mt-24">
+      <div className="mt-auto pt-24">
         <ArrowLink href={category.to}>{t('actions.viewMore')}</ArrowLink>
       </div>
     </div>
@@ -87,8 +88,9 @@ function ProgramShowcase() {
           </h2>
         </Reveal>
 
-        {/* 데스크탑: 좌 카테고리 리스트 + 우 패널 (같은 셀에 4장 겹침, 활성만 표시) */}
-        <div className="mt-64 hidden gap-48 lg:grid lg:grid-cols-2">
+        {/* 데스크탑: 좌 카테고리 리스트 + 우 패널 (같은 셀에 4장 겹침, 활성만 표시)
+            K2-1: items-stretch로 우측 패널 높이를 좌측 리스트 전체 높이에 정합 */}
+        <div className="mt-64 hidden items-stretch gap-48 lg:grid lg:grid-cols-2">
           <ul>
             {CATEGORIES.map((category) => {
               const isActive = active === category.key
@@ -126,7 +128,7 @@ function ProgramShowcase() {
             })}
           </ul>
 
-          <div className="grid">
+          <div className="grid h-full">
             {CATEGORIES.map((category) => {
               const isActive = active === category.key
               return (

@@ -1,6 +1,7 @@
-// /news/:id — 공지 상세 (J7 재설계)
-// 상단 타이틀 블록(밝은 카드): 제목 크게 + 등록일·태그 한 줄 + 첨부 줄(파일명·미리보기·다운로드).
-// 그 아래 본문(밝은 카드, 어두운 텍스트, 행간 1.8). 구글 사이트 원문 아웃바운드 없음(J7).
+// /news/:id — 공지 상세 (K2-3 다크 회귀)
+// J7 구조(타이틀 블록 / 첨부 줄 / 본문 / 이미지 갤러리) 유지, 색은 다크 체계로 복귀.
+// 타이틀 블록은 다크 표면(bg-bg-elev), 본문은 배경 그대로 + 헤어라인 구분,
+// 본문 텍스트 text-text-pri·행간 1.8(.rich-bright), 메타는 small + text-text-sec.
 import { useParams } from 'react-router-dom'
 import { Download, ExternalLink, Paperclip } from 'lucide-react'
 import PageBanner from '../components/layout/PageBanner'
@@ -14,12 +15,12 @@ import { useTitle } from '../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { notices } from '../data/notices'
 
-// J7: 첨부 줄 — 파일명 + 미리보기(새 탭) + 다운로드
+// J7: 첨부 줄 — 파일명 + 미리보기(새 탭) + 다운로드 (K2-3: 다크 토큰)
 function AttachmentRow({ file, t }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-12 border-t border-border-invert py-12">
-      <span className="inline-flex min-w-0 items-center gap-8 text-small-m text-text-invert md:text-small-d">
-        <Paperclip size={16} aria-hidden="true" className="shrink-0" />
+    <div className="flex min-w-0 flex-wrap items-center gap-12 border-t border-border-subtle py-12">
+      <span className="inline-flex min-w-0 items-center gap-8 text-small-m text-text-pri md:text-small-d">
+        <Paperclip size={16} aria-hidden="true" className="shrink-0 text-text-sec" />
         <span className="truncate">{file.name || file.url.split('/').pop()}</span>
       </span>
       <span className="flex shrink-0 items-center gap-8">
@@ -27,7 +28,7 @@ function AttachmentRow({ file, t }) {
           href={file.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-4 rounded-sm border border-border-invert px-12 py-4 text-caption-m text-text-invert transition-opacity duration-fast ease-out hover:opacity-70"
+          className="inline-flex items-center gap-4 rounded-sm border border-border-subtle px-12 py-4 text-caption-m text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
         >
           <ExternalLink size={12} aria-hidden="true" />
           {t('news.preview')}
@@ -35,7 +36,7 @@ function AttachmentRow({ file, t }) {
         <a
           href={file.url}
           download
-          className="inline-flex items-center gap-4 rounded-sm border border-border-invert px-12 py-4 text-caption-m text-text-invert transition-opacity duration-fast ease-out hover:opacity-70"
+          className="inline-flex items-center gap-4 rounded-sm border border-border-subtle px-12 py-4 text-caption-m text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
         >
           <Download size={12} aria-hidden="true" />
           {t('news.download')}
@@ -57,6 +58,8 @@ function NewsDetail() {
   const tag = post?.tag ?? post?.org ?? null
   const date = post?.date ?? (post?.created_at ?? '').slice(0, 10)
   const attachments = (post?.attachments ?? post?.files ?? []).filter((f) => f && f.url)
+  // K2-3 데이터 계약: posts.gallery = 이미지 URL 배열 → 본문 아래 갤러리
+  const gallery = (Array.isArray(post?.gallery) ? post.gallery : []).filter(Boolean)
   useTitle(title || t('titles.notices'))
 
   return (
@@ -89,19 +92,19 @@ function NewsDetail() {
               <EditPencil type="notice" to={`/admin/posts/notice/${id}/edit`} />
             </div>
 
-            {/* J7: 타이틀 블록 — 밝은 카드(제목 + 등록일·태그 + 첨부 줄) */}
-            <header className="rounded-md bg-bg-invert p-24 md:p-40">
-              <h1 className="text-h1-m font-bold leading-snug text-text-invert md:text-h1-d">
+            {/* 타이틀 블록 — 다크 표면 카드(제목 + 등록일·태그 + 첨부 줄) */}
+            <header className="rounded-md border border-border-subtle bg-bg-elev p-24 md:p-40">
+              <h1 className="text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
                 {title}
               </h1>
-              <div className="mt-16 flex flex-wrap items-center gap-12 text-small-m text-text-invert/70 md:text-small-d">
+              <div className="mt-16 flex flex-wrap items-center gap-12 text-small-m text-text-sec md:text-small-d">
                 {date && (
                   <time dateTime={date}>
                     {t('news.registered')} {date}
                   </time>
                 )}
                 {tag && (
-                  <span className="inline-flex items-center rounded-sm border border-border-invert px-8 py-2 text-caption-m">
+                  <span className="inline-flex items-center rounded-sm border border-border-subtle px-8 py-2 text-caption-m">
                     {tag}
                   </span>
                 )}
@@ -115,15 +118,38 @@ function NewsDetail() {
               )}
             </header>
 
-            {/* J7: 본문 — 밝은 카드, 어두운 텍스트, 행간 1.8 */}
+            {/* 본문 — 배경 그대로 + 타이틀 블록과의 사이 헤어라인, text-pri·행간 1.8 */}
             {post.body ? (
-              <div className="rounded-md bg-bg-invert p-24 md:p-40">
-                <RichBody body={post.body} className="rich-on-light leading-[1.8]" />
+              <div className="border-t border-border-subtle pt-32">
+                <RichBody body={post.body} className="rich-bright" />
               </div>
             ) : (
-              <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
+              <p className="border-t border-border-subtle pt-32 text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
                 {t('news.noBody')}
               </p>
+            )}
+
+            {/* K2-3: 이미지 갤러리 — 본문 아래 그리드, 원본은 새 탭 */}
+            {gallery.length > 0 && (
+              <ul className="grid grid-cols-2 gap-12 md:grid-cols-3 md:gap-16">
+                {gallery.map((url, i) => (
+                  <li key={url} className="min-w-0">
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block overflow-hidden rounded-md border border-border-subtle bg-bg-elev"
+                    >
+                      <img
+                        src={url}
+                        alt={`${title} 이미지 ${i + 1}`}
+                        loading="lazy"
+                        className="aspect-[4/3] w-full object-cover transition-opacity duration-fast ease-out group-hover:opacity-90"
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
             )}
 
             <footer className="flex flex-wrap items-center justify-between gap-16 border-t border-border-subtle pt-32">

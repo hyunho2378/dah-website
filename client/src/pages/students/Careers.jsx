@@ -164,7 +164,8 @@ function Careers() {
               {careersRes.loading ? t('common.loading') : t('common.empty')}
             </p>
           ) : (
-            <div className="mt-48 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
+            <div className="mt-48 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
+              {/* K2-14: 카드 그리드 유동화 — 300px = 기존 lg 3열 카드폭 근사 하한 */}
               {careerItems.map((career, index) => (
                 <Reveal key={career.id} delay={staggerDelay(index)} className="min-w-0">
                   <CareerCard career={career} />

@@ -7,10 +7,11 @@ import { ArrowUpRight } from 'lucide-react'
 const base =
   'inline-flex h-11 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm px-24 text-body-m font-semibold transition duration-fast ease-out md:h-48 md:text-body-d'
 
+// K2-9: press 시 미세 감광(active) — transition은 base의 duration-fast(motion 토큰) 공유
 const variants = {
-  primary: 'bg-bg-invert text-text-invert hover:opacity-90',
+  primary: 'bg-bg-invert text-text-invert hover:opacity-90 active:opacity-80',
   secondary:
-    'border border-glass-line bg-glass-bg text-text-pri hover:border-border-strong hover:bg-glass-strong',
+    'border border-glass-line bg-glass-bg text-text-pri hover:border-border-strong hover:bg-glass-strong active:opacity-90',
 }
 
 function Button({ variant = 'primary', href, external = false, children }) {
