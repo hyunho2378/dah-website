@@ -1,14 +1,14 @@
 // /showcase/:id — 쇼케이스 상세 (T3: 메인 16:9 + 메타 + 서브 이미지 2)
 import { useParams } from 'react-router-dom'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
+import Container from '../../components/layout/Container'
 import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
 import Tag from '../../components/common/Tag'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-
-const NOT_FOUND_TEXT = '쇼케이스 항목을 찾을 수 없습니다'
+import { useLang } from '../../i18n/LangContext'
 
 function MetaRow({ label, children }) {
   return (
@@ -20,10 +20,11 @@ function MetaRow({ label, children }) {
 }
 
 function ShowcaseDetail() {
+  const { t } = useLang()
   const { id } = useParams()
   const { data, loading } = useApi(`/content/showcase/${id}`)
   const item = itemOf(data)
-  useTitle(item?.title ?? '쇼케이스')
+  useTitle(item?.title ?? t('titles.showcase'))
 
   const tools = Array.isArray(item?.tools) ? item.tools : []
   const subImgs = Array.isArray(item?.sub_imgs) ? item.sub_imgs : []
@@ -34,21 +35,21 @@ function ShowcaseDetail() {
         titleKo="쇼케이스"
         titleEn="SHOWCASE"
         breadcrumb={[
-          { label: '홈', to: '/' },
-          { label: '쇼케이스', to: '/showcase' },
-          { label: item?.title ?? '상세' },
+          { label: t('nav.home'), to: '/' },
+          { label: t('titles.showcase'), to: '/showcase' },
+          { label: item?.title ?? t('actions.detail') },
         ]}
         nebulaX="70%"
         nebulaY="42%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : !item ? (
           <div className="flex flex-col items-start gap-24 py-64">
-            <p className="font-mono text-caption-m text-text-meta">{NOT_FOUND_TEXT}</p>
+            <p className="font-mono text-caption-m text-text-meta">{t('notFoundPage.showcase')}</p>
             <Button variant="secondary" href="/showcase">
-              목록으로 이동
+              {t('common.backToList')}
             </Button>
           </div>
         ) : (
@@ -76,17 +77,17 @@ function ShowcaseDetail() {
                 <EditPencil type="showcase" to="/admin/showcase" />
               </div>
               <dl className="border-t border-border-subtle">
-                {item.topic && <MetaRow label="주제">{item.topic}</MetaRow>}
-                {item.creator && <MetaRow label="팀·개인">{item.creator}</MetaRow>}
+                {item.topic && <MetaRow label={t('meta.topic')}>{item.topic}</MetaRow>}
+                {item.creator && <MetaRow label={t('meta.team')}>{item.creator}</MetaRow>}
                 {item.description && (
-                  <MetaRow label="설명">
+                  <MetaRow label={t('meta.description')}>
                     <span className="leading-relaxed text-text-sec">
                       {item.description}
                     </span>
                   </MetaRow>
                 )}
                 {tools.length > 0 && (
-                  <MetaRow label="활용 툴">
+                  <MetaRow label={t('meta.tools')}>
                     <span className="flex flex-wrap gap-8">
                       {tools.map((tool) => (
                         <Tag key={tool}>{tool}</Tag>
@@ -98,7 +99,7 @@ function ShowcaseDetail() {
               <div className="flex flex-wrap items-center gap-16">
                 {item.link && (
                   <Button variant="primary" href={item.link} external>
-                    프로젝트 링크
+                    {t('meta.projectLink')}
                   </Button>
                 )}
                 <ShareButton title={item.title} />
@@ -109,7 +110,7 @@ function ShowcaseDetail() {
             {subImgs.length > 0 && (
               <section className="flex flex-col gap-16">
                 <h2 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-                  서브 이미지
+                  {t('sections.subImages')}
                 </h2>
                 <ul className="grid grid-cols-1 gap-16 md:grid-cols-2">
                   {subImgs.map((url, idx) => (
@@ -129,7 +130,7 @@ function ShowcaseDetail() {
             )}
           </article>
         )}
-      </section>
+      </Container>
     </>
   )
 }

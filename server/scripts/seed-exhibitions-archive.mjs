@@ -7,7 +7,7 @@
 //
 // 규칙:
 //   - semester_label = 아래 label (최신 학기부터 내림차순)
-//   - poster_url = /images/exhibitions/{label}.png (client/public/images/exhibitions/ 실제 파일)
+//   - poster_url = /images/exhibitions/{label}.webp (client/public/images/exhibitions/ 실제 파일)
 //     단 기존 poster_url이 이미 있으면 보존(COALESCE) — 사용자 입력 덮어쓰기 금지
 //   - title = 아래 title (평문, 「」 제거 — 사용자 결정)
 //   - intro/body/site_url/gallery/held_at 은 절대 건드리지 않음 (2026-1 intro 등 보존)
@@ -67,7 +67,7 @@ async function main() {
     for (let i = 0; i < ARCHIVE.length; i++) {
       const { id, title: oldTitle } = rows[i]
       const { label, title } = ARCHIVE[i]
-      const poster = `/images/exhibitions/${label}.png`
+      const poster = `/images/exhibitions/${label}.webp`
       await client.query(
         `UPDATE exhibitions
          SET semester_label = $1,

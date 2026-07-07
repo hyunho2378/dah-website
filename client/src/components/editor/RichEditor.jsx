@@ -81,7 +81,7 @@ function ToolButton({ onClick, active = false, disabled = false, label, children
       aria-label={label}
       aria-pressed={active}
       title={label}
-      className={`flex h-32 w-32 cursor-pointer items-center justify-center rounded-full transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
+      className={`flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
         active
           ? 'bg-glass-strong text-text-pri'
           : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
@@ -210,7 +210,7 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
       <div
         role="toolbar"
         aria-label="서식 도구"
-        className="flex flex-wrap items-center gap-4 rounded-full border border-glass-line bg-glass-bg px-12 py-4 backdrop-blur-glass-mobile"
+        className="flex flex-wrap items-center gap-4 rounded-sm border border-glass-line bg-glass-bg px-12 py-4 backdrop-blur-glass-mobile"
       >
         <ToolButton
           label="볼드"
@@ -335,7 +335,7 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
 
       {/* URL 입력 행 — 링크·임베드 공용 */}
       {urlMode && (
-        <div className="flex items-center gap-8 rounded-full border border-glass-line bg-glass-bg px-12 py-4 backdrop-blur-glass-mobile">
+        <div className="flex items-center gap-8 rounded-sm border border-glass-line bg-glass-bg px-12 py-4 backdrop-blur-glass-mobile">
           <input
             type="url"
             value={urlValue}

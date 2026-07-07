@@ -74,7 +74,7 @@ function SettingsAdmin() {
       setSaved(true)
       refetch()
     } catch (err) {
-      setSaveError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setSaveError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setBusy(false)
     }

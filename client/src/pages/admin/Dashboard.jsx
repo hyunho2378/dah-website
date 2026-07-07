@@ -155,7 +155,7 @@ function Dashboard() {
                 <button
                   type="button"
                   onClick={() => approve(item)}
-                  className="inline-flex cursor-pointer items-center gap-8 rounded-full border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+                  className="inline-flex cursor-pointer items-center gap-8 rounded-sm border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
                 >
                   <Check size={16} aria-hidden="true" />
                   승인

@@ -9,8 +9,7 @@ import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-
-const NOT_FOUND_TEXT = '전시회를 찾을 수 없습니다'
+import { useLang } from '../../i18n/LangContext'
 
 // gallery jsonb 정규화: 배열 → 단일 갤러리, 객체 → 현장·작품 구분 섹션
 const GALLERY_LABELS = {
@@ -75,10 +74,11 @@ function GallerySection({ label, images, title }) {
 }
 
 function ExhibitionDetail() {
+  const { t } = useLang()
   const { id } = useParams()
   const { data, loading } = useApi(`/content/exhibitions/${id}`)
   const item = itemOf(data)
-  useTitle(item?.title ?? '전시회')
+  useTitle(item?.title ?? t('titles.exhibitions'))
 
   const galleries = normalizeGalleries(item?.gallery)
 
@@ -88,22 +88,22 @@ function ExhibitionDetail() {
         titleKo="전시회"
         titleEn="EXHIBITIONS"
         breadcrumb={[
-          { label: '홈', to: '/' },
-          { label: '프로그램' },
-          { label: '전시회', to: '/programs/exhibitions' },
-          { label: item?.title ?? '상세' },
+          { label: t('nav.home'), to: '/' },
+          { label: t('nav.events') },
+          { label: t('titles.exhibitions'), to: '/programs/exhibitions' },
+          { label: item?.title ?? t('actions.detail') },
         ]}
         nebulaX="18%"
         nebulaY="30%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : !item ? (
           <div className="flex flex-col items-start gap-24 py-64">
-            <p className="font-mono text-caption-m text-text-meta">{NOT_FOUND_TEXT}</p>
+            <p className="font-mono text-caption-m text-text-meta">{t('notFoundPage.exhibitions')}</p>
             <Button variant="secondary" href="/programs/exhibitions">
-              목록으로 이동
+              {t('common.backToList')}
             </Button>
           </div>
         ) : (
@@ -116,6 +116,8 @@ function ExhibitionDetail() {
                       src={item.poster_url}
                       alt={`${item.title} 포스터`}
                       loading="lazy"
+                      width={800}
+                      height={1200}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -137,15 +139,15 @@ function ExhibitionDetail() {
                 </div>
                 <dl className="border-t border-border-subtle">
                   {item.semester_label && (
-                    <MetaRow label="학기">{item.semester_label}</MetaRow>
+                    <MetaRow label={t('meta.semester')}>{item.semester_label}</MetaRow>
                   )}
-                  {item.held_at && <MetaRow label="개최">{item.held_at}</MetaRow>}
-                  {item.intro && <MetaRow label="소개">{item.intro}</MetaRow>}
+                  {item.held_at && <MetaRow label={t('meta.heldAt')}>{item.held_at}</MetaRow>}
+                  {item.intro && <MetaRow label={t('meta.intro')}>{item.intro}</MetaRow>}
                 </dl>
                 <div className="flex flex-wrap items-center gap-16">
                   {item.site_url && (
                     <Button variant="secondary" href={item.site_url} external>
-                      전시 사이트
+                      {t('actions.exhibitionSite')}
                     </Button>
                   )}
                   <ShareButton title={item.title} />

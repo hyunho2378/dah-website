@@ -9,9 +9,8 @@ import Container from '../../components/layout/Container'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import { useLang } from '../../i18n/LangContext'
 import { achievements } from '../../data/achievements'
-
-const EMPTY_TEXT = '등록된 항목이 없습니다'
 
 // API 게시글(13_CMS: 수상명/수상자/주최/연도/대회 URL) → 공통형. 정적 데이터도 동일 필드.
 function normalize(post) {
@@ -68,8 +67,12 @@ function AwardItem({ item }) {
 }
 
 function Achievements() {
-  useTitle('학생 성과')
-  const { data, error, offline } = useApi('/content/achievement')
+  const { t } = useLang()
+  useTitle(t('titles.achievements'))
+  // G1.3: 페이지네이션 없이 전량(41건) 노출 — 서버 기본 12건 상한 회피
+  const { data, error, offline } = useApi('/content/achievement', {
+    params: { pageSize: 100 },
+  })
 
   const useFallback = offline || (error && !data)
   const items = (useFallback ? achievements : data?.items ?? [])
@@ -83,9 +86,9 @@ function Achievements() {
         titleKo="학생 성과"
         titleEn="ACHIEVEMENTS"
         breadcrumb={[
-          { label: '홈', to: '/' },
-          { label: '학생' },
-          { label: '학생 성과', to: '/students/achievements' },
+          { label: t('nav.home'), to: '/' },
+          { label: t('nav.activities') },
+          { label: t('titles.achievements'), to: '/students/achievements' },
         ]}
         nebulaX="58%"
         nebulaY="12%"
@@ -93,30 +96,30 @@ function Achievements() {
       <Container as="section" className="py-section-m lg:py-section-d">
         {offline && (
           <p className="mb-16 font-mono text-caption-m text-text-meta">
-            실시간 동기화 대기 중
+            {t('common.offline')}
           </p>
         )}
         <div className="flex flex-wrap items-center justify-between gap-16">
           <p className="font-mono text-caption-m text-text-sec">
-            총 <span className="text-text-pri">{items.length}</span>건
+            {t('common.total')} <span className="text-text-pri">{items.length}</span>{t('common.count')}
           </p>
           <AddButton type="achievement" to="/admin/posts/achievement/new" />
         </div>
 
         {items.length === 0 ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{EMPTY_TEXT}</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.empty')}</p>
         ) : (
           <>
             {/* 연도 앵커 네비 — 존재하는 연도만 */}
             <nav
-              aria-label="연도 이동"
+              aria-label={t('aria.yearNav')}
               className="mt-24 flex flex-wrap gap-8 border-y border-border-subtle py-16"
             >
               {years.map((year) => (
                 <a
                   key={year}
                   href={`#year-${year}`}
-                  className="rounded-full border border-border-subtle px-12 py-4 font-mono text-caption-m text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
+                  className="rounded-sm border border-border-subtle px-12 py-4 font-mono text-caption-m text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
                 >
                   {year}
                 </a>

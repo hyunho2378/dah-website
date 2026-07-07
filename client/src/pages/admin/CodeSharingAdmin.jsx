@@ -19,7 +19,7 @@ import {
 } from '../../components/admin/FormControls'
 
 const ICON_BTN =
-  'flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center rounded-full text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
+  'flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
 
 /** 문자열 목록 편집 — 승인 절차·인정 학과 공용 */
 function StringListField({ label, value = [], onChange, addLabel = '항목 추가' }) {
@@ -64,7 +64,7 @@ const EMPTY = {
 
 function CodeSharingAdmin() {
   useTitle('코드쉐어링 관리')
-  const { data, loading, error, offline } = useApi('/admin/content/codesharing')
+  const { data, loading, error, offline, refetch } = useApi('/admin/content/codesharing')
   const [form, setForm] = useState(EMPTY)
   const [hydrated, setHydrated] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -113,7 +113,7 @@ function CodeSharingAdmin() {
       })
       setSaved(true)
     } catch (err) {
-      setSaveError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setSaveError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setBusy(false)
     }
@@ -123,13 +123,33 @@ function CodeSharingAdmin() {
     <section className="flex flex-col gap-24">
       <PageHead
         title="코드쉐어링"
-        desc="단일 문서 — 본문·인정 학과 목록·HWP 신청서를 관리합니다."
+        desc="단일 문서입니다. 본문과 인정 학과 목록, HWP 신청서를 관리합니다."
         offline={offline}
       />
 
-      {error && <ErrorText>{error.message}</ErrorText>}
-      {loading && <p className="font-mono text-caption-m text-text-meta">불러오는 중</p>}
+      {/* G3: 기존 문서가 채워진 뒤에만 폼 렌더 — 빈 폼으로 덮어쓰기 방지 */}
+      {!hydrated ? (
+        <div className="flex flex-col items-start gap-16">
+          {loading && (
+            <p className="font-mono text-caption-m text-text-meta">
+              기존 내용을 불러오는 중
+            </p>
+          )}
+          {error && (
+            <>
+              <ErrorText>{error.message}</ErrorText>
+              <GhostButton onClick={refetch}>다시 불러오기</GhostButton>
+            </>
+          )}
+          {!loading && !error && (
+            <p className="font-mono text-caption-m text-text-meta">
+              문서가 아직 없습니다. 저장하면 새 문서가 생성됩니다.
+            </p>
+          )}
+        </div>
+      ) : null}
 
+      {(hydrated || (!loading && !error && !data?.items?.length)) && (
       <form onSubmit={save} className="flex flex-col gap-24">
         <Field label="정의">
           <TextArea rows={3} value={form.definition} onChange={(e) => set('definition')(e.target.value)} />
@@ -199,6 +219,7 @@ function CodeSharingAdmin() {
           </PrimaryButton>
         </div>
       </form>
+      )}
     </section>
   )
 }

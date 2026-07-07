@@ -7,6 +7,8 @@ import { useCallback, useEffect, useState } from 'react'
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 const TIMEOUT_MS = 3000
+// G3: 어드민 조회는 스냅샷 폴백이 없어 조기 중단이 순손실 — 콜드 스타트(Render)·원거리 지연 허용
+const ADMIN_TIMEOUT_MS = 15000
 
 // 폴백 슬롯 — lazy glob (eager 금지). 파일이 없으면 data null + offline true.
 const snapshotModules = import.meta.glob('../data/snapshot/*.json')
@@ -98,7 +100,7 @@ export function itemOf(data) {
  * @returns {{ data: any, loading: boolean, error: Error|null, offline: boolean, refetch: Function }}
  *   offline true → 스냅샷 폴백 렌더 중. 상위에서 "실시간 동기화 대기 중" 배지 노출 가능
  */
-export function useApi(path, { params } = {}) {
+export function useApi(path, { params, timeoutMs } = {}) {
   const [state, setState] = useState({
     data: null,
     loading: Boolean(path),
@@ -107,6 +109,8 @@ export function useApi(path, { params } = {}) {
   })
   const [tick, setTick] = useState(0)
   const query = buildQuery(params)
+  // G3: /admin 경로는 기본 타임아웃을 길게 (프리필 GET이 3초 abort로 빈 폼이 되던 버그)
+  const limit = timeoutMs ?? (path && path.startsWith('/admin') ? ADMIN_TIMEOUT_MS : TIMEOUT_MS)
 
   useEffect(() => {
     if (!path) {
@@ -115,7 +119,7 @@ export function useApi(path, { params } = {}) {
     }
     let alive = true
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+    const timer = setTimeout(() => controller.abort(), limit)
     setState((s) => ({ ...s, loading: true, error: null }))
 
     fetch(`${API_BASE}${path}${query}`, {
@@ -144,7 +148,7 @@ export function useApi(path, { params } = {}) {
       clearTimeout(timer)
       controller.abort()
     }
-  }, [path, query, tick])
+  }, [path, query, tick, limit])
 
   const refetch = useCallback(() => setTick((t) => t + 1), [])
 

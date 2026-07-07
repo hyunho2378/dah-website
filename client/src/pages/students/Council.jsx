@@ -1,13 +1,13 @@
 // /students/council — 운영위원회 (T4 아카이브형: 기수별 아카이브)
 // 기수 탭(최신 기본) → 로고·기수명·소개·구성원 그리드. 기수가 늘어도 동일 템플릿 보존.
 import { useState } from 'react'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
+import Container from '../../components/layout/Container'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import { useLang } from '../../i18n/LangContext'
 import { lucid, councilHistory } from '../../data/council'
-
-const EMPTY_TEXT = '등록된 항목이 없습니다'
 
 const toMember = (member) =>
   typeof member === 'string' ? { name: member } : member
@@ -40,8 +40,12 @@ const FALLBACK_ITEMS = [
 ]
 
 function Council() {
-  useTitle('운영위원회')
-  const { data, loading, error, offline } = useApi('/content/council')
+  const { t } = useLang()
+  useTitle(t('titles.council'))
+  // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
+  const { data, loading, error, offline } = useApi('/content/council', {
+    params: { pageSize: 100 },
+  })
   const remote = data?.items ?? []
   // 원격 데이터 있으면 ordinal 내림차순, 없으면 원문 폴백(연도 내림차순)
   const items =
@@ -58,16 +62,16 @@ function Council() {
       <PageBanner
         titleKo="운영위원회"
         titleEn="COUNCIL"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '학생' }, { label: '운영위원회', to: '/students/council' }]}
+        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.activities') }, { label: t('titles.council'), to: '/students/council' }]}
         nebulaX="24%"
         nebulaY="40%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-16">
           {/* 기수 탭 — 최신 기수 기본 활성 */}
           <div
             role="group"
-            aria-label="기수 선택"
+            aria-label={t('aria.termSelect')}
             className="flex flex-wrap gap-x-24 gap-y-8"
           >
             {items.map((c) => {
@@ -93,10 +97,10 @@ function Council() {
         </div>
 
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : !active ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">
-            {error && !offline ? '목록을 불러오지 못했습니다' : EMPTY_TEXT}
+            {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
           <div className="mt-48 flex min-w-0 flex-col gap-48">
@@ -142,11 +146,11 @@ function Council() {
             {/* 구성원 그리드 */}
             <div className="flex flex-col gap-16">
               <h3 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-                구성원
+                {t('sections.members')}
               </h3>
               {members.length === 0 ? (
                 <p className="py-32 font-mono text-caption-m text-text-meta">
-                  {EMPTY_TEXT}
+                  {t('common.empty')}
                 </p>
               ) : (
                 <ul className="grid grid-cols-2 gap-12 md:grid-cols-3 lg:grid-cols-4">
@@ -175,7 +179,7 @@ function Council() {
             </div>
           </div>
         )}
-      </section>
+      </Container>
     </>
   )
 }

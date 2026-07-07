@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { MoreHorizontal, X } from 'lucide-react'
+import { MoreHorizontal, Settings, X } from 'lucide-react'
 import { nav } from '../../data/nav'
 import { useLang } from '../../i18n/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLoginModal } from '../../context/LoginModalContext'
-import Tag from '../common/Tag'
 import LangToggle from './LangToggle'
 import logoUrl from '../../assets/logo.svg'
 
@@ -20,8 +19,9 @@ const SPRING = 'cubic-bezier(0.32, 1.32, 0.5, 1)'
 const SWIPE_CLOSE_PX = 32
 
 // 현재 경로 → 페이지명 매칭 (구체 경로 우선: to 길이 내림차순)
+// G8: 하위 없는 최상위 메뉴(About·쇼케이스·공지사항·자료실)도 자기 자신으로 매칭
 const flatChildren = nav
-  .flatMap((item) => item.children)
+  .flatMap((item) => (item.children.length > 0 ? item.children : [item]))
   .sort((a, b) => b.to.length - a.to.length)
 
 // 언어에 따라 label(KR)/labelEn 선택. 홈·미매칭 폴백은 사전 키로 조회
@@ -145,12 +145,16 @@ function GlassDock() {
               <LangToggle />
               {/* 비로그인 = 로그인 링크만 / 로그인 = 역할 뱃지 + 관리 진입 (편집 UI 미렌더 원칙) */}
               {user ? (
-                <span className="flex items-center gap-8">
-                  <Tag>{user.role}</Tag>
-                  <Link to="/admin" onClick={close} className={utilLinkClass}>
-                    {t('actions.admin')}
-                  </Link>
-                </span>
+                // G14: 텍스트 뱃지 금지 — 관리 아이콘 버튼 하나. 역할은 툴팁으로만.
+                <Link
+                  to="/admin"
+                  onClick={close}
+                  title={`${user.role} ${t('actions.admin')}`}
+                  aria-label={`${user.role} ${t('actions.admin')}`}
+                  className="flex h-32 w-32 items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:text-text-pri"
+                >
+                  <Settings size={18} aria-hidden="true" />
+                </Link>
               ) : (
                 <button
                   type="button"

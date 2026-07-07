@@ -49,6 +49,9 @@ ALTER TABLE posts ADD COLUMN IF NOT EXISTS attachments JSONB;
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS seed_key TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_posts_seed_key ON posts (seed_key);
 
+-- G1(18_PHASE6): 학생 성과 원문 등장 순서. 목록 정렬 = 연도(tag) DESC, 연도 내 sort ASC.
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS sort INTEGER;
+
 -- 교수진
 CREATE TABLE IF NOT EXISTS professors (
   id        SERIAL PRIMARY KEY,

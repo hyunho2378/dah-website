@@ -1,37 +1,47 @@
 /**
  * ko.js — UI 라벨 사전 (13_CMS_SPEC 5절 i18n)
  *
- * - UI 라벨(네비·퀵링크·섹션 타이틀·푸터·공유·빈 상태)만 담는다.
- * - 긴 콘텐츠 문단(About 원문 등)은 여기 두지 않는다 — 페이지가 src/data 원문을 직접 렌더하고,
- *   영문 페이지에서는 KoreanOnlyBadge + 국문 렌더 패턴을 쓴다(en.js 하단 예약 키 주석 참조).
+ * - UI 라벨(네비·섹션 타이틀·푸터·공유·빈 상태·상세 메타)만 담는다.
+ * - 긴 콘텐츠 문단(About 원문 등)은 여기 두지 않는다. 페이지가 원문·페이지 상수를 직접 렌더한다.
  * - en.js에 같은 키가 없으면 LangContext.t()가 이 파일 값으로 폴백한다.
+ * - G11 교정 기준: 능동태, 한국어 어순, 불필요한 조사 제거. 이모티콘·em dash 금지.
  */
 export const ko = {
+  // G8 헤더 IA: About / 전공 소개 / 교육과정 / 학과 행사 / 학생 활동 / 쇼케이스 / 공지사항 / 자료실
   nav: {
     home: '홈',
     about: 'About',
+    people: '전공 소개',
     curriculum: '교육과정',
-    programs: '프로그램',
-    students: '학생',
+    events: '학과 행사',
+    activities: '학생 활동',
     showcase: '쇼케이스',
-    news: '소식',
+    notices: '공지사항',
+    resources: '자료실',
   },
   titles: {
-    about: '전공 소개',
-    people: '교수진·멘토단',
+    about: 'About',
+    people: '전공 소개',
+    faculty: '교수진',
+    mentors: '멘토단',
     curriculum: '교육과정',
     codesharing: '코드쉐어링',
+    exhibitions: '전시회',
+    contests: '공모전',
+    lectures: '특강',
+    council: '운영위원회',
+    clubs: '동아리',
+    achievements: '학생 성과',
+    careers: '진로',
+    showcase: '쇼케이스',
+    notices: '공지사항',
+    resources: '자료실',
+    privacy: '개인정보처리방침',
+    terms: '이용약관',
   },
   hero: {
     ctaAbout: '전공 소개',
     ctaExhibition: '전시회 보러가기',
-  },
-  quicklinks: {
-    label: '퀵링크',
-    submit: '전시회 접수',
-    showcaseSubmit: '쇼케이스 제출',
-    notice: '공지사항',
-    codesharing: '코드쉐어링',
   },
   sections: {
     programs: '프로그램',
@@ -39,7 +49,7 @@ export const ko = {
     achievements: '학생 수상 실적',
     news: '공지사항',
     overview: '개요',
-    missionVision: '미션·비전',
+    missionVision: '미션과 비전',
     history: '연혁',
     graduate: '대학원 안내',
     roadmap: '4년 로드맵',
@@ -49,8 +59,13 @@ export const ko = {
     faculty: '교수진',
     mentors: '산업 멘토단',
     codesharing: '코드쉐어링',
+    employment: '취업 현황',
+    portfolio: '재학생 포트폴리오',
+    members: '구성원',
+    gallery: '갤러리',
+    subImages: '서브 이미지',
   },
-  // 트랙 표시명 v2 (10_IA_V2 0절 확정) — 데이터 키(track-1~3/common)는 유지, 표시만 매핑
+  // 트랙 표시명 v2 — 데이터 키(track-1~3/common)는 유지, 표시만 매핑
   tracks: {
     'track-1': '디자인 트랙',
     'track-2': 'AI 트랙',
@@ -59,7 +74,7 @@ export const ko = {
   },
   programs: {
     exhibitions: { label: '전시회', desc: '학기별 전공 프로젝트 전시회 아카이브' },
-    contests: { label: '공모전', desc: '전공·교내외 공모전 모집과 결과 안내' },
+    contests: { label: '공모전', desc: '전공과 교내외 공모전의 모집·결과 안내' },
     lectures: { label: '특강', desc: '산업·학계 연사 초청 특강 안내' },
     showcase: { label: '쇼케이스', desc: '재학생 웹·앱 프로젝트 쇼케이스' },
   },
@@ -73,11 +88,16 @@ export const ko = {
     copied: '복사됨',
     login: '로그인',
     admin: '관리',
+    submitShowcase: '쇼케이스 제출',
+    exhibitionSite: '전시 사이트',
+    applyExternal: '접수 페이지',
+    applyLecture: '신청 페이지',
+    contestPage: '대회 페이지',
   },
   common: {
     koreanOnly: 'Korean only',
     empty: '등록된 항목이 없습니다',
-    offline: '실시간 동기화 대기 중',
+    offline: '실시간 동기화를 기다리는 중',
     loading: '불러오는 중',
     error: '목록을 불러오지 못했습니다',
     notFound: '게시글을 찾을 수 없습니다',
@@ -85,22 +105,46 @@ export const ko = {
     viewOriginal: '원문 보기',
     attachments: '첨부',
     menu: '메뉴',
+    total: '총',
+    count: '건',
+    noPoster: 'NO POSTER',
+    noImage: 'NO IMAGE',
+    externalApply: '외부 접수',
   },
-  // 접근성 라벨(aria-label) — 화면 미표시지만 스크린리더 언어 일치를 위해 사전화
+  meta: {
+    semester: '학기',
+    heldAt: '개최',
+    intro: '소개',
+    period: '기간',
+    datetime: '일시',
+    topic: '주제',
+    team: '팀·개인',
+    description: '설명',
+    tools: '활용 툴',
+    projectLink: '프로젝트 링크',
+  },
+  notFoundPage: {
+    exhibitions: '전시회를 찾을 수 없습니다',
+    contests: '공모전을 찾을 수 없습니다',
+    lectures: '특강을 찾을 수 없습니다',
+    showcase: '쇼케이스 항목을 찾을 수 없습니다',
+  },
+  // 접근성 라벨(aria-label) — 스크린리더 언어 일치용
   aria: {
     mainMenu: '주 메뉴',
     openMenu: '메뉴 열기',
     closeMenu: '메뉴 닫기',
     breadcrumb: '브레드크럼',
-    sitemap: '사이트맵',
-    relatedSites: '관련 사이트',
     mobileMenu: '모바일 메뉴',
     tagFilter: '태그 필터',
     submenu: '하위 메뉴',
+    yearNav: '연도 이동',
+    termSelect: '기수 선택',
   },
   news: {
     searchPlaceholder: '공지 검색',
-    bodyElsewhere: '이 공지의 본문은 원문 페이지에서 확인할 수 있습니다.',
+    resourceSearchPlaceholder: '자료 검색',
+    bodyElsewhere: '이 공지의 본문은 원문 페이지에서 확인하세요.',
     tags: {
       all: '전체',
       internal: '대내',
@@ -110,15 +154,11 @@ export const ko = {
     },
   },
   footer: {
-    copyright: '© 2026 Hallym University Digital Arts and Humanities',
+    copyright: '© 2026 디지털인문예술전공. All rights reserved.',
     department: '디지털인문예술전공',
     university: '한림대학교',
+    address: '강원특별자치도 춘천시 한림대학길 1',
     privacy: '개인정보처리방침',
     terms: '이용약관',
-    links: {
-      hallym: '한림대학교',
-      exhibition: '전시회',
-      instagram: '인스타그램',
-    },
   },
 };

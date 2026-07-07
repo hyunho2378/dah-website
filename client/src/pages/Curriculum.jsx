@@ -1,4 +1,5 @@
 import PageBanner from '../components/layout/PageBanner'
+import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import ArrowLink from '../components/common/ArrowLink'
@@ -11,9 +12,6 @@ import { motion } from '../styles/tokens'
 
 // 교육과정 v2 (10_IA_V2 2절 /curriculum) — Tracks.jsx 대체 페이지.
 // 트랙 표시명 v2(i18n 매핑), 앵커 id=track-1..3 유지, 로드맵 압축(공통기초 최상단 고정 + 한눈 뷰).
-
-const CONTAINER =
-  'mx-auto w-full max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide'
 
 // 다이어그램 레이아웃 계산 헬퍼 — Tracks.jsx 빌더 이식 + v2 압축(행높이·패딩 축소, 한눈 뷰)
 // 렌더 좌표 데이터만 반환. 색·텍스트는 렌더 측에서 border/text 토큰으로만 지정한다.
@@ -55,9 +53,10 @@ function buildDiagramLayout(lanes, items) {
 // 트랙 상세 블록 — Tracks.jsx TrackDetail 이식. 표시명만 v2(i18n), 앵커·과목 행 문법 유지
 function TrackDetail({ track, displayName, courses, coursesLabel }) {
   return (
-    <section
+    <Container
+      as="section"
       id={track.id}
-      className={`${CONTAINER} scroll-mt-header pt-section-m md:pt-section-d`}
+      className="scroll-mt-header pt-section-m md:pt-section-d"
     >
       <Reveal>
         <p className="font-mono text-label-m uppercase tracking-label text-text-sec md:text-label-d">
@@ -93,7 +92,7 @@ function TrackDetail({ track, displayName, courses, coursesLabel }) {
           </ul>
         </div>
       )}
-    </section>
+    </Container>
   )
 }
 
@@ -135,7 +134,7 @@ function Curriculum() {
 
         {/* 04 4년 로드맵 — 압축 SVG: 공통기초 최상단, 4학년 4열 한눈 뷰(초과 스크롤 없음) */}
         {curriculum.length > 0 && (
-          <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
+          <Container as="section" className="pt-section-m md:pt-section-d">
             <Reveal>
               <SectionLabel index="04" text="ROADMAP" />
               <div className="mt-24 flex flex-wrap items-center gap-12 md:mt-32">
@@ -293,11 +292,11 @@ function Curriculum() {
                 })}
               </div>
             </div>
-          </section>
+          </Container>
         )}
 
         {/* 05 코드쉐어링 — /curriculum/codesharing 분리 페이지 안내 (10_IA_V2 2절) */}
-        <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
+        <Container as="section" className="pt-section-m md:pt-section-d">
           <Reveal delay={motion.stagger}>
             <SectionLabel index="05" text="CODE SHARING" />
             <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
@@ -307,7 +306,7 @@ function Curriculum() {
               <ArrowLink href="/curriculum/codesharing">{t('actions.detail')}</ArrowLink>
             </div>
           </Reveal>
-        </section>
+        </Container>
       </div>
     </>
   )

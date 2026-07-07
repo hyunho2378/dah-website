@@ -9,8 +9,7 @@ import Reveal from '../../components/common/Reveal'
 import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-
-const EMPTY_TEXT = '등록된 항목이 없습니다'
+import { useLang } from '../../i18n/LangContext'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
 function period(item) {
@@ -21,15 +20,18 @@ function period(item) {
 }
 
 function CardBody({ item, external }) {
+  const { t } = useLang()
   const title = item.title_ko ?? item.title
   return (
-    <GlassCard hover className="flex h-full flex-col gap-12">
+    <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
       <figure className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
         {item.poster_url ? (
           <img
             src={item.poster_url}
             alt={`${title} 포스터`}
             loading="lazy"
+            width={600}
+            height={900}
             className="h-full w-full object-cover"
           />
         ) : (
@@ -38,9 +40,9 @@ function CardBody({ item, external }) {
           </span>
         )}
         {external && (
-          <span className="absolute right-8 top-8 inline-flex items-center gap-4 rounded-full border border-glass-line bg-glass-strong px-8 py-4 font-mono text-caption-m text-text-pri">
+          <span className="absolute right-8 top-8 inline-flex items-center gap-4 rounded-sm border border-glass-line bg-glass-strong px-8 py-4 font-mono text-caption-m text-text-pri">
             <ArrowUpRight size={16} aria-hidden="true" />
-            외부 접수
+            {t('common.externalApply')}
           </span>
         )}
       </figure>
@@ -77,8 +79,12 @@ function ContestCard({ item }) {
 }
 
 function Contests() {
-  useTitle('공모전')
-  const { data, loading, error, offline } = useApi('/content/contest')
+  const { t } = useLang()
+  useTitle(t('titles.contests'))
+  // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
+  const { data, loading, error, offline } = useApi('/content/contest', {
+    params: { pageSize: 100 },
+  })
   const items = data?.items ?? []
 
   return (
@@ -86,22 +92,22 @@ function Contests() {
       <PageBanner
         titleKo="공모전"
         titleEn="CONTESTS"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '프로그램' }, { label: '공모전', to: '/programs/contests' }]}
+        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.events') }, { label: t('titles.contests'), to: '/programs/contests' }]}
         nebulaX="46%"
         nebulaY="14%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-16">
           <p className="font-mono text-caption-m text-text-sec">
-            총 <span className="text-text-pri">{data?.total ?? items.length}</span>건
+            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
           </p>
           <AddButton type="contest" to="/admin/posts/contest/new" />
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : items.length === 0 ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">
-            {error && !offline ? '목록을 불러오지 못했습니다' : EMPTY_TEXT}
+            {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
           <ul className="mt-32 grid grid-cols-2 gap-16 md:grid-cols-3 md:gap-24 lg:grid-cols-4">

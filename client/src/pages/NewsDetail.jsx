@@ -28,7 +28,9 @@ function NewsDetail() {
   const date = post?.date ?? (post?.created_at ?? '').slice(0, 10)
   const author = post?.author ?? null
   const attachments = post?.attachments ?? post?.files ?? []
-  useTitle(title || t('quicklinks.notice'))
+  // G2: external_url 항목도 내부 상세를 먼저 열고, 원문은 버튼으로 이동
+  const originalUrl = post?.external_url ?? post?.url ?? null
+  useTitle(title || t('titles.notices'))
 
   return (
     <>
@@ -37,8 +39,7 @@ function NewsDetail() {
         titleEn="NEWS"
         breadcrumb={[
           { label: t('nav.home'), to: '/' },
-          { label: t('nav.news') },
-          { label: t('quicklinks.notice'), to: '/news' },
+          { label: t('titles.notices'), to: '/news' },
           { label: title || t('actions.detail') },
         ]}
         nebulaX="72%"
@@ -73,15 +74,16 @@ function NewsDetail() {
             {post.body ? (
               <RichBody body={post.body} />
             ) : (
-              <div className="flex flex-col items-start gap-24">
-                <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
-                  {t('news.bodyElsewhere')}
-                </p>
-                {post.url && (
-                  <Button variant="secondary" href={post.url} external>
-                    {t('common.viewOriginal')}
-                  </Button>
-                )}
+              <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
+                {t('news.bodyElsewhere')}
+              </p>
+            )}
+            {/* G2: 원문 링크가 있으면 본문 유무와 무관하게 원문 보기 버튼 노출 */}
+            {originalUrl && (
+              <div>
+                <Button variant="secondary" href={originalUrl} external>
+                  {t('common.viewOriginal')}
+                </Button>
               </div>
             )}
             {attachments.length > 0 && (

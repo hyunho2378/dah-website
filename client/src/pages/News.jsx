@@ -31,9 +31,8 @@ function toRow(post, no) {
     author: post.author ?? null,
     date: post.date ?? (post.created_at ?? '').slice(0, 10) ?? null,
     pinned: Boolean(post.pinned),
-    // F8 내부 링크화: 기본 내부 상세로, external_url 있는 항목만 바로 외부
-    href: post.external_url ?? undefined,
-    to: post.external_url ? undefined : `/news/${post.id}`,
+    // G2: 전 항목 내부 상세 우선. external_url은 상세 페이지의 "원문 보기" 버튼으로만 노출.
+    to: `/news/${post.id}`,
   }
 }
 
@@ -43,7 +42,7 @@ function pinnedFirst(list) {
 
 function News() {
   const { t } = useLang()
-  useTitle(t('quicklinks.notice'))
+  useTitle(t('titles.notices'))
   const [tag, setTag] = useState('전체')
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
@@ -89,8 +88,7 @@ function News() {
         titleEn="NEWS"
         breadcrumb={[
           { label: t('nav.home'), to: '/' },
-          { label: t('nav.news') },
-          { label: t('quicklinks.notice'), to: '/news' },
+          { label: t('titles.notices'), to: '/news' },
         ]}
         nebulaX="72%"
         nebulaY="18%"
@@ -109,7 +107,7 @@ function News() {
                     setTag(def.value)
                     setPage(1)
                   }}
-                  className={`cursor-pointer rounded-full border px-12 py-4 font-mono text-caption-m transition-colors duration-fast ease-out ${
+                  className={`cursor-pointer rounded-sm border px-12 py-4 font-mono text-caption-m transition-colors duration-fast ease-out ${
                     isActive
                       ? 'border-border-strong bg-glass-strong text-text-pri'
                       : 'border-border-subtle text-text-sec hover:border-border-strong hover:text-text-pri'

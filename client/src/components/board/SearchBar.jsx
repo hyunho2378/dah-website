@@ -13,7 +13,7 @@ function SearchBar({ value = '', onSearch, placeholder = '검색어 입력' }) {
         event.preventDefault()
         onSearch(q.trim())
       }}
-      className="flex w-full min-w-0 items-center gap-8 rounded-full border border-border-subtle bg-bg-panel px-16 py-8 transition-colors duration-fast ease-out focus-within:border-border-strong md:w-auto"
+      className="flex w-full min-w-0 items-center gap-8 rounded-sm border border-border-subtle bg-bg-panel px-16 py-8 transition-colors duration-fast ease-out focus-within:border-border-strong md:w-auto"
     >
       <input
         type="search"

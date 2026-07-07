@@ -34,7 +34,7 @@ export function submitErrorMessage(err) {
     return '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.'
   const parts = [err?.message, err?.hint].filter(Boolean)
   return parts.length
-    ? parts.join(' — ')
+    ? parts.join(' / ')
     : '요청에 실패했습니다. 잠시 후 다시 시도해 주세요.'
 }
 

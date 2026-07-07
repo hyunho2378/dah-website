@@ -68,7 +68,8 @@ export const spacing = {
 export const layout = {
   // v2(11_DESIGN_V2 7절): 5xl 3840 추가 (4K·32인치 대응)
   breakpoints: { xs: 320, sm: 390, md: 768, lg: 1024, xl: 1280, '2xl': 1440, '3xl': 1920, '4xl': 2560, '5xl': 3840 },
-  radius: { sm: 6, md: 10, lg: 16, full: 9999 },
+  // G4(18_PHASE6): 라디우스 전면 4px 통일. full은 알약형(언어 토글·GlassDock)만 허용.
+  radius: { sm: 4, md: 4, lg: 4, full: 9999 },
   headerHeight: { default: 72, shrunk: 56 },
 };
 
@@ -80,7 +81,7 @@ export const glass = {
   highlight: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 40%)',
   blur: '20px',        // backdrop-filter: blur(20px) saturate(160%)
   blurMobile: '12px',
-  radius: 20,
+  radius: 4,           // G4: 글래스 카드도 4px 통일
 };
 
 // v2: 무한한 우주 배경 시스템

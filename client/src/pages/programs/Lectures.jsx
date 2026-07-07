@@ -7,8 +7,7 @@ import Reveal from '../../components/common/Reveal'
 import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-
-const EMPTY_TEXT = '등록된 항목이 없습니다'
+import { useLang } from '../../i18n/LangContext'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
 function LectureCard({ item }) {
@@ -17,13 +16,15 @@ function LectureCard({ item }) {
 
   return (
     <Link to={`/programs/lectures/${item.id}`} className="group block h-full">
-      <GlassCard hover className="flex h-full flex-col gap-12">
+      <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
         <figure className="aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
           {item.poster_url ? (
             <img
               src={item.poster_url}
               alt={`${title} 포스터`}
               loading="lazy"
+              width={600}
+              height={900}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -44,8 +45,12 @@ function LectureCard({ item }) {
 }
 
 function Lectures() {
-  useTitle('특강')
-  const { data, loading, error, offline } = useApi('/content/lecture')
+  const { t } = useLang()
+  useTitle(t('titles.lectures'))
+  // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
+  const { data, loading, error, offline } = useApi('/content/lecture', {
+    params: { pageSize: 100 },
+  })
   const items = data?.items ?? []
 
   return (
@@ -53,22 +58,22 @@ function Lectures() {
       <PageBanner
         titleKo="특강"
         titleEn="LECTURES"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '프로그램' }, { label: '특강', to: '/programs/lectures' }]}
+        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.events') }, { label: t('titles.lectures'), to: '/programs/lectures' }]}
         nebulaX="80%"
         nebulaY="34%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-16">
           <p className="font-mono text-caption-m text-text-sec">
-            총 <span className="text-text-pri">{data?.total ?? items.length}</span>건
+            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
           </p>
           <AddButton type="lecture" to="/admin/posts/lecture/new" />
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : items.length === 0 ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">
-            {error && !offline ? '목록을 불러오지 못했습니다' : EMPTY_TEXT}
+            {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
           <ul className="mt-32 grid grid-cols-2 gap-16 md:grid-cols-3 md:gap-24 lg:grid-cols-4">

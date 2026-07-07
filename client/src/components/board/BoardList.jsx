@@ -51,7 +51,7 @@ function RowBody({ item, isLink }) {
                 key={file.url}
                 href={file.url}
                 download
-                className="inline-flex items-center gap-4 rounded-full border border-border-subtle px-12 py-4 font-mono text-caption-m text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
+                className="inline-flex items-center gap-4 rounded-sm border border-border-subtle px-12 py-4 font-mono text-caption-m text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
               >
                 <Download size={16} aria-hidden="true" />
                 {file.name}

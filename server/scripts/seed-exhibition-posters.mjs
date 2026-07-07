@@ -2,7 +2,7 @@
 //
 // 원칙: UPDATE ... WHERE poster_url IS NULL — 이미 값이 있는 행(예 PITR로 복구된 'Against the Flow'의
 //   CMS 포스터)은 절대 덮어쓰지 않는다. 삭제/truncate 없음.
-// 포스터 파일: client/public/images/exhibitions/<학기>.png (Vercel 정적 서빙).
+// 포스터 파일: client/public/images/exhibitions/<학기>.webp (Vercel 정적 서빙).
 // 실행: server/ 안에서 `node scripts/seed-exhibition-posters.mjs`
 import 'dotenv/config'
 import pg from 'pg'
@@ -47,7 +47,7 @@ async function main() {
     for (const [title, sem] of MAP) {
       const r = await client.query(
         `UPDATE exhibitions SET poster_url = $1 WHERE title = $2 AND poster_url IS NULL`,
-        [`/images/exhibitions/${sem}.png`, title]
+        [`/images/exhibitions/${sem}.webp`, title]
       )
       filled += r.rowCount
       if (r.rowCount === 0) misses.push(`${title} (제목 불일치 또는 이미 포스터 존재)`)

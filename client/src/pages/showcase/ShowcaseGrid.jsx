@@ -1,6 +1,7 @@
 // /showcase — 웹&앱 쇼케이스 그리드 (published만, 16:9 카드)
 import { Link } from 'react-router-dom'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
+import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import Reveal from '../../components/common/Reveal'
 import Tag from '../../components/common/Tag'
@@ -8,8 +9,7 @@ import Button from '../../components/common/Button'
 import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-
-const EMPTY_TEXT = '등록된 항목이 없습니다'
+import { useLang } from '../../i18n/LangContext'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
 function ShowcaseCard({ item }) {
@@ -17,7 +17,7 @@ function ShowcaseCard({ item }) {
 
   return (
     <Link to={`/showcase/${item.id}`} className="group block h-full">
-      <GlassCard hover className="flex h-full flex-col gap-12">
+      <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
         <figure className="aspect-video w-full overflow-hidden rounded-md bg-bg-elev">
           {item.main_img ? (
             <img
@@ -53,9 +53,11 @@ function ShowcaseCard({ item }) {
 }
 
 function ShowcaseGrid() {
-  useTitle('쇼케이스')
+  const { t } = useLang()
+  useTitle(t('titles.showcase'))
+  // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
   const { data, loading, error, offline } = useApi('/content/showcase', {
-    params: { status: 'published' },
+    params: { status: 'published', pageSize: 100 },
   })
   const items = data?.items ?? []
 
@@ -64,27 +66,27 @@ function ShowcaseGrid() {
       <PageBanner
         titleKo="쇼케이스"
         titleEn="SHOWCASE"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '쇼케이스', to: '/showcase' }]}
+        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('titles.showcase'), to: '/showcase' }]}
         nebulaX="70%"
         nebulaY="42%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-16">
           <p className="font-mono text-caption-m text-text-sec">
-            총 <span className="text-text-pri">{data?.total ?? items.length}</span>건
+            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
           </p>
           <div className="flex flex-wrap items-center gap-12">
             <AddButton type="showcase" to="/admin/showcase" />
             <Button variant="secondary" href="/showcase/submit">
-              쇼케이스 제출
+              {t('actions.submitShowcase')}
             </Button>
           </div>
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : items.length === 0 ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">
-            {error && !offline ? '목록을 불러오지 못했습니다' : EMPTY_TEXT}
+            {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
           <ul className="mt-32 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
@@ -95,7 +97,7 @@ function ShowcaseGrid() {
             ))}
           </ul>
         )}
-      </section>
+      </Container>
     </>
   )
 }

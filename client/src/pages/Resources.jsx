@@ -7,11 +7,9 @@ import BoardList from '../components/board/BoardList'
 import { AddButton } from '../components/content/EditControls'
 import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
+import { useLang } from '../i18n/LangContext'
 
 const PAGE_SIZE = 10
-const EMPTY_TEXT = '등록된 항목이 없습니다'
-const LOADING_TEXT = '불러오는 중'
-const ERROR_TEXT = '목록을 불러오지 못했습니다'
 
 function toAttachment(file) {
   if (typeof file === 'string') return { name: '첨부파일', url: file }
@@ -35,7 +33,8 @@ function toRow(post, no) {
 }
 
 function Resources() {
-  useTitle('자료실')
+  const { t } = useLang()
+  useTitle(t('titles.resources'))
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
 
@@ -50,11 +49,11 @@ function Resources() {
   )
 
   const statusText = loading
-    ? LOADING_TEXT
+    ? t('common.loading')
     : rows.length === 0
       ? error && !offline
-        ? ERROR_TEXT
-        : EMPTY_TEXT
+        ? t('common.error')
+        : t('common.empty')
       : null
 
   return (
@@ -62,14 +61,14 @@ function Resources() {
       <PageBanner
         titleKo="자료실"
         titleEn="RESOURCES"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '소식' }, { label: '자료실', to: '/resources' }]}
+        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('titles.resources'), to: '/resources' }]}
         nebulaX="28%"
         nebulaY="22%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         {offline && (
           <p className="mb-16 font-mono text-caption-m text-text-meta">
-            실시간 동기화 대기 중
+            {t('common.offline')}
           </p>
         )}
         <BoardList
@@ -83,7 +82,7 @@ function Resources() {
             setPage(1)
           }}
           searchValue={q}
-          searchPlaceholder="자료 검색"
+          searchPlaceholder={t('news.resourceSearchPlaceholder')}
           statusText={statusText}
           actions={<AddButton type="resource" to="/admin/posts/resource/new" />}
         />

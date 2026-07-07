@@ -1,7 +1,7 @@
 /**
  * en.js — 영문 UI 라벨 사전 (13_CMS_SPEC 5절 i18n)
  *
- * - 확실한 UI 라벨만 담는다. 기계번역 삽입 금지.
+ * - 확실한 UI 라벨만 담는다. 기계번역 삽입 금지 — 여기 값은 사람이 감수한 문안.
  * - 여기 없는 키는 LangContext.t()가 ko.js 값으로 폴백한다.
  * - Track 영문명은 13_CMS_SPEC 5절 확정값: Design Track / AI Track / Enter-Culture Track.
  */
@@ -9,28 +9,37 @@ export const en = {
   nav: {
     home: 'Home',
     about: 'About',
+    people: 'People',
     curriculum: 'Curriculum',
-    programs: 'Programs',
-    students: 'Students',
+    events: 'Events',
+    activities: 'Activities',
     showcase: 'Showcase',
-    news: 'News',
+    notices: 'Notices',
+    resources: 'Resources',
   },
   titles: {
     about: 'About',
-    people: 'Faculty & Mentors',
+    people: 'People',
+    faculty: 'Faculty',
+    mentors: 'Mentors',
     curriculum: 'Curriculum',
     codesharing: 'Code Sharing',
+    exhibitions: 'Exhibitions',
+    contests: 'Contests',
+    lectures: 'Lectures',
+    council: 'Student Council',
+    clubs: 'Clubs',
+    achievements: 'Achievements',
+    careers: 'Careers',
+    showcase: 'Showcase',
+    notices: 'Notices',
+    resources: 'Resources',
+    privacy: 'Privacy Policy',
+    terms: 'Terms of Service',
   },
   hero: {
     ctaAbout: 'About',
     ctaExhibition: 'Visit Exhibition',
-  },
-  quicklinks: {
-    label: 'Quick Links',
-    submit: 'Exhibition Entry',
-    showcaseSubmit: 'Showcase Submission',
-    notice: 'Notices',
-    codesharing: 'Code Sharing',
   },
   sections: {
     programs: 'Programs',
@@ -48,6 +57,11 @@ export const en = {
     faculty: 'Faculty',
     mentors: 'Industry Mentors',
     codesharing: 'Code Sharing',
+    employment: 'Employment',
+    portfolio: 'Student Portfolios',
+    members: 'Members',
+    gallery: 'Gallery',
+    subImages: 'Sub Images',
   },
   tracks: {
     'track-1': 'Design Track',
@@ -71,6 +85,11 @@ export const en = {
     copied: 'Copied',
     login: 'Login',
     admin: 'Manage',
+    submitShowcase: 'Submit Work',
+    exhibitionSite: 'Exhibition Site',
+    applyExternal: 'Apply',
+    applyLecture: 'Register',
+    contestPage: 'Contest Page',
   },
   common: {
     koreanOnly: 'Korean only',
@@ -83,21 +102,45 @@ export const en = {
     viewOriginal: 'View original',
     attachments: 'Attachments',
     menu: 'Menu',
+    total: 'Total',
+    count: '',
+    noPoster: 'NO POSTER',
+    noImage: 'NO IMAGE',
+    externalApply: 'External',
+  },
+  meta: {
+    semester: 'Semester',
+    heldAt: 'Held',
+    intro: 'Intro',
+    period: 'Period',
+    datetime: 'Date',
+    topic: 'Topic',
+    team: 'Team',
+    description: 'About',
+    tools: 'Tools',
+    projectLink: 'Project Link',
+  },
+  notFoundPage: {
+    exhibitions: 'Exhibition not found',
+    contests: 'Contest not found',
+    lectures: 'Lecture not found',
+    showcase: 'Showcase entry not found',
   },
   aria: {
     mainMenu: 'Main menu',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     breadcrumb: 'Breadcrumb',
-    sitemap: 'Sitemap',
-    relatedSites: 'Related sites',
     mobileMenu: 'Mobile menu',
     tagFilter: 'Tag filter',
     submenu: 'submenu',
+    yearNav: 'Jump to year',
+    termSelect: 'Select term',
   },
   news: {
     searchPlaceholder: 'Search notices',
-    bodyElsewhere: 'The full text of this notice is available on the original page.',
+    resourceSearchPlaceholder: 'Search resources',
+    bodyElsewhere: 'Read the full text of this notice on the original page.',
     tags: {
       all: 'All',
       internal: 'Internal',
@@ -107,22 +150,11 @@ export const en = {
     },
   },
   footer: {
-    copyright: '© 2026 Hallym University Digital Arts and Humanities',
+    copyright: '© 2026 Digital Arts and Humanities. All rights reserved.',
     department: 'Digital Arts and Humanities',
     university: 'Hallym University',
+    address: '1 Hallymdaehak-gil, Chuncheon, Gangwon State, Republic of Korea',
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
-    links: {
-      hallym: 'Hallym University',
-      exhibition: 'Exhibition',
-      instagram: 'Instagram',
-    },
   },
-
-  // ── 예약 키 (값 미기입 = ko 폴백) ─────────────────────────────────────
-  // 고정 페이지 장문 원고는 사람이 감수한 번역 확보 후 아래 키로 추가한다(13_CMS_SPEC 5절).
-  // 그 전까지 영문 페이지는 KoreanOnlyBadge + 국문 렌더.
-  // content.about.what / content.about.why / content.about.history
-  // content.curriculum.trackSummaries / content.codesharing.definition
-  // content.codesharing.note / content.codesharing.steps
 };

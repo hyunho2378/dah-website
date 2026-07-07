@@ -1,5 +1,6 @@
 import { Download } from 'lucide-react'
 import PageBanner from '../components/layout/PageBanner'
+import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import Tag from '../components/common/Tag'
@@ -11,9 +12,6 @@ import { motion } from '../styles/tokens'
 
 // 코드쉐어링 v2 (10_IA_V2 2절 /curriculum/codesharing) — 구 Tracks.jsx 하단 섹션의 분리 페이지.
 // HWP 신청서: public/files/codesharing-form.hwp 정적 슬롯(실물 파일은 사용자 배치 — 데이터 갭).
-
-const CONTAINER =
-  'mx-auto w-full max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide'
 
 const HWP_HREF = '/files/codesharing-form.hwp'
 
@@ -40,7 +38,7 @@ function CodeSharing() {
 
       <div className="pb-section-m md:pb-section-d">
         {/* 01 안내 — 정의·유의 사항 원문 + HWP 다운로드 */}
-        <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
+        <Container as="section" className="pt-section-m md:pt-section-d">
           <Reveal>
             <div className="flex flex-wrap items-center gap-12">
               <SectionLabel index="01" text="OVERVIEW" />
@@ -64,11 +62,11 @@ function CodeSharing() {
               {t('actions.download')}
             </a>
           </Reveal>
-        </section>
+        </Container>
 
         {/* 02 승인 절차 4단계 (원문 그대로) */}
         {codeSharing.steps.length > 0 && (
-          <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
+          <Container as="section" className="pt-section-m md:pt-section-d">
             <Reveal>
               <SectionLabel index="02" text="PROCESS" />
               <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
@@ -87,12 +85,12 @@ function CodeSharing() {
                 </Reveal>
               ))}
             </ol>
-          </section>
+          </Container>
         )}
 
         {/* 03 인정 학과 (원문 19개 + 학점 상한 안내) */}
         {codeSharing.departments.length > 0 && (
-          <section className={`${CONTAINER} pt-section-m md:pt-section-d`}>
+          <Container as="section" className="pt-section-m md:pt-section-d">
             <Reveal>
               <SectionLabel index="03" text="DEPARTMENTS" />
               <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
@@ -109,7 +107,7 @@ function CodeSharing() {
                 <Tag key={dept}>{dept}</Tag>
               ))}
             </div>
-          </section>
+          </Container>
         )}
       </div>
     </>

@@ -1,6 +1,7 @@
 import PageBanner from '../components/layout/PageBanner'
 import Container from '../components/layout/Container'
 import { useTitle } from '../hooks/useTitle'
+import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { site } from '../data/site.js'
 
 // Privacy.jsx — 개인정보처리방침 (F5, 16_PHASE4)
@@ -46,7 +47,8 @@ const SECTIONS = [
 ]
 
 function Privacy() {
-  useTitle('개인정보처리방침')
+  const { t } = useLang()
+  useTitle(t('titles.privacy'))
 
   return (
     <>
@@ -54,8 +56,8 @@ function Privacy() {
         titleKo="개인정보처리방침"
         titleEn="PRIVACY POLICY"
         breadcrumb={[
-          { label: '홈', to: '/' },
-          { label: '개인정보처리방침', to: '/privacy' },
+          { label: t('nav.home'), to: '/' },
+          { label: t('titles.privacy'), to: '/privacy' },
         ]}
         nebulaX="70%"
         nebulaY="25%"
@@ -63,6 +65,7 @@ function Privacy() {
 
       <Container className="py-section-m md:py-section-d">
         <div className="max-w-[760px]">
+          <div className="mb-16"><KoreanOnlyBadge /></div>
           <p className="text-body-m leading-relaxed text-text-sec md:text-body-d">
             {ORG}(이하 &lsquo;본 전공&rsquo;)은 이용자의 개인정보를 중요하게
             생각하며, 관련 법령에 따라 개인정보를 보호하고 있습니다.

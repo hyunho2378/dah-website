@@ -79,7 +79,7 @@ function AdminNav() {
           type="button"
           onClick={logout}
           aria-label="로그아웃"
-          className="flex h-32 w-32 cursor-pointer items-center justify-center rounded-full text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+          className="flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
         >
           <LogOut size={16} />
         </button>

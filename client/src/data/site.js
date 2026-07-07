@@ -52,7 +52,7 @@ export const nav = [
  * @property {boolean} external
  */
 export const hero = {
-  eyebrow: 'HALLYM UNIVERSITY — SINCE 2017',
+  eyebrow: 'HALLYM UNIVERSITY SINCE 2017',
   titleEn: ['DIGITAL ARTS', '& HUMANITIES'],
   subKr: '미래를 디자인하는 창의적 리더 양성',
   body: '디지털인문예술전공은 글로벌 혁신을 주도하는 디지털·정보통신기술, 인간을 위한 가치를 구현하는 디자인, 그리고 사람과 사회를 이해하는 인문사회학적 소양을 융합하여 미래의 주역이 될 인재를 양성하는 새로운 융합 프로그램입니다.',
@@ -68,7 +68,7 @@ export const hero = {
  */
 export const newsbar = {
   label: 'NOW SHOWING',
-  title: '26-1 전공 프로젝트 전시회 — Against the Flow',
+  title: '26-1 전공 프로젝트 전시회 Against the Flow',
   href: 'https://26-1-dah-exhibition.vercel.app',
 };
 

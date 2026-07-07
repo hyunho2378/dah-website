@@ -31,7 +31,7 @@ export function LockedField({ label, value }) {
         <input
           type="text"
           readOnly
-          aria-label={`${label} — 수정 불가 항목`}
+          aria-label={`${label} (수정 불가 항목)`}
           value={value ?? ''}
           className={`${inputCls} cursor-not-allowed pr-48 text-text-meta focus:border-border-subtle`}
         />
@@ -97,7 +97,7 @@ export function ImagesField({ images, onChange }) {
                 type="button"
                 aria-label={`작품 이미지 ${idx + 1} 제거`}
                 onClick={() => remove(idx)}
-                className="absolute right-8 top-8 flex cursor-pointer items-center justify-center rounded-full border border-glass-line bg-glass-strong p-4 text-text-pri transition-colors duration-fast ease-out hover:border-border-strong"
+                className="absolute right-8 top-8 flex cursor-pointer items-center justify-center rounded-sm border border-glass-line bg-glass-strong p-4 text-text-pri transition-colors duration-fast ease-out hover:border-border-strong"
               >
                 <X size={16} aria-hidden="true" />
               </button>

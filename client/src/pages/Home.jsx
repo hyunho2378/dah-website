@@ -1,7 +1,6 @@
 import { useTitle } from '../hooks/useTitle'
 import { useApi } from '../hooks/useApi'
 import HeroSection from '../components/home/HeroSection'
-import QuickLinks from '../components/home/QuickLinks'
 import ProgramShowcase from '../components/home/ProgramShowcase'
 import TracksSection from '../components/home/TracksSection'
 import AchievementsHighlight from '../components/home/AchievementsHighlight'
@@ -22,7 +21,7 @@ function Home() {
   return (
     <>
       <HeroSection settings={settings} />
-      <QuickLinks settings={settings} />
+      {/* G13: 퀵링크 바 삭제 — 히어로 하단 페이드가 다음 섹션으로 바로 이어진다 */}
       <ProgramShowcase />
       <Divider />
       <TracksSection />

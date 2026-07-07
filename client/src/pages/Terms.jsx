@@ -1,6 +1,7 @@
 import PageBanner from '../components/layout/PageBanner'
 import Container from '../components/layout/Container'
 import { useTitle } from '../hooks/useTitle'
+import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { site } from '../data/site.js'
 
 // Terms.jsx — 이용약관 (F5, 16_PHASE4)
@@ -46,7 +47,8 @@ const SECTIONS = [
 ]
 
 function Terms() {
-  useTitle('이용약관')
+  const { t } = useLang()
+  useTitle(t('titles.terms'))
 
   return (
     <>
@@ -54,8 +56,8 @@ function Terms() {
         titleKo="이용약관"
         titleEn="TERMS OF SERVICE"
         breadcrumb={[
-          { label: '홈', to: '/' },
-          { label: '이용약관', to: '/terms' },
+          { label: t('nav.home'), to: '/' },
+          { label: t('titles.terms'), to: '/terms' },
         ]}
         nebulaX="30%"
         nebulaY="70%"
@@ -63,6 +65,7 @@ function Terms() {
 
       <Container className="py-section-m md:py-section-d">
         <div className="max-w-[760px]">
+          <div className="mb-16"><KoreanOnlyBadge /></div>
           <p className="text-body-m leading-relaxed text-text-sec md:text-body-d">
             본 약관은 {ORG} 웹사이트 이용에 필요한 기본 사항을 규정합니다. 서비스를
             이용함으로써 이용자는 본 약관에 동의한 것으로 봅니다.

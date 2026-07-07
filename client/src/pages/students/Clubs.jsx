@@ -1,15 +1,15 @@
 // /students/clubs — 동아리 (카드 그리드)
 import { ArrowUpRight } from 'lucide-react'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
+import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import Reveal from '../../components/common/Reveal'
 import Tag from '../../components/common/Tag'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import { useLang } from '../../i18n/LangContext'
 import { clubs as staticClubs } from '../../data/clubs'
-
-const EMPTY_TEXT = '등록된 항목이 없습니다'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
 // F 폴백: 서버 오프라인·빈 응답 시 data/clubs.js 원문(동아리 4종)을 카드로 렌더
@@ -62,7 +62,7 @@ function ClubCard({ item }) {
 
   // 중첩 앵커 금지 — EditPencil(내부 링크)은 외부 링크 앵커 밖에 둔다
   return (
-    <GlassCard hover className="flex h-full flex-col gap-12">
+    <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
       {item.external_url ? (
         <a
           href={item.external_url}
@@ -83,8 +83,12 @@ function ClubCard({ item }) {
 }
 
 function Clubs() {
-  useTitle('동아리')
-  const { data, loading, error, offline } = useApi('/content/club')
+  const { t } = useLang()
+  useTitle(t('titles.clubs'))
+  // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
+  const { data, loading, error, offline } = useApi('/content/club', {
+    params: { pageSize: 100 },
+  })
   const items = data?.items?.length ? data.items : FALLBACK_CLUBS
 
   return (
@@ -92,22 +96,22 @@ function Clubs() {
       <PageBanner
         titleKo="동아리"
         titleEn="CLUBS"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '학생' }, { label: '동아리', to: '/students/clubs' }]}
+        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.activities') }, { label: t('titles.clubs'), to: '/students/clubs' }]}
         nebulaX="64%"
         nebulaY="26%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-16">
           <p className="font-mono text-caption-m text-text-sec">
-            총 <span className="text-text-pri">{data?.total ?? items.length}</span>건
+            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
           </p>
           <AddButton type="club" to="/admin/posts/club/new" />
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : items.length === 0 ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">
-            {error && !offline ? '목록을 불러오지 못했습니다' : EMPTY_TEXT}
+            {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
           <ul className="mt-32 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
@@ -118,7 +122,7 @@ function Clubs() {
             ))}
           </ul>
         )}
-      </section>
+      </Container>
     </>
   )
 }

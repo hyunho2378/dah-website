@@ -91,6 +91,25 @@
 - [x] 검증(로컬 서버→배포 Neon): GET /content/exhibitions?pageSize=100 → total 18·18건 반환, 2026-1 최상단·2017-2 최하단 학기 역순 확인. 상세 /content/exhibitions/2(2026-1, intro 보존)·/19(2017-2) 정상 item 반환, 잘못된 id→404. client `npm run build` 성공(P5-1 itemOf 언랩 전제)
 - [ ] 잔여: 서버(Render)·클라(Vercel) 재배포 후 /programs/exhibitions 육안 QA(18카드 학기역순·포스터 표시)
 
+## PHASE 6 — 배포 실측 크리틱 반영 (18_PHASE6_FIXES)
+- [x] G1 학생 성과 재정비: posts.sort 컬럼 신설(schema), achievement orderBy `tag DESC, sort ASC NULLS LAST`(content-config, sortable 컬럼 화이트리스트 추가), seed에 sort=원문 등장 순서(1..41). seed-achievements.mjs를 G1 지시대로 achievement 한정 전량 삭제 후 재시드로 개편·배포 Neon 실행. 검증: 41건, 2026 대상=sort1 → HUSS=13 → 2025 첫=14 → 2019 끝=41 (원문 1:1). 클라 pageSize=100(페이지네이션 없는 전 목록 전수: achievements·contests·lectures·clubs·council·careers·portfolios·showcase). AwardItem 렌더 원문 구조 유지 확인
+- [x] G2 공지 내부 상세: News toRow가 전 항목 `to=/news/:id`(external_url 항목 포함). NewsDetail에 원문 보기 버튼(본문 유무 무관, external_url∥url 존재 시)
+- [x] G3 어드민 프리필: 원인=useApi 3초 abort가 Render 콜드스타트에서 단건 GET을 죽여 빈 폼 노출. /admin 경로 기본 타임아웃 15초(timeoutMs 옵션 신설) + PostForm·CodeSharingAdmin은 hydrated 전 폼 미렌더(로딩/에러+다시 불러오기), 수정 저장은 PUT(기존), 싱글턴은 POST upsert(B1 계약)
+- [x] G4 라디우스 4px: tokens radius sm/md/lg=4, glass.radius=4. rounded-full 전수 → rounded-sm(예외: LangToggle·GlassDock만 유지). 카드 내부 패딩 p-20 md:p-28(전시회·공모전·특강·동아리·쇼케이스·진로 카드; People은 기존 24/32 유지)
+- [x] G5 WebP: convert-posters-webp.mjs(sharp, q80→400KB 초과 시 감쇠, 대형 3장은 1200px 리사이즈) → 18장 전부 ≤400KB, PNG 삭제. 배포 Neon poster_url 18건 .webp UPDATE. seed 3종 .webp 경로 갱신. 포스터 img에 width/height+lazy
+- [x] G6 Container 통일: 자체 max-w/px 클래스 전수 교체(About·Curriculum·CodeSharing CONTAINER 상수 제거, People·Clubs·Council·Careers·ShowcaseGrid·ShowcaseDetail). common/PageBanner는 layout 재노출 심 → 직접 임포트로 정리
+- [x] G7 푸터 가로 재배치: 좌(로고 h-20 + 학과명 KR/EN·주소 2줄) | 우(개인정보처리방침|이용약관), 최하단 저작권 1줄. lg:py-32(상하 32 이내), 모바일 세로 스택+GlassDock 여백
+- [x] G8 헤더 IA: nav 8메뉴(About/전공 소개/교육과정/학과 행사/학생 활동/쇼케이스/공지사항/자료실). 전공 소개=교수진·멘토단 하위, 소식 폐지, 공지·자료실 최상위(하위 없음=단일 링크). i18n nav·titles 사전 동기화, GlassDock 현재 페이지 매칭에 무자식 메뉴 포함
+- [x] G9 메가메뉴: 헤더 sticky → fixed inset-x-0 top-0 + 본문 스페이서(h-header-s lg:h-header). 패널은 헤더 기준 absolute top-full(z-20, 불투명 depth1+그림자) — 스크롤 위치 무관 노출. overflow 잘림 없음 확인(헤더에 overflow 없음)
+- [x] G10 em dash 0건: useTitle "페이지명 | 한림대학교 디지털인문예술전공", hero eyebrow 'HALLYM UNIVERSITY SINCE 2017', 에러 힌트 `(hint)` 형식, 빌드 산출물 grep — 공개 번들 0건(어드민 번들 1건은 Tiptap 라이브러리 내부 regex)
+- [x] G11 카피 교정: UI 사전 전면 재작성(능동태·간결, 예: "실시간 동기화를 기다리는 중", "본문은 원문 페이지에서 확인하세요"). 사용자 원문(성과·공지·운영위·About KR)은 제외·유지
+- [x] G12 About 재구성: 리드 문단(h3 스케일·행간 1.8·max-w 720) → WHY 소섹션(헤어라인 구분) → 미션·비전 → 연혁. 기존 텍스트 재배치만, 창작 없음
+- [x] G13 퀵링크 바 삭제(QuickLinks.jsx 제거), G14 owner 뱃지 제거(헤더·GlassDock: Settings 아이콘 버튼 + title 툴팁으로 역할 안내)
+- [x] G15 토글·시프트: LangToggle 활성=화이트 배경+어두운 글자/비활성 투명(role=switch, aria-checked). 헤더 메뉴·로그인 라벨 KR/EN 이중 렌더(비활성 invisible)로 폭 예약 → 전환 시 레이아웃 시프트 0
+- [x] G16 영문 전면: 사전 95키 전량 ko/en 커버(누락 0, 스크립트 검증). About 고정 페이지 EN 원고(정보 증감 없는 대역). 목록·상세 템플릿 라벨(메타·버튼·빈 상태·브레드크럼) 전수 t() 전환. 콘텐츠(공지·성과·연혁·코드쉐어링 본문·법률 문안)는 KR 폴백+Korean only 뱃지 정책 유지
+- [!] Privacy·Terms 법률 문안 EN: 감수 없는 번역 위험 → KR+뱃지 유지. 감수 번역 확보 시 교체
+- [!] 어드민·접수 플로우는 국문 전용(v2 스코프) — i18n 제외 유지
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

@@ -1,7 +1,8 @@
 // /students/careers — 진로 (취업 현황 + 재학생 포트폴리오 통합, 10_IA_V2 0절)
 // API: /content/careers, /content/portfolios — offline 시 src/data 정적 폴백.
 import { ArrowUpRight } from 'lucide-react'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
+import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import SectionLabel from '../../components/common/SectionLabel'
 import Reveal from '../../components/common/Reveal'
@@ -10,10 +11,9 @@ import ArrowLink from '../../components/common/ArrowLink'
 import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import { useLang } from '../../i18n/LangContext'
 import { careers as staticCareers } from '../../data/careers'
 import { portfolios as staticPortfolios } from '../../data/portfolios'
-
-const EMPTY_TEXT = '등록된 항목이 없습니다'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
 const joinMajors = (majors) =>
@@ -41,7 +41,7 @@ function CareerCard({ career }) {
   const { name, majors, company, companyUrl, role } = career
 
   return (
-    <GlassCard hover className="h-full">
+    <GlassCard hover className="h-full p-20 md:p-28">
       <div className="flex min-w-0 flex-col items-start gap-8">
         <div className="flex flex-wrap items-baseline gap-x-8 gap-y-4">
           <h3 className="text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
@@ -122,9 +122,11 @@ function PortfolioItem({ portfolio }) {
 }
 
 function Careers() {
-  useTitle('진로')
-  const careersRes = useApi('/content/careers')
-  const portfoliosRes = useApi('/content/portfolios')
+  const { t } = useLang()
+  useTitle(t('titles.careers'))
+  // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피 — 취업 26건 등)
+  const careersRes = useApi('/content/careers', { params: { pageSize: 100 } })
+  const portfoliosRes = useApi('/content/portfolios', { params: { pageSize: 100 } })
 
   const careerFallback = careersRes.offline || (careersRes.error && !careersRes.data)
   const careerItems = (
@@ -142,24 +144,24 @@ function Careers() {
       <PageBanner
         titleKo="진로"
         titleEn="CAREERS"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '학생' }, { label: '진로', to: '/students/careers' }]}
+        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.activities') }, { label: t('titles.careers'), to: '/students/careers' }]}
         nebulaX="36%"
         nebulaY="20%"
       />
-      <div className="mx-auto max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide">
+      <Container>
         <section className="py-section-m lg:py-section-d">
           <Reveal>
             <SectionLabel index="01" text="EMPLOYMENT" />
             <div className="mt-24 flex flex-wrap items-center justify-between gap-16">
               <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
-                취업 현황
+                {t('sections.employment')}
               </h2>
               <AddButton type="careers" to="/admin/careers" />
             </div>
           </Reveal>
           {careerItems.length === 0 ? (
             <p className="py-64 font-mono text-caption-m text-text-meta">
-              {careersRes.loading ? '불러오는 중' : EMPTY_TEXT}
+              {careersRes.loading ? t('common.loading') : t('common.empty')}
             </p>
           ) : (
             <div className="mt-48 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
@@ -177,14 +179,14 @@ function Careers() {
             <SectionLabel index="02" text="PORTFOLIO" />
             <div className="mt-24 flex flex-wrap items-center justify-between gap-16">
               <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
-                재학생 포트폴리오
+                {t('sections.portfolio')}
               </h2>
               <AddButton type="portfolios" to="/admin/careers" />
             </div>
           </Reveal>
           {portfolioItems.length === 0 ? (
             <p className="py-64 font-mono text-caption-m text-text-meta">
-              {portfoliosRes.loading ? '불러오는 중' : EMPTY_TEXT}
+              {portfoliosRes.loading ? t('common.loading') : t('common.empty')}
             </p>
           ) : (
             <div className="mt-48 divide-y divide-border-subtle">
@@ -194,7 +196,7 @@ function Careers() {
             </div>
           )}
         </section>
-      </div>
+      </Container>
     </>
   )
 }

@@ -27,7 +27,7 @@ export function PageHead({ title, desc, actions, offline = false }) {
 export function OfflineBadge({ show = false }) {
   if (!show) return null
   return (
-    <span className="inline-flex items-center rounded-full border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-meta">
+    <span className="inline-flex items-center rounded-sm border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-meta">
       실시간 동기화 대기 중
     </span>
   )
@@ -81,7 +81,7 @@ export function Toggle({ checked = false, onChange, label, disabled = false }) {
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange && onChange(!checked)}
-      className={`inline-flex h-24 w-40 shrink-0 cursor-pointer items-center rounded-full border px-4 transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
+      className={`inline-flex h-24 w-40 shrink-0 cursor-pointer items-center rounded-sm border px-4 transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
         checked
           ? 'justify-end border-border-strong bg-glass-strong'
           : 'justify-start border-border-subtle bg-bg-panel'
@@ -89,7 +89,7 @@ export function Toggle({ checked = false, onChange, label, disabled = false }) {
     >
       <span
         aria-hidden="true"
-        className={`h-16 w-16 rounded-full transition duration-fast ease-out ${
+        className={`h-16 w-16 rounded-sm transition duration-fast ease-out ${
           checked ? 'bg-text-pri' : 'bg-text-meta'
         }`}
       />
@@ -140,7 +140,7 @@ export function Pagination({ page = 1, pageSize = 10, total = 0, onPage }) {
   for (let n = start; n <= Math.min(totalPages, start + 4); n += 1) nums.push(n)
 
   const btn = (active) =>
-    `flex h-32 w-32 cursor-pointer items-center justify-center rounded-full font-mono text-small-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
+    `flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm font-mono text-small-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
       active ? 'bg-glass-strong text-text-pri' : 'text-text-sec hover:text-text-pri'
     }`
 

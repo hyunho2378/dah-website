@@ -84,7 +84,7 @@ function LoginModal() {
         closeLogin()
       }
     } catch (err) {
-      setError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setBusy(false)
     }
@@ -106,7 +106,7 @@ function LoginModal() {
       await setupPassword(email, newPassword)
       closeLogin()
     } catch (err) {
-      setError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setBusy(false)
     }
@@ -133,7 +133,7 @@ function LoginModal() {
           type="button"
           aria-label="닫기"
           onClick={closeLogin}
-          className="absolute right-16 top-16 flex h-32 w-32 cursor-pointer items-center justify-center rounded-full text-text-sec transition-colors duration-fast ease-out hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+          className="absolute right-16 top-16 flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
         >
           <X size={18} aria-hidden="true" />
         </button>

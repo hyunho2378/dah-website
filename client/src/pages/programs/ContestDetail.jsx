@@ -10,8 +10,7 @@ import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-
-const NOT_FOUND_TEXT = '공모전을 찾을 수 없습니다'
+import { useLang } from '../../i18n/LangContext'
 
 function MetaRow({ label, children }) {
   return (
@@ -23,11 +22,12 @@ function MetaRow({ label, children }) {
 }
 
 function ContestDetail() {
+  const { t } = useLang()
   const { id } = useParams()
   const { data, loading } = useApi(`/content/contest/${id}`)
   const item = itemOf(data)
   const title = item?.title_ko ?? item?.title
-  useTitle(title ?? '공모전')
+  useTitle(title ?? t('titles.contests'))
 
   const start = (item?.event_start ?? '').slice(0, 10)
   const end = (item?.event_end ?? '').slice(0, 10)
@@ -39,22 +39,22 @@ function ContestDetail() {
         titleKo="공모전"
         titleEn="CONTESTS"
         breadcrumb={[
-          { label: '홈', to: '/' },
-          { label: '프로그램' },
-          { label: '공모전', to: '/programs/contests' },
-          { label: title ?? '상세' },
+          { label: t('nav.home'), to: '/' },
+          { label: t('nav.events') },
+          { label: t('titles.contests'), to: '/programs/contests' },
+          { label: title ?? t('actions.detail') },
         ]}
         nebulaX="46%"
         nebulaY="14%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">불러오는 중</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : !item ? (
           <div className="flex flex-col items-start gap-24 py-64">
-            <p className="font-mono text-caption-m text-text-meta">{NOT_FOUND_TEXT}</p>
+            <p className="font-mono text-caption-m text-text-meta">{t('notFoundPage.contests')}</p>
             <Button variant="secondary" href="/programs/contests">
-              목록으로 이동
+              {t('common.backToList')}
             </Button>
           </div>
         ) : (
@@ -88,7 +88,7 @@ function ContestDetail() {
                 </div>
                 <dl className="border-t border-border-subtle">
                   {(start || end) && (
-                    <MetaRow label="기간">
+                    <MetaRow label={t('meta.period')}>
                       {start && end ? `${start} ~ ${end}` : start || end}
                     </MetaRow>
                   )}
@@ -96,7 +96,7 @@ function ContestDetail() {
                 <div className="flex flex-wrap items-center gap-16">
                   {item.external_url && (
                     <Button variant="primary" href={item.external_url} external>
-                      접수 페이지
+                      {t('actions.applyExternal')}
                     </Button>
                   )}
                   <ShareButton title={title} />
@@ -107,7 +107,7 @@ function ContestDetail() {
             {gallery.length > 0 && (
               <section className="flex flex-col gap-16">
                 <h2 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-                  갤러리
+                  {t('sections.gallery')}
                 </h2>
                 <ul className="grid grid-cols-2 gap-8 md:grid-cols-3 md:gap-16">
                   {gallery

@@ -14,7 +14,7 @@ import {
 } from '../../components/admin/FormControls'
 
 const PILL_BTN =
-  'inline-flex cursor-pointer items-center gap-8 rounded-full border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
+  'inline-flex cursor-pointer items-center gap-8 rounded-sm border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
 
 const TABS = [
   { key: 'pending', label: '승인 대기' },
@@ -40,7 +40,7 @@ function ShowcaseQueue() {
       await api.put(`/admin/content/showcase/${item.id}`, { status })
       refetch()
     } catch (err) {
-      setActionError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setActionError(err.hint ? `${err.message} (${err.hint})` : err.message)
     }
   }
 
@@ -52,7 +52,7 @@ function ShowcaseQueue() {
       await api.del(`/admin/content/showcase/${item.id}`)
       refetch()
     } catch (err) {
-      setActionError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setActionError(err.hint ? `${err.message} (${err.hint})` : err.message)
     }
   }
 
@@ -71,7 +71,7 @@ function ShowcaseQueue() {
               setTab(t.key)
               setPage(1)
             }}
-            className={`inline-flex cursor-pointer items-center rounded-full border px-16 py-8 text-body-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus ${
+            className={`inline-flex cursor-pointer items-center rounded-sm border px-16 py-8 text-body-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus ${
               tab === t.key
                 ? 'border-glass-line bg-glass-strong text-text-pri'
                 : 'border-border-subtle text-text-sec hover:text-text-pri'

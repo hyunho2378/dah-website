@@ -78,7 +78,7 @@ function ExhibitionAdmin() {
       setSaved(true)
       settings.refetch()
     } catch (err) {
-      setSaveError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setSaveError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setBusy(false)
     }
@@ -102,7 +102,7 @@ function ExhibitionAdmin() {
         <div className="flex flex-wrap items-center gap-12">
           <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">접수 일정</h3>
           {exhibition && (
-            <span className="inline-flex items-center rounded-full border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-meta">
+            <span className="inline-flex items-center rounded-sm border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-meta">
               {exhibition.is_submit_period
                 ? '접수 기간'
                 : exhibition.is_edit_period

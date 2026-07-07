@@ -1,39 +1,47 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Settings } from 'lucide-react'
 import { nav } from '../../data/nav'
 import { useLang } from '../../i18n/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLoginModal } from '../../context/LoginModalContext'
 import { cosmos } from '../../styles/tokens'
 import Container from './Container'
-import Tag from '../common/Tag'
 import LangToggle from './LangToggle'
 import logoUrl from '../../assets/logo.svg'
 
-// 10_IA_V2 1절 · 11_DESIGN_V2 헤더 재작업 — KPC 문법 이식
-// 데스크탑(lg+): 로고 SVG + 1차 메뉴 6 + 우측 유틸(EN 토글 + 로그인/역할 뱃지)
-//   호버·포커스 시 풀폭 메가메뉴(글래스 패널, 하위 페이지 그리드). ESC·포커스 이탈 시 닫힘
-// lg 미만: 로고 + 로그인만 있는 초슬림 바(하단 내비는 GlassDock 담당, BR이 App 조립)
-// 스크롤 80px 또는 메가메뉴 열림 시 투명 → 글래스화(backdrop-blur)
-// 성능 규칙(11_DESIGN_V2 2절): blur 상한 3 중 헤더 1계층(바+메가메뉴 패널).
-// will-change는 Header·GlassDock 2곳만 허용 — 여기서 1곳 사용
+// 헤더 — KPC 문법. G8 IA 8메뉴, G9 fixed 포지셔닝, G14 관리 아이콘, G15 언어 전환 시프트 0.
+// G9: sticky → fixed. 메가메뉴 패널은 헤더 기준 absolute top-full — 스크롤 위치와 무관하게
+//     항상 헤더 바로 아래에 뜬다. 본문은 Header가 렌더하는 스페이서가 밀어낸다.
+// G15: 메뉴·로그인 라벨은 KR/EN 두 라벨을 같은 칸에 겹쳐 렌더(비활성 invisible)해
+//     언어 전환 시 폭이 변하지 않는다(레이아웃 시프트 0).
+// 성능 규칙(11_DESIGN_V2 2절): blur 상한 3 중 헤더 1계층.
 const SHRINK_Y = 80
 
-const utilLinkClass =
-  'text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d'
+// G15: 언어 전환 폭 고정 — 두 라벨을 같은 grid 칸에 겹치고 비활성 쪽은 invisible
+function FixedWidthLabel({ current, other, className = '' }) {
+  return (
+    <span className={`grid ${className}`}>
+      <span className="col-start-1 row-start-1">{current}</span>
+      <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+        {other}
+      </span>
+    </span>
+  )
+}
 
 function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [openIndex, setOpenIndex] = useState(null) // 메가메뉴 활성 1차 메뉴 index
   const { lang, t } = useLang()
-  // nav.js는 label(KR)/labelEn을 함께 보유 — 현재 언어에 맞는 표시명 선택
   const navLabel = (item) => (lang === 'en' ? item.labelEn : item.label)
+  const navOther = (item) => (lang === 'en' ? item.label : item.labelEn)
   const { user } = useAuth()
   const { openLogin } = useLoginModal()
   const { pathname } = useLocation()
   const headerRef = useRef(null)
 
-  // 스크롤 rAF 스로틀 (v1 유지: 80px 이후 높이 72→56)
+  // 스크롤 rAF 스로틀 (80px 이후 높이 72→56)
   useEffect(() => {
     let rafId = 0
     const onScroll = () => {
@@ -61,7 +69,7 @@ function Header() {
     return () => window.removeEventListener('keydown', onKey)
   }, [openIndex])
 
-  // 라우트 이동 시 메가메뉴 닫기 (스크롤 복구는 아래 잠금 effect 클린업이 담당)
+  // 라우트 이동 시 메가메뉴 닫기
   useEffect(() => {
     setOpenIndex(null)
   }, [pathname])
@@ -77,7 +85,7 @@ function Header() {
   const active = openIndex !== null ? nav[openIndex] : null
   const menuOpen = Boolean(active && active.children.length > 0)
 
-  // 메가메뉴 열림 시 본문 스크롤 잠금 (storage 미사용) — 닫힘·라우트 이동 시 클린업으로 복구
+  // 메가메뉴 열림 시 본문 스크롤 잠금 — 닫힘·라우트 이동 시 클린업으로 복구
   useEffect(() => {
     if (!menuOpen) return
     const prev = document.body.style.overflow
@@ -89,8 +97,7 @@ function Header() {
 
   return (
     <>
-      {/* 열림 시 본문 딤 오버레이 — 헤더(z-50) 아래, 클릭 시 닫힘. lg 전용(메가메뉴가 lg+).
-          헤더의 backdrop-filter가 containing block을 만들어 fixed 자식을 가두므로 헤더 밖 형제로 렌더 */}
+      {/* 열림 시 본문 딤 오버레이 — 헤더(z-50) 아래, 클릭 시 닫힘. lg 전용 */}
       {menuOpen && (
         <button
           type="button"
@@ -104,7 +111,7 @@ function Header() {
         ref={headerRef}
         onMouseLeave={close}
         onBlur={onBlur}
-        className={`sticky top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
+        className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
           glassed
             ? 'border-glass-line bg-glass-bg backdrop-blur-glass-mobile md:backdrop-blur-glass'
             : 'border-transparent bg-transparent'
@@ -120,7 +127,7 @@ function Header() {
           onMouseEnter={close}
           className="group/logo flex shrink-0 items-center"
         >
-          {/* 높이 28: 11_DESIGN_V2 9절 명시값. hover 시 stroke 미세 글로우(색은 tokens.cosmos.star) */}
+          {/* 높이 28: 11_DESIGN_V2 9절 명시값. hover 시 stroke 미세 글로우 */}
           <img
             src={logoUrl}
             alt="디지털인문예술전공 홈"
@@ -134,16 +141,16 @@ function Header() {
             <NavLink
               key={item.to}
               to={item.to}
-              aria-expanded={openIndex === i}
+              aria-expanded={item.children.length > 0 ? openIndex === i : undefined}
               onMouseEnter={() => setOpenIndex(i)}
               onFocus={() => setOpenIndex(i)}
               className={({ isActive }) =>
-                `flex h-full items-center px-16 text-body-d transition-colors duration-fast ease-out hover:text-text-pri ${
+                `flex h-full items-center px-12 text-body-d transition-colors duration-fast ease-out hover:text-text-pri ${
                   isActive ? 'text-text-pri' : 'text-text-sec'
                 }`
               }
             >
-              {navLabel(item)}
+              <FixedWidthLabel current={navLabel(item)} other={navOther(item)} className="text-center" />
             </NavLink>
           ))}
         </nav>
@@ -154,29 +161,34 @@ function Header() {
             <LangToggle />
           </span>
           <span aria-hidden="true" className="hidden h-16 w-px bg-border-subtle lg:block" />
-          {/* 로그인 상태: 비로그인 = 로그인 링크만 / 로그인 = 역할 뱃지 + 관리 진입 (편집 UI 미렌더 원칙) */}
+          {/* G14: 로그인 상태는 관리 아이콘 버튼 하나로만 — 역할은 호버 툴팁(title). 텍스트 뱃지 금지 */}
           {user ? (
-            <span className="flex items-center gap-8">
-              <Tag>{user.role}</Tag>
-              <Link to="/admin" className={utilLinkClass}>
-                {t('actions.admin')}
-              </Link>
-            </span>
+            <Link
+              to="/admin"
+              title={`${user.role} ${t('actions.admin')}`}
+              aria-label={`${user.role} ${t('actions.admin')}`}
+              className="flex h-32 w-32 items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri"
+            >
+              <Settings size={18} aria-hidden="true" />
+            </Link>
           ) : (
             <button
               type="button"
               onClick={openLogin}
-              className={`cursor-pointer ${utilLinkClass}`}
+              className="cursor-pointer text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d"
             >
-              {t('actions.login')}
+              <FixedWidthLabel
+                current={t('actions.login')}
+                other={lang === 'en' ? '로그인' : 'Login'}
+                className="text-center"
+              />
             </button>
           )}
         </div>
       </Container>
 
-      {/* 풀폭 메가메뉴 — KPC 방식. 즉답성 우선(11_DESIGN_V2 5절), 전환 애니메이션 없음.
-          P5-5: 헤더(positioned) 바로 아래 top-full 고정. 배경 완전 불투명(bg-cosmos-depth1)으로
-          아래 콘텐츠 비침 차단 + 하단 그림자로 분리. z-20으로 헤더 바(z-10 Container) 위. */}
+      {/* 풀폭 메가메뉴 — G9: fixed 헤더 기준 absolute top-full → 스크롤 무관, 항상 헤더 바로 아래.
+          배경 완전 불투명(bg-cosmos-depth1)으로 아래 콘텐츠 비침 차단 + 하단 그림자. */}
       {menuOpen && (
         <div className="absolute inset-x-0 top-full z-20 hidden border-b border-glass-line bg-cosmos-depth1 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.7)] lg:block">
           <Container
@@ -203,6 +215,8 @@ function Header() {
         </div>
       )}
       </header>
+      {/* G9: fixed 헤더가 차지하던 자리를 본문에서 확보하는 스페이서 */}
+      <div aria-hidden="true" className="h-header-s lg:h-header" />
     </>
   )
 }

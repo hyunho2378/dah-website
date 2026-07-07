@@ -8,9 +8,7 @@ import Reveal from '../../components/common/Reveal'
 import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-
-const EMPTY_TEXT = '등록된 항목이 없습니다'
-const LOADING_TEXT = '불러오는 중'
+import { useLang } from '../../i18n/LangContext'
 
 // P9: 스태거 지연은 최대 6개까지만
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
@@ -18,14 +16,16 @@ const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 function PosterCard({ item }) {
   return (
     <Link to={`/programs/exhibitions/${item.id}`} className="group block h-full">
-      {/* P5-3: 카드 radius 과한 glass(20) → lg(16)로 통일, 내부 패딩 p-12 */}
-      <GlassCard hover className="flex h-full flex-col gap-12 !rounded-lg p-12">
+      {/* G4: radius 토큰 4px 통일(rounded-glass=4), 내부 여백 모바일 20 / 데스크탑 28 */}
+      <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
         <figure className="aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
           {item.poster_url ? (
             <img
               src={item.poster_url}
               alt={`${item.title} 포스터`}
               loading="lazy"
+              width={600}
+              height={900}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -50,7 +50,8 @@ function PosterCard({ item }) {
 }
 
 function Exhibitions() {
-  useTitle('전시회')
+  const { t } = useLang()
+  useTitle(t('titles.exhibitions'))
   // 아카이브는 단일 페이지에 전량 노출(페이지네이션 UI 없음) — 서버 최대치(100)로 요청
   const { data, loading, error, offline } = useApi('/content/exhibitions', {
     params: { pageSize: 100 },
@@ -62,22 +63,22 @@ function Exhibitions() {
       <PageBanner
         titleKo="전시회"
         titleEn="EXHIBITIONS"
-        breadcrumb={[{ label: '홈', to: '/' }, { label: '프로그램' }, { label: '전시회', to: '/programs/exhibitions' }]}
+        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.events') }, { label: t('titles.exhibitions'), to: '/programs/exhibitions' }]}
         nebulaX="18%"
         nebulaY="30%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-between gap-16">
           <p className="font-mono text-caption-m text-text-sec">
-            총 <span className="text-text-pri">{data?.total ?? items.length}</span>건
+            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
           </p>
           <AddButton type="exhibitions" to="/admin/posts/exhibitions/new" />
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{LOADING_TEXT}</p>
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : items.length === 0 ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">
-            {error && !offline ? '목록을 불러오지 못했습니다' : EMPTY_TEXT}
+            {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
           <ul className="mt-32 grid grid-cols-2 gap-16 md:grid-cols-3 md:gap-24 lg:grid-cols-4">

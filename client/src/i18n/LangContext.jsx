@@ -69,7 +69,7 @@ export function KoreanOnlyBadge() {
   if (lang !== 'en') return null
 
   return (
-    <span className="inline-flex items-center whitespace-nowrap rounded-full border border-border-subtle px-8 py-4 font-mono text-caption-m text-text-meta">
+    <span className="inline-flex items-center whitespace-nowrap rounded-sm border border-border-subtle px-8 py-4 font-mono text-caption-m text-text-meta">
       {t('common.koreanOnly')}
     </span>
   )

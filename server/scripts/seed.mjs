@@ -258,16 +258,18 @@ async function main() {
     }
     console.log(`[seed] clubs → posts ${clubs.length}건`)
 
-    for (const a of achievements) {
+    // G1: sort = 원문 등장 순서(파일 배열 순서 그대로 1..N). 목록 정렬 tag DESC, sort ASC.
+    for (const [i, a] of achievements.entries()) {
       await client.query(
-        `INSERT INTO posts (type, title_ko, body, tag, seed_key, published, created_at, updated_at)
-         VALUES ('achievement', $1, $2, $3, $4, TRUE, $5, $5)
+        `INSERT INTO posts (type, title_ko, body, tag, seed_key, sort, published, created_at, updated_at)
+         VALUES ('achievement', $1, $2, $3, $4, $5, TRUE, $6, $6)
          ON CONFLICT (seed_key) DO NOTHING`,
         [
           a.title,
           JSON.stringify({ awardee: a.awardee, host: a.host, desc: a.desc, year: a.year }),
           String(a.year),
           a.id, // seed_key(안정 키)
+          i + 1, // 원문 등장 순서
           `${a.year}-01-01T09:00:00+09:00`, // 연도 정렬용 합성 타임스탬프
         ]
       )
@@ -379,12 +381,12 @@ async function main() {
       { title: '「2018-1 프로젝트 전시회」' },
       { title: '「2017-2 프로젝트 전시회」' },
     ]
-    // 역대 전시회 포스터(과거 아카이브) — client/public/images/exhibitions/<학기>.png.
+    // 역대 전시회 포스터(과거 아카이브) — client/public/images/exhibitions/<학기>.webp.
     // 위 exhibitions 배열은 최신→과거 순서라 학기 역순과 1:1 대응(마지막 3건이 2018-2·2018-1·2017-2로 정합 확인).
     const EX_POSTERS = [
       '2026-1', '2025-2', '2025-1', '2024-2', '2024-1', '2023-2', '2023-1', '2022-2', '2022-1',
       '2021-2', '2021-1', '2020-2', '2020-1', '2019-2', '2019-1', '2018-2', '2018-1', '2017-2',
-    ].map((s) => `/images/exhibitions/${s}.png`)
+    ].map((s) => `/images/exhibitions/${s}.webp`)
     if (await isEmpty('exhibitions')) {
       for (const [i, e] of exhibitions.entries()) {
         await client.query(

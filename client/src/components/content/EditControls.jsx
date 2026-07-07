@@ -7,7 +7,7 @@ import { Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const PILL =
-  'inline-flex cursor-pointer items-center gap-8 rounded-full border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-sec backdrop-blur-glass-mobile transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
+  'inline-flex cursor-pointer items-center gap-8 rounded-sm border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-sec backdrop-blur-glass-mobile transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
 
 /**
  * EditPencil — 콘텐츠 위 연필 아이콘(글래스 필). canEdit(type) false면 미렌더.

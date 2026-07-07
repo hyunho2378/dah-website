@@ -11,8 +11,10 @@ const POST_ORDER = 'pinned DESC, created_at DESC, id DESC'
 
 function postType(type, minRole, opts = {}) {
   // attachments: PDF·HWP 첨부 배열([{name,url,type,bytes}]). 공지·자료실 type만 화이트리스트에 포함.
-  const columns = opts.attachments ? [...POST_COLUMNS, 'attachments'] : POST_COLUMNS
+  let columns = opts.attachments ? [...POST_COLUMNS, 'attachments'] : POST_COLUMNS
   const jsonb = opts.attachments ? [...POST_JSONB, 'attachments'] : POST_JSONB
+  // G1: 원문 등장 순서(sort) 지원 — 성과 등 순서가 의미인 type만
+  if (opts.sortable) columns = [...columns, 'sort']
   return {
     table: 'posts',
     postType: type,
@@ -20,7 +22,7 @@ function postType(type, minRole, opts = {}) {
     columns,
     jsonb,
     required: ['title_ko'],
-    orderBy: POST_ORDER,
+    orderBy: opts.orderBy || POST_ORDER,
     publicWhere: 'published = TRUE',
     searchCols: ['title_ko', 'title_en'],
     tagCol: 'tag',
@@ -33,7 +35,11 @@ export const CONTENT_TYPES = {
   notice: postType('notice', 'manager', { attachments: true }),
   lecture: postType('lecture', 'manager'),
   contest: postType('contest', 'manager'),
-  achievement: postType('achievement', 'manager'),
+  // G1: 연도(tag) 내림차순 + 연도 내 원문 등장 순서(sort) 오름차순 = 화면이 원문과 1:1
+  achievement: postType('achievement', 'manager', {
+    sortable: true,
+    orderBy: 'tag DESC, sort ASC NULLS LAST, id ASC',
+  }),
   resource: postType('resource', 'manager', { attachments: true }),
   club: postType('club', 'manager'),
 

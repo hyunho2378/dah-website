@@ -42,7 +42,7 @@ function CareersAdmin() {
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`inline-flex cursor-pointer items-center rounded-full border px-16 py-8 text-body-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus ${
+            className={`inline-flex cursor-pointer items-center rounded-sm border px-16 py-8 text-body-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus ${
               tab === t.key
                 ? 'border-glass-line bg-glass-strong text-text-pri'
                 : 'border-border-subtle text-text-sec hover:text-text-pri'

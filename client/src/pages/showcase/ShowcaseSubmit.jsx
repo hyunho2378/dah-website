@@ -92,7 +92,7 @@ function CropThumb({ image, label, onRemove }) {
         type="button"
         aria-label={`${label} 제거`}
         onClick={onRemove}
-        className="absolute right-8 top-8 flex cursor-pointer items-center justify-center rounded-full border border-glass-line bg-glass-strong p-4 text-text-pri transition-colors duration-fast ease-out hover:border-border-strong"
+        className="absolute right-8 top-8 flex cursor-pointer items-center justify-center rounded-sm border border-glass-line bg-glass-strong p-4 text-text-pri transition-colors duration-fast ease-out hover:border-border-strong"
       >
         <X size={16} aria-hidden="true" />
       </button>
@@ -300,7 +300,7 @@ function ShowcaseSubmit() {
                   {tools.map((tool) => (
                     <li
                       key={tool}
-                      className="inline-flex items-center gap-4 rounded-full border border-border-subtle px-12 py-4 font-mono text-caption-m text-text-sec"
+                      className="inline-flex items-center gap-4 rounded-sm border border-border-subtle px-12 py-4 font-mono text-caption-m text-text-sec"
                     >
                       {tool}
                       <button

@@ -25,7 +25,7 @@ import {
 import { POST_TYPES } from './postTypes'
 
 const ICON_BTN =
-  'flex h-32 w-32 cursor-pointer items-center justify-center rounded-full text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
+  'flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
 
 // '' → null 정규화 — PG date·url 컬럼에 빈 문자열 삽입 방지
 const nul = (v) => (v === '' || v === undefined ? null : v)
@@ -135,7 +135,7 @@ function GalleryField({ value = [], onChange, usage = 'exhibition' }) {
                 type="button"
                 onClick={() => onChange(value.filter((_, idx) => idx !== i))}
                 aria-label={`갤러리 이미지 ${i + 1} 제거`}
-                className="absolute -right-8 -top-8 flex h-24 w-24 cursor-pointer items-center justify-center rounded-full border border-glass-line bg-glass-bg text-text-sec backdrop-blur-glass-mobile transition duration-fast ease-out hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+                className="absolute -right-8 -top-8 flex h-24 w-24 cursor-pointer items-center justify-center rounded-sm border border-glass-line bg-glass-bg text-text-sec backdrop-blur-glass-mobile transition duration-fast ease-out hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
               >
                 <Trash2 size={12} />
               </button>
@@ -329,7 +329,7 @@ function PostForm() {
   const isNew = !id
   useTitle(config ? `${config.label} ${isNew ? '작성' : '수정'}` : '콘텐츠 관리')
 
-  const { data, loading, error } = useApi(
+  const { data, loading, error, refetch } = useApi(
     config && !isNew ? `/admin/content/${type}/${id}` : null
   )
   const [form, setForm] = useState(() => emptyForm(template))
@@ -360,7 +360,7 @@ function PostForm() {
       else await api.put(`/admin/content/${type}/${id}`, payload)
       navigate(backTo)
     } catch (err) {
-      setSaveError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setSaveError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setBusy(false)
     }
@@ -375,11 +375,22 @@ function PostForm() {
         actions={<GhostButton onClick={() => navigate(backTo)}>목록</GhostButton>}
       />
 
-      {error && <ErrorText>{error.message}</ErrorText>}
-      {!isNew && loading && (
-        <p className="font-mono text-caption-m text-text-meta">불러오는 중</p>
-      )}
-
+      {/* G3: 수정 모드는 기존 값이 채워진 뒤에만 폼 렌더 — 빈 폼 노출·빈 값 저장 방지 */}
+      {!isNew && !hydrated ? (
+        <div className="flex flex-col items-start gap-16">
+          {loading && (
+            <p className="font-mono text-caption-m text-text-meta">
+              기존 내용을 불러오는 중
+            </p>
+          )}
+          {error && (
+            <>
+              <ErrorText>{error.message}</ErrorText>
+              <GhostButton onClick={refetch}>다시 불러오기</GhostButton>
+            </>
+          )}
+        </div>
+      ) : (
       <form onSubmit={save} className="flex flex-col gap-24">
         <div className="grid grid-cols-1 gap-16 md:grid-cols-2">
           {/* 제목 — posts 계열 ko/en, 전시회·포트폴리오는 테이블 컬럼 */}
@@ -548,6 +559,7 @@ function PostForm() {
           <GhostButton onClick={() => navigate(backTo)}>취소</GhostButton>
         </div>
       </form>
+      )}
     </section>
   )
 }

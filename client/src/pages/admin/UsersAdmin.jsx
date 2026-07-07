@@ -18,12 +18,12 @@ import {
 } from '../../components/admin/FormControls'
 
 const ICON_BTN =
-  'flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center rounded-full text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40'
+  'flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40'
 
 const ROLE_OPTIONS = [
-  { value: 'manager', label: 'manager — 지정 유형 작성·수정' },
-  { value: 'admin', label: 'admin — 콘텐츠 전 유형' },
-  { value: 'owner', label: 'owner — 전체 관리' },
+  { value: 'manager', label: 'manager (지정 유형 작성·수정)' },
+  { value: 'admin', label: 'admin (콘텐츠 전 유형)' },
+  { value: 'owner', label: 'owner (전체 관리)' },
 ]
 
 function UsersAdmin() {
@@ -47,7 +47,7 @@ function UsersAdmin() {
       setForm({ email: '', name: '', role: 'manager' })
       refetch()
     } catch (err) {
-      setFormError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setFormError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setBusy(false)
     }
@@ -159,7 +159,7 @@ function UsersAdmin() {
                   </span>
                 </span>
                 {item.must_set_pw && (
-                  <span className="inline-flex items-center rounded-full border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-meta">
+                  <span className="inline-flex items-center rounded-sm border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-meta">
                     비밀번호 미설정
                   </span>
                 )}

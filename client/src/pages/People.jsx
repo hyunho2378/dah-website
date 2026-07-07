@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react'
 import PageBanner from '../components/layout/PageBanner'
+import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import GlassCard from '../components/common/GlassCard'
@@ -134,7 +135,8 @@ function People() {
         nebulaX="40%"
         nebulaY="70%"
       />
-      <div className="mx-auto max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide">
+      {/* G6: 전역 단일 Container로 통일 — 헤더·본문 좌측선 픽셀 일치 */}
+      <Container>
         <section className="py-section-m lg:py-section-d">
           <Reveal>
             <SectionLabel index="01" text="FACULTY" />
@@ -186,7 +188,7 @@ function People() {
             </div>
           )}
         </section>
-      </div>
+      </Container>
     </>
   )
 }

@@ -19,7 +19,7 @@ import {
 } from './FormControls'
 
 const ICON_BTN =
-  'flex h-32 w-32 cursor-pointer items-center justify-center rounded-full text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40'
+  'flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40'
 
 function emptyForm(fields) {
   const form = {}
@@ -198,7 +198,7 @@ function EntityCrud({
       close()
       refetch()
     } catch (err) {
-      setSaveError(err.hint ? `${err.message} — ${err.hint}` : err.message)
+      setSaveError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setBusy(false)
     }
