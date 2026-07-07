@@ -4,7 +4,7 @@
 // 제출 후 status pending — 승인 대기 안내. 비밀번호는 클라이언트에 저장하지 않는다.
 import { useState } from 'react'
 import { ImagePlus, Plus, X } from 'lucide-react'
-import PageBanner from '../../components/common/PageBanner'
+import PageBanner from '../../components/layout/PageBanner'
 import GlassCard from '../../components/common/GlassCard'
 import Button from '../../components/common/Button'
 import { api } from '../../hooks/useApi'

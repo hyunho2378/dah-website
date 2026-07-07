@@ -1,6 +1,6 @@
 // /programs/contests — 공모전 (포스터 그리드)
 // external_url 있으면 카드에서 바로 외부 접수(ArrowUpRight 표시), 없으면 상세 진입.
-import { Link } from 'react-router-dom'
+import Link from '../../components/common/LangLink'
 import { ArrowUpRight } from 'lucide-react'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
@@ -98,10 +98,7 @@ function Contests() {
         nebulaY="14%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
-        <div className="flex flex-wrap items-center justify-between gap-16">
-          <p className="font-mono text-caption-m text-text-sec">
-            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
-          </p>
+        <div className="flex flex-wrap items-center justify-end gap-16">
           <AddButton type="contest" to="/admin/posts/contest/new" />
         </div>
         {loading ? (

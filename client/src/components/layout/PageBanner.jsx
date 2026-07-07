@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from '../common/LangLink'
 import { useLang } from '../../i18n/LangContext'
 import Container from './Container'
 

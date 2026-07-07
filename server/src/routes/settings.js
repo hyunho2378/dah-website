@@ -29,8 +29,8 @@ function computeExhibitionState(row) {
     button_mode: row.button_mode,
     is_submit_period: isSubmitPeriod,
     is_edit_period: isEditPeriod,
-    // 접수 버튼 노출: 기간 중 자동 + header_visible로 강제 off (10_IA 1절)
-    show_button: row.header_visible !== false && isSubmitPeriod,
+    // J3: 노출 여부는 오직 설정 스위치가 결정 — 기간 검증은 제출 시점 서버(403)에서만
+    show_button: row.header_visible === true,
   }
 }
 

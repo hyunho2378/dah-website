@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from '../common/LangLink'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import SectionLabel from '../common/SectionLabel'
 import Reveal from '../common/Reveal'

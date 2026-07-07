@@ -67,7 +67,7 @@ export const CONTENT_TYPES = {
   curriculum: {
     table: 'curriculum',
     minRole: 'admin',
-    columns: ['grade', 'semester', 'track', 'name_ko', 'name_en', 'sort'],
+    columns: ['grade', 'semester', 'track', 'name_ko', 'name_en', 'credit', 'sort'],
     jsonb: [],
     required: ['grade', 'track', 'name_ko'],
     orderBy: 'grade ASC, sort ASC, id ASC',

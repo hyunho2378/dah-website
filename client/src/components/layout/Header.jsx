@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import Link, { LangNavLink as NavLink } from '../common/LangLink'
 import { CalendarCheck, Settings } from 'lucide-react'
 import { nav } from '../../data/nav'
 import { useLang } from '../../i18n/LangContext'

@@ -1,5 +1,5 @@
 // /programs/lectures — 특강 (포스터 그리드)
-import { Link } from 'react-router-dom'
+import Link from '../../components/common/LangLink'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
@@ -64,10 +64,7 @@ function Lectures() {
         nebulaY="34%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
-        <div className="flex flex-wrap items-center justify-between gap-16">
-          <p className="font-mono text-caption-m text-text-sec">
-            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
-          </p>
+        <div className="flex flex-wrap items-center justify-end gap-16">
           <AddButton type="lecture" to="/admin/posts/lecture/new" />
         </div>
         {loading ? (

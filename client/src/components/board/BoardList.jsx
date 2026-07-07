@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from '../common/LangLink'
 import { ArrowUpRight, Download, Pin } from 'lucide-react'
 import Tag from '../common/Tag'
 import SearchBar from './SearchBar'
@@ -112,10 +112,7 @@ function BoardList({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-16">
-      <div className="flex flex-wrap items-center justify-between gap-16">
-        <p className="font-mono text-caption-m text-text-sec">
-          총 <span className="text-text-pri">{total}</span>건
-        </p>
+      <div className="flex flex-wrap items-center justify-end gap-16">
         <div className="flex min-w-0 flex-wrap items-center gap-12">
           {actions}
           {onSearch && (

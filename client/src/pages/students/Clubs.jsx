@@ -23,35 +23,27 @@ const FALLBACK_CLUBS = (staticClubs ?? []).map((c) => ({
 function ClubCard({ item }) {
   const title = item.title_ko ?? item.title
 
+  // J8: 로고 중앙 상단 + 이름·설명 중앙 정렬. 로고 없으면 이니셜 플레이스홀더.
   const content = (
     <>
-      {item.poster_url && (
-        <figure className="aspect-video w-full overflow-hidden rounded-md bg-bg-elev">
+      <div className="flex h-96 w-96 items-center justify-center overflow-hidden rounded-sm border border-border-subtle bg-bg-panel">
+        {item.poster_url ? (
           <img
             src={item.poster_url}
-            alt={`${title} 이미지`}
+            alt={`${title} 로고`}
             loading="lazy"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
           />
-        </figure>
-      )}
-      <div className="flex items-start justify-between gap-12">
-        <h3 className="min-w-0 text-h3-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-h3-d">
-          {title}
-        </h3>
-        {item.external_url && (
-          <ArrowUpRight
-            size={16}
-            aria-hidden="true"
-            className="mt-4 shrink-0 text-text-meta transition-colors duration-fast ease-out group-hover:text-text-pri"
-          />
+        ) : (
+          <span aria-hidden="true" className="font-mono text-h2-m text-text-meta">
+            {(title || '').trim().charAt(0)}
+          </span>
         )}
       </div>
-      {item.tag && (
-        <div>
-          <Tag>{item.tag}</Tag>
-        </div>
-      )}
+      <h3 className="text-h3-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-h3-d">
+        {title}
+      </h3>
+      {item.tag && <Tag>{item.tag}</Tag>}
       {item.intro && (
         <p className="text-small-m leading-relaxed text-text-sec md:text-small-d">
           {item.intro}
@@ -62,20 +54,27 @@ function ClubCard({ item }) {
 
   // 중첩 앵커 금지 — EditPencil(내부 링크)은 외부 링크 앵커 밖에 둔다
   return (
-    <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
+    <GlassCard hover className="flex h-full flex-col p-20 md:p-28">
       {item.external_url ? (
         <a
           href={item.external_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex min-w-0 flex-1 flex-col gap-16"
+          className="group flex min-w-0 flex-1 flex-col items-center gap-16 text-center"
         >
           {content}
+          <ArrowUpRight
+            size={16}
+            aria-hidden="true"
+            className="text-text-meta transition-colors duration-fast ease-out group-hover:text-text-pri"
+          />
         </a>
       ) : (
-        <div className="flex min-w-0 flex-1 flex-col gap-16">{content}</div>
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-16 text-center">
+          {content}
+        </div>
       )}
-      <div className="flex justify-end">
+      <div className="mt-16 flex justify-end">
         <EditPencil type="club" to={`/admin/posts/club/${item.id}/edit`} />
       </div>
     </GlassCard>
@@ -101,10 +100,7 @@ function Clubs() {
         nebulaY="26%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
-        <div className="flex flex-wrap items-center justify-between gap-16">
-          <p className="font-mono text-caption-m text-text-sec">
-            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
-          </p>
+        <div className="flex flex-wrap items-center justify-end gap-16">
           <AddButton type="club" to="/admin/posts/club/new" />
         </div>
         {loading ? (

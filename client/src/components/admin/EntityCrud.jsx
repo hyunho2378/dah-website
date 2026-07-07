@@ -35,23 +35,29 @@ function emptyForm(fields) {
 function pickForm(fields, item) {
   const form = {}
   for (const f of fields) {
-    form[f.key] = item[f.key] ?? emptyForm([f])[f.key]
+    let v = item[f.key] ?? emptyForm([f])[f.key]
+    // J2: 시드가 넣은 객체형 jsonb(예: professors.links {website,...})가 pairs 필드로 들어오면
+    // value.map 크래시로 편집 화면이 빈 화면이 됨 — 배열이 아니면 안전 배열로 강제
+    if (f.kind === 'pairs' && !Array.isArray(v)) v = []
+    form[f.key] = v
   }
   return form
 }
 
 function PairsField({ field, value = [], onChange }) {
+  // J2: 비배열 방어 — 렌더 크래시 방지
+  const rows = Array.isArray(value) ? value : []
   const keys = field.pairKeys || [
     { key: 'name', label: '이름' },
     { key: 'role', label: '역할' },
   ]
   const setRow = (i, k, v) => {
-    const next = value.map((row, idx) => (idx === i ? { ...row, [k]: v } : row))
+    const next = rows.map((row, idx) => (idx === i ? { ...row, [k]: v } : row))
     onChange(next)
   }
   return (
     <div className="flex flex-col gap-8">
-      {value.map((row, i) => (
+      {rows.map((row, i) => (
         <div key={i} className="flex items-center gap-8">
           {keys.map((k) => (
             <Input
@@ -64,7 +70,7 @@ function PairsField({ field, value = [], onChange }) {
           ))}
           <button
             type="button"
-            onClick={() => onChange(value.filter((_, idx) => idx !== i))}
+            onClick={() => onChange(rows.filter((_, idx) => idx !== i))}
             aria-label="항목 제거"
             className={ICON_BTN}
           >
@@ -72,7 +78,7 @@ function PairsField({ field, value = [], onChange }) {
           </button>
         </div>
       ))}
-      <GhostButton onClick={() => onChange([...value, {}])}>
+      <GhostButton onClick={() => onChange([...rows, {}])}>
         <Plus size={16} aria-hidden="true" />
         항목 추가
       </GhostButton>

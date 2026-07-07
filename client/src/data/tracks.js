@@ -91,8 +91,19 @@ export const tracks = [
 export const codeSharing = {
   definition:
     '타과 교과목 중 기준에 충족하는 과목에 한해서 디지털인문예술전공의 과목으로 인정하는 시스템을 말한다.',
+  // J5: EN 대역(정보 증감 없는 번역)
+  definitionEn:
+    'A system that recognizes courses from other departments as Digital Arts and Humanities courses, limited to courses that meet the criteria.',
   note: '이미 취득한 학점에 대해서만 가능하며, 졸업 전까지 코드쉐어링 인정원 작성 후 미래융합스쿨 교학팀의 승인을 받아야 인정된다.',
+  noteEn:
+    'Only credits already earned are eligible. Recognition requires completing the Code Sharing recognition form before graduation and obtaining approval from the Future Convergence School academic team.',
   steps: ['타과 교과목 이수', '학점 취득', '코드쉐어링 인정원 작성', '학과행정실 제출(통합스쿨 교학팀)'],
+  stepsEn: [
+    'Complete courses in another department',
+    'Earn the credits',
+    'Fill out the Code Sharing recognition form',
+    'Submit to the department office (Integrated School academic team)',
+  ],
   types: [
     { name: '교과목 대체형 코드쉐어링 (교과목 1:1 매칭)', detail: '해당 없음' },
     { name: '타과교과목 인정형 코드쉐어링', detail: '아래 교과목을 최대 9학점 이내에서 전공으로 인정합니다.' },

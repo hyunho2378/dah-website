@@ -12,6 +12,17 @@ import { councils } from '../../data/council'
 const toMember = (member) =>
   typeof member === 'string' ? { name: member } : member
 
+// J6: 연속한 같은 부서(role)를 한 행으로 묶는다 — 원문 순서 보존
+function groupByRole(members) {
+  const rows = []
+  for (const m of members) {
+    const last = rows[rows.length - 1]
+    if (last && last.role === (m.role ?? '')) last.members.push(m)
+    else rows.push({ role: m.role ?? '', members: [m] })
+  }
+  return rows
+}
+
 // H3 폴백: data/council.js 원문(councils) — 2026(현 LUCID) 맨 앞, 이후 연도 내림차순
 const FALLBACK_ITEMS = councils.map((c) => ({
   id: `council-${c.year}`,
@@ -22,7 +33,7 @@ const FALLBACK_ITEMS = councils.map((c) => ({
 }))
 
 function Council() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   useTitle(t('titles.council'))
   // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
   const { data, loading, error, offline } = useApi('/content/council', {
@@ -40,6 +51,10 @@ function Council() {
   const [selectedId, setSelectedId] = useState(null)
   const active = items.find((c) => c.id === selectedId) ?? items[0] ?? null
   const members = Array.isArray(active?.members) ? active.members.map(toMember) : []
+  // J5: EN 모드 소개문 — 원격 행에는 introEn이 없어 정적 원문(councils)을 연도로 매칭
+  const staticMatch = councils.find((c) => String(c.year) === String(active?.year_label))
+  const introText =
+    lang === 'en' ? staticMatch?.introEn ?? active?.intro : active?.intro
 
   return (
     <>
@@ -118,46 +133,56 @@ function Council() {
                   </h2>
                   <EditPencil type="council" to="/admin/council" />
                 </div>
-                {active.intro && (
+                {introText && (
                   <p className="max-w-[760px] whitespace-pre-line text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
-                    {active.intro}
+                    {introText}
                   </p>
                 )}
               </div>
             </div>
 
-            {/* 구성원 그리드 */}
-            <div className="flex flex-col gap-16">
-              <h3 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-                {t('sections.members')}
-              </h3>
+            {/* J6: 구성 — eyebrow + 제목 + 부서별 행 리스트(좌 라벨 / 우 이름, 헤어라인) */}
+            <div className="flex flex-col gap-24">
+              <div>
+                <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
+                  COMMITTEE
+                </p>
+                <h3 className="mt-12 text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
+                  {t('council.compositionTitle')}
+                </h3>
+              </div>
               {members.length === 0 ? (
                 <p className="py-32 font-mono text-caption-m text-text-meta">
                   {t('common.empty')}
                 </p>
               ) : (
-                <ul className="grid grid-cols-2 gap-12 md:grid-cols-3 lg:grid-cols-4">
-                  {members.map((member) => (
-                    <li
-                      key={`${member.name}-${member.role ?? ''}`}
-                      className="flex min-w-0 flex-col gap-4 rounded-md border border-border-subtle bg-bg-elev px-16 py-12"
+                <dl className="border-t border-border-subtle">
+                  {groupByRole(members).map((row) => (
+                    <div
+                      key={row.role}
+                      className="flex flex-col gap-8 border-b border-border-subtle py-16 md:flex-row md:items-baseline md:gap-24 md:py-20"
                     >
-                      <span className="text-body-m font-semibold text-text-pri md:text-body-d">
-                        {member.name}
-                      </span>
-                      {(member.role || member.part) && (
-                        <span className="font-mono text-caption-m text-text-sec">
-                          {member.role ?? member.part}
-                        </span>
-                      )}
-                      {member.majors && (
-                        <span className="text-caption-m text-text-meta">
-                          {member.majors}
-                        </span>
-                      )}
-                    </li>
+                      <dt className="w-128 shrink-0 font-mono text-small-m text-text-meta md:text-small-d">
+                        {row.role}
+                      </dt>
+                      <dd className="flex min-w-0 flex-wrap gap-x-24 gap-y-8">
+                        {row.members.map((member) => (
+                          <span
+                            key={`${member.name}-${member.majors ?? ''}`}
+                            className="text-body-m text-text-pri md:text-body-d"
+                          >
+                            {member.name}
+                            {member.majors && (
+                              <span className="ml-8 text-small-m text-text-meta md:text-small-d">
+                                ({member.majors})
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </dd>
+                    </div>
                   ))}
-                </ul>
+                </dl>
               )}
             </div>
           </div>

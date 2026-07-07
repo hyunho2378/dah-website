@@ -10,37 +10,141 @@ import { tracks } from '../data/tracks'
 import { curriculum } from '../data/curriculum'
 import { motion } from '../styles/tokens'
 
-// 교육과정 v2 (10_IA_V2 2절 /curriculum) — Tracks.jsx 대체 페이지.
-// 트랙 표시명 v2(i18n 매핑), 앵커 id=track-1..3 유지, 로드맵 압축(공통기초 최상단 고정 + 한눈 뷰).
+// 교육과정 (J10, 20_PHASE8) — 표 형식 전환.
+// 트랙(공통기초 포함)별로 1학기·2학기 표를 나란히(데스크탑 2열, 모바일 세로) 배치.
+// 표 컬럼: 학년 | 과목명 | 학점-강의-실습. 디자인은 토큰만(radius 4, 헤어라인, 다크).
+// 4년 로드맵 SVG는 과목의 개설 학기(1·2학기)를 학기 서브컬럼에 반영, 공통기초 최상단.
 
-// 다이어그램 레이아웃 계산 헬퍼 — Tracks.jsx 빌더 이식 + v2 압축(행높이·패딩 축소, 한눈 뷰)
-// 렌더 좌표 데이터만 반환. 색·텍스트는 렌더 측에서 border/text 토큰으로만 지정한다.
+const LANE_KEYS = ['common', 'track-1', 'track-2', 'track-3']
+
+function coursesOf(trackKey, semester) {
+  return curriculum.filter((c) => c.track === trackKey && c.semester === semester)
+}
+
+function courseName(course, lang) {
+  return lang === 'en' && course.nameEn ? course.nameEn : course.name
+}
+
+// J10: 학기 표 — 학년 | 과목명 | 학점-강의-실습
+function SemesterTable({ trackKey, semester, lang, t }) {
+  const rows = coursesOf(trackKey, semester)
+  if (rows.length === 0) return null
+  return (
+    <div className="min-w-0 overflow-hidden rounded-md border border-border-subtle">
+      <p className="border-b border-border-subtle bg-bg-elev px-16 py-12 font-mono text-label-m uppercase tracking-label text-text-sec md:text-label-d">
+        {t(`curriculum.sem${semester}`)}
+      </p>
+      <table className="w-full border-collapse text-left">
+        <thead>
+          <tr className="border-b border-border-subtle">
+            <th
+              scope="col"
+              className="w-64 px-16 py-8 font-mono text-caption-m font-medium text-text-meta"
+            >
+              {t('curriculum.grade')}
+            </th>
+            <th
+              scope="col"
+              className="px-8 py-8 font-mono text-caption-m font-medium text-text-meta"
+            >
+              {t('curriculum.course')}
+            </th>
+            <th
+              scope="col"
+              className="w-96 px-16 py-8 text-right font-mono text-caption-m font-medium text-text-meta"
+            >
+              {t('curriculum.credit')}
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border-subtle">
+          {rows.map((course) => (
+            <tr key={`${course.name}-${course.year}`}>
+              <td className="px-16 py-12 font-mono text-small-m text-text-meta md:text-small-d">
+                {course.year}
+              </td>
+              <td className="min-w-0 break-keep px-8 py-12 text-body-m text-text-pri md:text-body-d">
+                {courseName(course, lang)}
+              </td>
+              <td className="px-16 py-12 text-right font-mono text-small-m text-text-sec md:text-small-d">
+                {course.credit}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// 트랙 블록: 헤딩(+트랙 소개) + 1·2학기 표 2열
+function LaneSection({ trackKey, lang, t }) {
+  const track = tracks.find((tr) => tr.id === trackKey) ?? null
+  const displayName = track ? t(`tracks.${track.id}`) : t('tracks.common')
+  const summary =
+    track && (lang === 'en' && track.summaryEn ? track.summaryEn : track.summary)
+
+  return (
+    <Container
+      as="section"
+      id={trackKey === 'common' ? undefined : trackKey}
+      className="scroll-mt-header pt-section-m md:pt-section-d"
+    >
+      <Reveal>
+        <p className="font-mono text-label-m uppercase tracking-label text-text-sec md:text-label-d">
+          {track ? track.no : 'COMMON'}
+        </p>
+        <h2 className="mt-16 text-h1-m font-extrabold leading-tight tracking-display text-text-pri md:mt-24 md:text-h1-d">
+          {displayName}
+        </h2>
+        {summary && (
+          <p className="mt-16 max-w-[720px] text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
+            {summary}
+          </p>
+        )}
+      </Reveal>
+      {/* J10·J13: 데스크탑 2열(1학기|2학기), 모바일 세로 스택 */}
+      <div className="mt-32 grid grid-cols-1 gap-16 md:mt-48 md:grid-cols-2 md:gap-24">
+        <SemesterTable trackKey={trackKey} semester={1} lang={lang} t={t} />
+        <SemesterTable trackKey={trackKey} semester={2} lang={lang} t={t} />
+      </div>
+    </Container>
+  )
+}
+
+// 4년 로드맵 다이어그램 — 학기(1·2학기) 서브컬럼에 과목 배치, 공통기초 최상단
 function buildDiagramLayout(lanes, items) {
   const W = 960
   const colW = W / 4
-  const axisH = 40 // v1 56 → 압축
-  const labelH = 24 // v1 32 → 압축
-  const rowH = 24 // v1 34 → 압축(세로 밀도 상향)
-  const lanePad = 12 // v1 16 → 압축
+  const semW = colW / 2
+  const axisH = 40
+  const labelH = 24
+  const rowH = 24
+  const lanePad = 12
   let y = axisH
   const laneBoxes = []
   for (const lane of lanes) {
-    const byYear = [1, 2, 3, 4].map((year) =>
-      items.filter((c) => c.track === lane.key && c.year === year)
+    // (학년, 학기)별 과목 — 레인 높이는 학년 내 학기 중 최다 행 기준
+    const cells = [1, 2, 3, 4].map((year) =>
+      [1, 2].map((sem) =>
+        items.filter((c) => c.track === lane.key && c.year === year && c.semester === sem)
+      )
     )
-    const maxRows = Math.max(...byYear.map((list) => list.length))
+    const maxRows = Math.max(...cells.map(([s1, s2]) => Math.max(s1.length, s2.length)))
     if (maxRows === 0) continue
     const top = y
     const blocks = []
-    byYear.forEach((yearItems, yi) => {
-      yearItems.forEach((course, ri) => {
-        blocks.push({
-          code: course.code,
-          name: course.name,
-          x: yi * colW + 10,
-          y: top + labelH + ri * rowH,
-          w: colW - 20,
-          h: rowH - 6,
+    cells.forEach((sems, yi) => {
+      sems.forEach((semItems, si) => {
+        semItems.forEach((course, ri) => {
+          blocks.push({
+            key: `${lane.key}-${yi}-${si}-${course.name}-${ri}`,
+            name: course.name,
+            x: yi * colW + si * semW + 6,
+            y: top + labelH + ri * rowH,
+            w: semW - 12,
+            h: rowH - 6,
+          })
         })
       })
     })
@@ -50,57 +154,10 @@ function buildDiagramLayout(lanes, items) {
   return { W, H: y, colW, axisH, lanes: laneBoxes }
 }
 
-// 트랙 상세 블록 — Tracks.jsx TrackDetail 이식. 표시명만 v2(i18n), 앵커·과목 행 문법 유지
-function TrackDetail({ track, displayName, courses, coursesLabel }) {
-  return (
-    <Container
-      as="section"
-      id={track.id}
-      className="scroll-mt-header pt-section-m md:pt-section-d"
-    >
-      <Reveal>
-        <p className="font-mono text-label-m uppercase tracking-label text-text-sec md:text-label-d">
-          {track.no}
-        </p>
-        <h2 className="mt-16 text-h1-m font-extrabold leading-tight tracking-display text-text-pri md:mt-24 md:text-h1-d">
-          {displayName}
-        </h2>
-        <p className="mt-16 max-w-[640px] text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
-          {track.summary}
-        </p>
-      </Reveal>
-
-      {courses.length > 0 && (
-        <div className="mt-48 md:mt-64">
-          <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-            {coursesLabel}
-          </p>
-          <ul className="mt-16 border-t border-border-subtle">
-            {courses.map((course) => (
-              <li
-                key={course.code}
-                className="flex items-baseline gap-16 border-b border-border-subtle py-12 md:gap-24 md:py-16"
-              >
-                <span className="w-40 shrink-0 font-mono text-small-m text-text-meta md:text-small-d">
-                  {course.code}
-                </span>
-                <span className="text-body-m text-text-pri md:text-body-d">
-                  {course.name}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </Container>
-  )
-}
-
 function Curriculum() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   useTitle(t('titles.curriculum'))
 
-  // 공통기초(common) 레인 최상단 고정(13_CMS_SPEC 1절 교과목 행) → 트랙 3 순서
   const lanes = [
     { key: 'common', label: t('tracks.common') },
     ...tracks.map((track) => ({ key: track.id, label: t(`tracks.${track.id}`) })),
@@ -121,40 +178,31 @@ function Curriculum() {
       />
 
       <div className="pb-section-m md:pb-section-d">
-        {/* TRACK 01~03 상세 블록 (앵커 유지: /curriculum#track-n) */}
-        {tracks.map((track) => (
-          <TrackDetail
-            key={track.id}
-            track={track}
-            displayName={t(`tracks.${track.id}`)}
-            courses={curriculum.filter((c) => c.track === track.id)}
-            coursesLabel={t('sections.relatedCourses')}
-          />
+        {/* 공통기초 → 트랙 3: 학기별 표 (앵커 유지: /curriculum#track-n) */}
+        {LANE_KEYS.map((key) => (
+          <LaneSection key={key} trackKey={key} lang={lang} t={t} />
         ))}
 
-        {/* 04 4년 로드맵 — 압축 SVG: 공통기초 최상단, 4학년 4열 한눈 뷰(초과 스크롤 없음) */}
+        {/* 4년 로드맵 — 학기 반영 SVG (md 미만은 표가 이미 학기별 정보를 제공해 숨김) */}
         {curriculum.length > 0 && (
           <Container as="section" className="pt-section-m md:pt-section-d">
             <Reveal>
-              <SectionLabel index="04" text="ROADMAP" />
+              <SectionLabel index="05" text="ROADMAP" />
               <div className="mt-24 flex flex-wrap items-center gap-12 md:mt-32">
                 <h2 className="text-h1-m font-extrabold leading-tight tracking-display text-text-pri md:text-h1-d">
                   {t('sections.roadmap')}
                 </h2>
-                {/* 교과목 편집(admin+, 13_CMS_SPEC 1절) — 비로그인 미렌더 */}
                 <EditPencil type="curriculum" to="/admin/curriculum" />
               </div>
             </Reveal>
 
-            <div className="mt-48 md:mt-64">
-              {/* md 이상: SVG 다이어그램 (색은 border/text 토큰만, 절대폭 금지 — viewBox 반응형) */}
+            <div className="mt-48 hidden md:mt-64 md:block">
               <svg
                 viewBox={`0 0 ${diagram.W} ${diagram.H}`}
                 role="img"
-                aria-label="공통기초를 최상단에 두고 1학년부터 4학년까지 학년 축으로 배치한 트랙별 교육과정 로드맵"
-                className="hidden h-auto w-full md:block"
+                aria-label="공통기초를 최상단에 두고 학년과 학기 축으로 배치한 트랙별 교육과정 로드맵"
+                className="h-auto w-full"
               >
-                {/* 학년·학기 축 */}
                 {[0, 1, 2, 3].map((i) => (
                   <g key={i}>
                     <text
@@ -165,7 +213,7 @@ function Curriculum() {
                       fill="currentColor"
                       className="font-mono text-text-pri"
                     >
-                      {`${i + 1}학년`}
+                      {`${i + 1}${t('curriculum.gradeSuffix')}`}
                     </text>
                     <text
                       x={i * diagram.colW + diagram.colW / 4}
@@ -175,7 +223,7 @@ function Curriculum() {
                       fill="currentColor"
                       className="font-mono text-text-meta"
                     >
-                      1학기
+                      {t('curriculum.sem1')}
                     </text>
                     <text
                       x={i * diagram.colW + (diagram.colW * 3) / 4}
@@ -185,9 +233,8 @@ function Curriculum() {
                       fill="currentColor"
                       className="font-mono text-text-meta"
                     >
-                      2학기
+                      {t('curriculum.sem2')}
                     </text>
-                    {/* 학기 경계: 점선 헤어라인 */}
                     <line
                       x1={i * diagram.colW + diagram.colW / 2}
                       y1={diagram.axisH - 6}
@@ -197,7 +244,6 @@ function Curriculum() {
                       strokeDasharray="2 6"
                       className="text-border-subtle"
                     />
-                    {/* 학년 경계: 실선 */}
                     {i > 0 && (
                       <line
                         x1={i * diagram.colW}
@@ -211,7 +257,6 @@ function Curriculum() {
                   </g>
                 ))}
 
-                {/* 레인(공통기초 → 트랙 3) + 과목 블록 */}
                 {diagram.lanes.map((lane) => (
                   <g key={lane.label}>
                     <line
@@ -232,73 +277,39 @@ function Curriculum() {
                       {lane.label}
                     </text>
                     {lane.blocks.map((b) => (
-                      <g key={b.code}>
+                      <g key={b.key}>
                         <rect
                           x={b.x}
                           y={b.y}
                           width={b.w}
                           height={b.h}
-                          rx="5"
+                          rx="4"
                           fill="none"
                           stroke="currentColor"
                           className="text-border-subtle"
                         />
                         <text
-                          x={b.x + 10}
+                          x={b.x + 6}
                           y={b.y + b.h / 2 + 3.5}
-                          fontSize="10"
+                          fontSize="9"
                           fill="currentColor"
+                          className="font-sans text-text-sec"
                         >
-                          <tspan className="font-mono text-text-meta">{b.code}</tspan>
-                          <tspan dx="8" className="font-sans text-text-sec">
-                            {b.name}
-                          </tspan>
+                          {b.name}
                         </text>
                       </g>
                     ))}
                   </g>
                 ))}
               </svg>
-
-              {/* md 미만: 학년별 리스트 폴백 (공통기초 먼저, 트랙 순) */}
-              <div className="md:hidden">
-                {[1, 2, 3, 4].map((year) => {
-                  const items = lanes.flatMap((lane) =>
-                    curriculum.filter((c) => c.year === year && c.track === lane.key)
-                  )
-                  if (items.length === 0) return null
-                  return (
-                    <div key={year} className="mt-40 first:mt-0">
-                      <p className="font-mono text-label-m uppercase tracking-label text-text-meta">
-                        {`${year}학년`}
-                      </p>
-                      <ul className="mt-12 border-t border-border-subtle">
-                        {items.map((c) => (
-                          <li
-                            key={c.code}
-                            className="flex items-baseline gap-16 border-b border-border-subtle py-12"
-                          >
-                            <span className="w-40 shrink-0 font-mono text-small-m text-text-meta">
-                              {c.code}
-                            </span>
-                            <span className="min-w-0 text-body-m text-text-pri">
-                              {c.name}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )
-                })}
-              </div>
             </div>
           </Container>
         )}
 
-        {/* 05 코드쉐어링 — /curriculum/codesharing 분리 페이지 안내 (10_IA_V2 2절) */}
+        {/* 코드쉐어링 — 분리 페이지 안내 */}
         <Container as="section" className="pt-section-m md:pt-section-d">
           <Reveal delay={motion.stagger}>
-            <SectionLabel index="05" text="CODE SHARING" />
+            <SectionLabel index="06" text="CODE SHARING" />
             <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
               {t('sections.codesharing')}
             </h2>

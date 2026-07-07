@@ -134,6 +134,31 @@
   (H8) 푸터 TEL 033-248-3556 / (H9) 배경 그라데이션+스크롤 성운 이동(reduced-motion 정지)
   (H10) /admin/exhibition 기간을 현재로 설정 + /admin/settings 노출 on → 헤더(또는 플로팅) 접수 버튼 → /submit. 즉시 테스트: 관리자 로그인 후 /submit?preview=1
 
+## PHASE 8 — 크리틱 반영 + 전수 검사 (20_PHASE8_FIXES)
+- [x] J2 [최우선] 어드민 편집 빈 화면: 근본 원인 2종 — (a)시드 professors.links가 객체({website,…})인데 PairsField가 배열 기대 → value.map 크래시. EntityCrud pickForm/PairsField 비배열 방어 + ProfessorsAdmin fromItem이 객체→pairs 변환 (b)레거시 body jsonb({paragraphs}·{field,intro})가 RichEditor(Tiptap)에 들어가면 스키마 크래시 → doc 형태만 통과(safeValue). 추가 안전망: AdminLayout에 ErrorBoundary(빈 화면 대신 오류+다시 시도). 전 유형 진입 경로(라우트 posts/:type/:id/edit, EntityCrud 인라인, 싱글턴) 코드 전수 확인
+- [x] J1 어드민 레이아웃: 콘텐츠 영역 공용 Container 정렬 + 사이드바 sticky+max-h(100vh 기준)+overflow-y-auto 독립 스크롤
+- [x] J3 접수 버튼 상시 노출: show_button = header_visible만(기간 무관). 기간 검증은 제출 시점 서버 403 + /submit 안내 유지. 설정 화면 문구 갱신
+- [x] J4 언어 유지: localizeTo(lang,to) + LangLink/LangNavLink 신설, 공개 링크 전수 치환(Header·GlassDock·Footer·PageBanner·Button·ArrowLink·NoticeItem·BoardList·ProgramShowcase·목록 카드 4종). /admin·/submit은 국문 전용 예외. GlassDock 현재 페이지 매칭 /en 정규화
+- [x] J4 레이아웃 고정: 히어로 본문 lg:min-h-[4lh](긴 언어 기준 예약), 트랙 카드 flex-col + 요약 min-h-[2lh] + 키워드 min-h-64 + 자세히 보기 mt-auto 하단 고정 — 1440에서 KR/EN 버튼 위치 동일(코드 보증)
+- [x] J5 콘텐츠 영문화(어드민 제외): professors roleEn·affiliationEn(11명), council introEn(7개 기수), codeSharing definitionEn·noteEn·stepsEn, curriculum nameEn(38과목), 트랙 summaryEn·keywordsEn, 히어로 subEn·bodyEn(기반영). People·Council·CodeSharing·Curriculum lang 분기. 공지 등 게시물은 KR 폴백+뱃지 정책 유지
+- [x] J6 운영위 구성: eyebrow COMMITTEE + "운영위원회 구성" + 부서별 행(좌 라벨 mono 보조색/우 이름, 위원장·부위원장 괄호 소속·학번 흐리게, 헤어라인). 전 기수 동일 컴포넌트, 모노크롬 토큰만
+- [x] J7 공지 상세 재설계: 밝은 타이틀 카드(제목+등록일·태그+첨부 줄: 파일명·미리보기·다운로드) + 밝은 본문 카드(행간 1.8). 원문 보기·구글 사이트 아웃바운드 전면 삭제(NewsDetail·NoticeItem·Resources 행, viewOriginal 사전 키 제거)
+- [x] J8 동아리 카드: 로고(또는 이니셜) 중앙 상단 + 이름·설명 중앙 정렬
+- [x] J9 FinalCTA 삭제: Home 사용 제거 + FinalCTA.jsx 삭제
+- [x] J10 교육과정: curriculum.js 원문 전면 교체(38과목, 학기·"학점-강의-실습"·nameEn). 페이지를 트랙별 1·2학기 표 2열(모바일 세로)로 재설계(컬럼 학년/과목명/학점-강의-실습, radius 4·헤어라인·다크). 로드맵 SVG 학기 서브컬럼 반영·공통기초 최상단. 어드민 폼 credit 필드 + schema/curriculum.credit + content-config. 배포 Neon 재시드 38건 확인(seed-curriculum.mjs)
+- [x] J11 성과 설명 상시 노출: 원인 — 라이브 API의 awardee/host/desc가 body jsonb에 있는데 normalize가 최상위만 읽음 → body 판독 추가. 목록에서 항상 펼침(접힘 없음)
+- [x] J12 "총 N건" 삭제: 공개 목록 전체(전시회·공모전·특강·동아리·쇼케이스·성과·BoardList). 어드민 목록은 운영 정보로 유지
+- [x] J13 모바일: 히어로 영상 object-cover 크롭+Container 안전영역 확인, 교육과정 표 모바일 세로 스택, 운영위 행 flex-col, 공지 카드·동아리 그리드 1열 — 코드 레벨 확인(390px 육안은 배포 후 사용자 확인)
+- [x] J14 텍스트 검수: 신규 문구 G11 기준 작성(능동태·명사형), em dash 공개 번들 0건 재확인, t() 100키 ko/en 누락 0
+- [x] J15 전수 검사 결과(수정 목록):
+  - 크래시: PairsField 비배열(J2-a), RichEditor 비doc body(J2-b) — 수정
+  - 죽은 코드 13파일 삭제: NewsBar·IdentitySection·CurriculumSection·StatsSection·PeoplePreview(v1 홈), Card·Stat·PageHero·LogoWordmark·common/PageBanner(심), data/identity.js·stats.js(고아 데이터), AttachmentViewer(J7로 고아화)
+  - 미사용 import: NewsDetail Tag 제거. 미사용 사전 키: viewOriginal·bodyElsewhere 제거
+  - console.log 0건(서버 부트 로그 1건은 정상 유지), TODO/FIXME 0건, JSX 하드코딩 HEX 0건
+  - img alt 멀티라인 전수 검증 누락 0건, 아이콘 버튼 aria-label 유지 확인
+  - 서버 전 파일 node --check 통과, client npm run build 성공
+- [!] 실사이트 육안 검증(사용자 수행) 체크리스트: 어드민 교수진 편집 폼 프리필 / 접수 스위치 on→버튼 상시 / EN 내비 유지+1440 버튼 고정 / EN 콘텐츠(트랙·운영위·코드쉐어링·교수 직함·교육과정) / 운영위 구성 행 디자인 / 공지 밝은 타이틀·본문 카드+원문 보기 없음 / 동아리 중앙 카드 / 홈 FinalCTA 없음 / 교육과정 표(1·2학기 2열)+로드맵 학기 / 성과 설명 펼침 / 총 N건 없음 / 390px 가로 스크롤 0
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

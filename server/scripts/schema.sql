@@ -52,6 +52,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_posts_seed_key ON posts (seed_key);
 -- G1(18_PHASE6): 학생 성과 원문 등장 순서. 목록 정렬 = 연도(tag) DESC, 연도 내 sort ASC.
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS sort INTEGER;
 
+-- J10(20_PHASE8): 교과목 학점 표기 "학점-강의-실습" (예: 3-2-2)
+ALTER TABLE curriculum ADD COLUMN IF NOT EXISTS credit TEXT;
+
 -- 교수진
 CREATE TABLE IF NOT EXISTS professors (
   id        SERIAL PRIMARY KEY,

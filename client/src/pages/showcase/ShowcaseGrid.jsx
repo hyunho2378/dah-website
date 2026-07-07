@@ -1,5 +1,5 @@
 // /showcase — 웹&앱 쇼케이스 그리드 (published만, 16:9 카드)
-import { Link } from 'react-router-dom'
+import Link from '../../components/common/LangLink'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
@@ -71,10 +71,7 @@ function ShowcaseGrid() {
         nebulaY="42%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
-        <div className="flex flex-wrap items-center justify-between gap-16">
-          <p className="font-mono text-caption-m text-text-sec">
-            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
-          </p>
+        <div className="flex flex-wrap items-center justify-end gap-16">
           <div className="flex flex-wrap items-center gap-12">
             <AddButton type="showcase" to="/admin/showcase" />
             <Button variant="secondary" href="/showcase/submit">

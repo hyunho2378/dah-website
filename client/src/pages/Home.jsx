@@ -5,7 +5,6 @@ import ProgramShowcase from '../components/home/ProgramShowcase'
 import TracksSection from '../components/home/TracksSection'
 import AchievementsHighlight from '../components/home/AchievementsHighlight'
 import NewsSection from '../components/home/NewsSection'
-import FinalCTA from '../components/home/FinalCTA'
 import Divider from '../components/common/Divider'
 
 // 홈 v2 (10_IA_V2 4절, 순서 고정):
@@ -28,7 +27,7 @@ function Home() {
       <Divider />
       <AchievementsHighlight />
       <NewsSection />
-      <FinalCTA />
+      {/* J9: FinalCTA(BUILD WHAT'S NEXT) 섹션 삭제 */}
     </>
   )
 }

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from './LangLink'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 
 // COMPONENTS.md §1 ArrowLink — hover: 언더라인 좌→우 draw(250ms), 화살표 translate-x 4px

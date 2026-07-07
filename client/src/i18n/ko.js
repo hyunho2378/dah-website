@@ -103,7 +103,6 @@ export const ko = {
     error: '목록을 불러오지 못했습니다',
     notFound: '게시글을 찾을 수 없습니다',
     backToList: '목록으로 이동',
-    viewOriginal: '원문 보기',
     attachments: '첨부',
     menu: '메뉴',
     total: '총',
@@ -142,10 +141,24 @@ export const ko = {
     yearNav: '연도 이동',
     termSelect: '기수 선택',
   },
+  council: {
+    compositionTitle: '운영위원회 구성',
+  },
+  curriculum: {
+    grade: '학년',
+    gradeSuffix: '학년',
+    course: '과목명',
+    credit: '학점-강의-실습',
+    sem1: '1학기',
+    sem2: '2학기',
+  },
   news: {
     searchPlaceholder: '공지 검색',
     resourceSearchPlaceholder: '자료 검색',
-    bodyElsewhere: '이 공지의 본문은 원문 페이지에서 확인하세요.',
+    noBody: '본문이 등록되지 않은 공지입니다.',
+    registered: '등록일',
+    preview: '미리보기',
+    download: '다운로드',
     tags: {
       all: '전체',
       internal: '대내',

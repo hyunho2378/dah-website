@@ -112,14 +112,14 @@ async function main() {
     } else skip('mentors')
 
     if (await isEmpty('curriculum')) {
+      // J10: 학기(semester)·학점 표기(credit)·영문명(name_en) 포함
       for (const [i, c] of curriculum.entries()) {
-        // semester: 원본 데이터 구조에 필드 없음(주석만) → NULL. code('1.1')는 스키마에 없어 미이관(정렬은 sort 보존)
         await client.query(
-          `INSERT INTO curriculum (grade, semester, track, name_ko, name_en, sort) VALUES ($1, NULL, $2, $3, NULL, $4)`,
-          [c.year, TRACK_MAP[c.track], c.name, i]
+          `INSERT INTO curriculum (grade, semester, track, name_ko, name_en, credit, sort) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [c.year, c.semester ?? null, TRACK_MAP[c.track], c.name, c.nameEn ?? null, c.credit ?? null, i]
         )
       }
-      console.log(`[seed] curriculum ${curriculum.length}건`)
+      console.log(`[seed] curriculum ${curriculum.length}건 (학기·학점 포함)`)
     } else skip('curriculum')
 
     if (await isEmpty('careers')) {

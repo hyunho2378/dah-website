@@ -111,7 +111,8 @@ function SettingsAdmin() {
         <div className={PANEL}>
           <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">접수 버튼 노출</h3>
           <p className="text-small-m text-text-sec">
-            접수 기간 중 자동 노출됩니다. 아래 스위치를 끄면 기간 중에도 강제로 숨깁니다.
+            스위치를 켜면 접수 기간과 무관하게 버튼을 노출합니다. 기간 검증은 제출 시점에
+            서버가 적용합니다.
           </p>
           <div className="flex flex-wrap items-start gap-24">
             <Field label="노출 허용">

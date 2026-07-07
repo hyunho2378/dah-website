@@ -76,7 +76,8 @@ function HeroSection({ settings }) {
           <p className="mt-24 text-h2-m font-bold leading-heading text-text-pri lg:text-h2-d">
             {lang === 'en' && hero.subEn ? hero.subEn : hero.subKr}
           </p>
-          <p className="mt-16 max-w-xl text-body-l-m leading-body text-text-sec lg:text-body-l-d">
+          {/* J4.2: KR/EN 중 긴 쪽(EN 4줄) 기준 높이 예약 — 언어 전환 시 CTA 위치 고정 */}
+          <p className="mt-16 max-w-xl text-body-l-m leading-body text-text-sec lg:min-h-[4lh] lg:text-body-l-d">
             {lang === 'en' && hero.bodyEn ? hero.bodyEn : hero.body}
           </p>
           <div className="mt-40 flex flex-wrap items-center gap-16">

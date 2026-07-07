@@ -16,7 +16,13 @@ import { motion } from '../styles/tokens'
 const HWP_HREF = '/files/codesharing-form.hwp'
 
 function CodeSharing() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
+  // J5: EN 대역 우선(없으면 국문 폴백)
+  const definition =
+    lang === 'en' ? codeSharing.definitionEn ?? codeSharing.definition : codeSharing.definition
+  const note = lang === 'en' ? codeSharing.noteEn ?? codeSharing.note : codeSharing.note
+  const steps =
+    lang === 'en' && Array.isArray(codeSharing.stepsEn) ? codeSharing.stepsEn : codeSharing.steps
   useTitle(t('titles.codesharing'))
 
   // 인정 학과 목록에 붙는 학점 상한 안내 — 원문 '학점인정형 코드쉐어링' 항목(types 3번째)
@@ -47,10 +53,10 @@ function CodeSharing() {
               <EditPencil type="codesharing" to="/admin/codesharing" />
             </div>
             <p className="mt-24 max-w-4xl text-h3-m font-bold leading-snug tracking-display text-text-pri md:mt-32 md:text-h3-d">
-              {codeSharing.definition}
+              {definition}
             </p>
             <p className="mt-16 max-w-[640px] text-body-m leading-relaxed text-text-sec md:text-body-d">
-              {codeSharing.note}
+              {note}
             </p>
             {/* 글래스 다운로드 버튼 — 파일 슬롯 예약(파일명 고정: codesharing-form.hwp) */}
             <a
@@ -65,7 +71,7 @@ function CodeSharing() {
         </Container>
 
         {/* 02 승인 절차 4단계 (원문 그대로) */}
-        {codeSharing.steps.length > 0 && (
+        {steps.length > 0 && (
           <Container as="section" className="pt-section-m md:pt-section-d">
             <Reveal>
               <SectionLabel index="02" text="PROCESS" />
@@ -74,7 +80,7 @@ function CodeSharing() {
               </h2>
             </Reveal>
             <ol className="mt-32 grid gap-24 border-t border-border-subtle pt-24 md:mt-48 md:grid-cols-4 md:gap-32">
-              {codeSharing.steps.map((step, i) => (
+              {steps.map((step, i) => (
                 <Reveal key={step} delay={i < 6 ? i * motion.stagger : 0} as="li">
                   <p className="font-mono text-small-m text-text-pri md:text-small-d">
                     {String(i + 1).padStart(2, '0')}

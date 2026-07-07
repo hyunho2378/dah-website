@@ -15,16 +15,21 @@ import { achievements } from '../../data/achievements'
 // API 게시글(13_CMS: 수상명/수상자/주최/연도/대회 URL) → 공통형. 정적 데이터도 동일 필드.
 function normalize(post) {
   const year = Number(
-    post.year ?? (post.event_start ?? post.created_at ?? '').slice(0, 4)
+    post.year ??
+      (post.body && typeof post.body === 'object' ? post.body.year : undefined) ??
+      post.tag ??
+      (post.event_start ?? post.created_at ?? '').slice(0, 4)
   )
+  // J11: 라이브 API는 상세 필드가 body jsonb에 담김 — 최상위 폴백과 함께 판독
+  const body = post.body && typeof post.body === 'object' ? post.body : {}
   return {
     id: String(post.id),
     year: Number.isFinite(year) && year > 0 ? year : null,
     title: post.title ?? post.title_ko ?? '',
-    awardee: post.awardee ?? null,
-    host: post.host ?? null,
+    awardee: post.awardee ?? body.awardee ?? null,
+    host: post.host ?? body.host ?? null,
     url: post.external_url ?? post.url ?? null,
-    desc: post.desc ?? null,
+    desc: post.desc ?? body.desc ?? null,
   }
 }
 
@@ -99,10 +104,7 @@ function Achievements() {
             {t('common.offline')}
           </p>
         )}
-        <div className="flex flex-wrap items-center justify-between gap-16">
-          <p className="font-mono text-caption-m text-text-sec">
-            {t('common.total')} <span className="text-text-pri">{items.length}</span>{t('common.count')}
-          </p>
+        <div className="flex flex-wrap items-center justify-end gap-16">
           <AddButton type="achievement" to="/admin/posts/achievement/new" />
         </div>
 

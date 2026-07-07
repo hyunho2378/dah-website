@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from './LangLink'
 import { ArrowUpRight } from 'lucide-react'
 
 // COMPONENTS.md §1 Button — primary: bg invert / secondary: 글래스 톤(v2 스킨, 11_DESIGN_V2 5절)

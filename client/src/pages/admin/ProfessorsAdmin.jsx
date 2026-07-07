@@ -25,6 +25,29 @@ const FIELDS = [
   { key: 'active', label: '표시 여부', kind: 'toggle', default: true },
 ]
 
+// J2: 시드 links는 {website, affiliation, lead} 객체 — pairs 배열로 변환해 프리필(크래시 원인 해소).
+// 문자열 값만 표시용 pairs로 승격, 저장 시엔 pairs 배열 그대로 links jsonb에 기록된다.
+function fromItem(item) {
+  const raw = item.links
+  let links = raw
+  if (raw && !Array.isArray(raw) && typeof raw === 'object') {
+    links = Object.entries(raw)
+      .filter(([, v]) => typeof v === 'string' && v)
+      .map(([label, url]) => ({ label, url }))
+  }
+  return {
+    name_ko: item.name_ko || '',
+    name_en: item.name_en || '',
+    title_ko: item.title_ko || '',
+    title_en: item.title_en || '',
+    email: item.email || '',
+    photo_url: item.photo_url || '',
+    links: Array.isArray(links) ? links : [],
+    sort: item.sort ?? 0,
+    active: item.active !== false,
+  }
+}
+
 function ProfessorsAdmin() {
   useTitle('교수진 관리')
   return (
@@ -33,6 +56,7 @@ function ProfessorsAdmin() {
       title="교수진"
       desc="추가·수정·삭제·정렬. 사진 미보유 교수는 이니셜 플레이스홀더로 렌더됩니다."
       fields={FIELDS}
+      fromItem={fromItem}
       display={(item) => ({
         title: item.name_ko,
         meta: [item.title_ko, item.email].filter(Boolean).join(' · '),

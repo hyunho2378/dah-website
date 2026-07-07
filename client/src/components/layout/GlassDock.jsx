@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import Link from '../common/LangLink'
 import { MoreHorizontal, Settings, X } from 'lucide-react'
 import { nav } from '../../data/nav'
 import { useLang } from '../../i18n/LangContext'
@@ -25,10 +26,13 @@ const flatChildren = nav
   .sort((a, b) => b.to.length - a.to.length)
 
 // 언어에 따라 label(KR)/labelEn 선택. 홈·미매칭 폴백은 사전 키로 조회
+// J4.1: /en 프리픽스를 벗겨 KR 경로 기준으로 매칭
 function currentLabel(pathname, lang, t) {
-  if (pathname === '/') return t('nav.home')
+  const path =
+    pathname === '/en' ? '/' : pathname.startsWith('/en/') ? pathname.slice(3) : pathname
+  if (path === '/') return t('nav.home')
   const hit = flatChildren.find(
-    (c) => pathname === c.to || pathname.startsWith(`${c.to}/`)
+    (c) => path === c.to || path.startsWith(`${c.to}/`)
   )
   if (!hit) return t('common.menu')
   return lang === 'en' ? hit.labelEn : hit.label

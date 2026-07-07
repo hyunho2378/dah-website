@@ -1,10 +1,14 @@
 // AdminLayout.jsx — 어드민 공통 골격 (13_CMS_SPEC 6절, 14_ROUTES_V2 가드)
 // RequireRole(manager) 래핑 + 글래스 사이드 네비 + <Outlet />.
-// PageBanner는 B2 계약 컴포넌트(components/common/) — BR 통합 시 경로 확인.
+// J1: 콘텐츠 영역을 공용 Container 정렬로 통일 + 사이드바는 독립 스크롤
+//     (sticky, 뷰포트 높이 기준 overflow-y-auto — 길어져도 콘텐츠와 따로 스크롤).
+// J2: ErrorBoundary — 렌더 크래시 시 빈 화면 대신 오류 안내를 표시한다.
 
+import { Component } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
-import PageBanner from '../common/PageBanner'
+import PageBanner from '../layout/PageBanner'
+import Container from '../layout/Container'
 import { RequireRole, useAuth } from '../../context/AuthContext'
 
 const NAV_GROUPS = [
@@ -58,13 +62,48 @@ const navLinkClass = ({ isActive }) =>
       : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
   }`
 
+// J2: 어드민 렌더 크래시 안전망 — 빈 화면 금지, 오류 원인 노출
+class AdminErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex flex-col items-start gap-16 rounded-md border border-border-subtle bg-bg-elev p-24">
+          <h2 className="text-h3-m font-bold text-text-pri md:text-h3-d">
+            화면 렌더 중 오류가 발생했습니다
+          </h2>
+          <p className="font-mono text-caption-m text-state-error">
+            {String(this.state.error?.message || this.state.error)}
+          </p>
+          <button
+            type="button"
+            onClick={() => this.setState({ error: null })}
+            className="cursor-pointer rounded-sm border border-border-subtle px-16 py-8 text-small-m text-text-pri transition duration-fast ease-out hover:border-border-strong"
+          >
+            다시 시도
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 function AdminNav() {
   const { user, logout, hasRole } = useAuth()
 
   return (
     <nav
       aria-label="관리 메뉴"
-      className="flex flex-col gap-24 rounded-glass border border-glass-line bg-glass-bg p-16 backdrop-blur-glass-mobile lg:sticky lg:top-96"
+      className="flex flex-col gap-24 rounded-glass border border-glass-line bg-glass-bg p-16 backdrop-blur-glass-mobile"
     >
       <div className="flex items-center justify-between gap-8 border-b border-border-subtle pb-16">
         <span className="min-w-0">
@@ -109,14 +148,18 @@ function AdminLayout() {
   return (
     <RequireRole role="manager">
       <PageBanner titleKo="관리" titleEn="ADMIN" nebulaX="76%" nebulaY="18%" />
-      <div className="mx-auto w-full max-w-container-wide px-gutter-m pb-section-m pt-32 md:px-gutter-t lg:grid lg:grid-cols-[240px,minmax(0,1fr)] lg:gap-32 lg:px-gutter-d">
-        <aside className="mb-32 lg:mb-0">
+      {/* J1: 공용 Container 정렬 — 공개 페이지와 좌우선 일치 */}
+      <Container className="pb-section-m pt-32 lg:grid lg:grid-cols-[240px,minmax(0,1fr)] lg:items-start lg:gap-32">
+        {/* J1: 사이드바 독립 스크롤 — 뷰포트 기준 sticky + 내부 overflow */}
+        <aside className="mb-32 lg:sticky lg:top-96 lg:mb-0 lg:max-h-[calc(100vh-theme(spacing.128))] lg:overflow-y-auto">
           <AdminNav />
         </aside>
         <main className="min-w-0">
-          <Outlet />
+          <AdminErrorBoundary>
+            <Outlet />
+          </AdminErrorBoundary>
         </main>
-      </div>
+      </Container>
     </RequireRole>
   )
 }

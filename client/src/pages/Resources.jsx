@@ -26,9 +26,8 @@ function toRow(post, no) {
     author: post.author ?? null,
     date: post.date ?? (post.created_at ?? '').slice(0, 10) ?? null,
     pinned: Boolean(post.pinned),
-    // 자료실은 상세 페이지 없음(14_ROUTES_V2) — 외부 링크만 허용, 첨부는 행 안에서 다운로드
-    href: post.external_url ?? undefined,
-    attachments: post.external_url ? [] : files.map(toAttachment),
+    // J7: 외부(구글 사이트) 아웃바운드 폐지 — 자료실 행은 비링크 + 첨부 다운로드만
+    attachments: files.map(toAttachment),
   }
 }
 

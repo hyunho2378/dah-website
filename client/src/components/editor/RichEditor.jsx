@@ -108,6 +108,10 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef(null)
 
+  // J2: Tiptap doc이 아닌 레거시 body jsonb({paragraphs}, {field,intro} 등)가 들어오면
+  // setContent가 스키마 오류로 크래시(빈 화면) — doc 형태만 통과시킨다
+  const safeValue = value && value.type === 'doc' ? value : null
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
@@ -123,7 +127,7 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
       FigmaEmbed,
       SlidesEmbed,
     ],
-    content: value || null,
+    content: safeValue,
     editorProps: {
       transformPastedHTML: stripPastedStyles,
     },
@@ -134,11 +138,11 @@ function RichEditor({ value, onChange, placeholder = '내용 입력' }) {
 
   // 편집 폼 비동기 로딩 대응 — 외부 value 도착 시 1회 주입
   useEffect(() => {
-    if (!editor || !value) return
+    if (!editor || !safeValue) return
     if (editor.isEmpty && !editor.isFocused) {
-      editor.commands.setContent(value, false)
+      editor.commands.setContent(safeValue, false)
     }
-  }, [editor, value])
+  }, [editor, safeValue])
 
   if (!editor) return null
 

@@ -1,6 +1,6 @@
 // /programs/exhibitions — 전시회 아카이브 (포스터 그리드, 2017~)
 // 포스터는 원색 유지(grayscale 금지 — 전시 포스터 정체성). 로드 전 bg-elev, lazy, alt.
-import { Link } from 'react-router-dom'
+import Link from '../../components/common/LangLink'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
@@ -68,10 +68,7 @@ function Exhibitions() {
         nebulaY="30%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
-        <div className="flex flex-wrap items-center justify-between gap-16">
-          <p className="font-mono text-caption-m text-text-sec">
-            {t('common.total')} <span className="text-text-pri">{data?.total ?? items.length}</span>{t('common.count')}
-          </p>
+        <div className="flex flex-wrap items-center justify-end gap-16">
           <AddButton type="exhibitions" to="/admin/posts/exhibitions/new" />
         </div>
         {loading ? (

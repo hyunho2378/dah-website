@@ -100,7 +100,6 @@ export const en = {
     error: 'Failed to load list',
     notFound: 'Post not found',
     backToList: 'Back to list',
-    viewOriginal: 'View original',
     attachments: 'Attachments',
     menu: 'Menu',
     total: 'Total',
@@ -138,10 +137,24 @@ export const en = {
     yearNav: 'Jump to year',
     termSelect: 'Select term',
   },
+  council: {
+    compositionTitle: 'Committee Members',
+  },
+  curriculum: {
+    grade: 'Year',
+    gradeSuffix: 'Y',
+    course: 'Course',
+    credit: 'Credit-Lecture-Lab',
+    sem1: 'Semester 1',
+    sem2: 'Semester 2',
+  },
   news: {
     searchPlaceholder: 'Search notices',
     resourceSearchPlaceholder: 'Search resources',
-    bodyElsewhere: 'Read the full text of this notice on the original page.',
+    noBody: 'This notice has no body content.',
+    registered: 'Posted',
+    preview: 'Preview',
+    download: 'Download',
     tags: {
       all: 'All',
       internal: 'Internal',

@@ -28,24 +28,27 @@ function TracksSection() {
         <div className="mt-64 grid gap-24 md:grid-cols-3">
           {tracks.map((track, i) => (
             <Reveal key={track.id} delay={i < 6 ? i * motion.stagger : 0}>
-              <GlassCard hover className="h-full p-24 md:p-32">
+              <GlassCard hover className="flex h-full flex-col p-24 md:p-32">
                 <p className="font-mono text-label-m uppercase tracking-label text-text-meta lg:text-label-d">
                   {track.no}
                 </p>
                 <h3 className="mt-16 text-h3-m font-bold text-text-pri lg:text-h3-d">
                   {t(`tracks.${track.id}`)}
                 </h3>
-                <p className="mt-12 line-clamp-2 text-body-m leading-relaxed text-text-sec lg:text-body-d">
+                {/* J4.2: clamp 2줄 + 2줄 높이 예약 — 언어별 길이 차 무시 */}
+                <p className="mt-12 line-clamp-2 min-h-[2lh] text-body-m leading-relaxed text-text-sec lg:text-body-d">
                   {lang === 'en' && track.summaryEn ? track.summaryEn : track.summary}
                 </p>
-                <div className="mt-20 flex flex-wrap gap-8">
+                {/* J4.2: 키워드 랩 2행 높이 예약(min-h-64) — EN 랩핑 차이 흡수 */}
+                <div className="mt-20 flex min-h-64 flex-wrap content-start gap-8">
                   {((lang === 'en' && track.keywordsEn) || track.keywords || [])
                     .slice(0, 3)
                     .map((keyword) => (
                       <Tag key={keyword}>{keyword}</Tag>
                     ))}
                 </div>
-                <div className="mt-24">
+                {/* J4.2: 버튼은 카드 하단 고정 — 위 콘텐츠 높이와 무관 */}
+                <div className="mt-auto pt-24">
                   <ArrowLink href={`/curriculum#${track.id}`}>
                     {t('actions.detail')}
                   </ArrowLink>

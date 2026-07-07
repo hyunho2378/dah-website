@@ -34,8 +34,12 @@ function initialsOf(nameEn, nameKr) {
   return nameKr ? nameKr[0] : ''
 }
 
-function ProfessorCard({ professor }) {
-  const { nameKr, nameEn, role, affiliation, email, link } = professor
+function ProfessorCard({ professor, lang }) {
+  const { nameKr, nameEn, email, link } = professor
+  // J5: EN 모드는 직함·소속 영문 필드 우선(없으면 국문 폴백)
+  const role = lang === 'en' ? professor.roleEn || professor.role : professor.role
+  const affiliation =
+    lang === 'en' ? professor.affiliationEn || professor.affiliation : professor.affiliation
 
   return (
     <GlassCard hover className="h-full p-24 md:p-32">
@@ -119,7 +123,7 @@ function MentorCard({ mentor }) {
 }
 
 function People() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   useTitle(t('titles.people'))
 
   return (
@@ -156,7 +160,7 @@ function People() {
             <div className="mt-48 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
               {professors.map((professor, index) => (
                 <Reveal key={professor.id} delay={staggerDelay(index)}>
-                  <ProfessorCard professor={professor} />
+                  <ProfessorCard professor={professor} lang={lang} />
                 </Reveal>
               ))}
             </div>

@@ -18,6 +18,8 @@ export const councils = [
     title: '제1대 운영위원회 LUCID',
     intro:
       '물감은 섞일수록 어두워지지만, 빛은 섞일수록 밝고 투명해집니다. LUCID는 인문과 기술, 다양한 전공이 모인 이곳에서 나다움을 잃지 않으면서도 서로를 빛내주는 시너지를 만들고자 합니다. 다양한 색이 모여 만드는 가장 눈부신 가능성을 마음껏 펼칠 수 있도록 2026년 한 해 동안 여러분의 길잡이가 되겠습니다.',
+    introEn:
+      'Pigments grow darker as they mix, but light grows brighter and clearer as it blends. LUCID seeks to create a synergy in this place where the humanities, technology, and many different majors come together, letting each of us shine for one another without losing what makes us who we are. Throughout 2026 we will be your guide, so that the most dazzling possibilities created by many colors coming together can unfold freely.',
     members: [
       { role: '위원장', name: '주현호', majors: '디지털인문예술 22' },
       { role: '부위원장', name: '윤현아', majors: '디지털인문예술 23' },
@@ -40,6 +42,8 @@ export const councils = [
       "안녕하세요. 디지털인문예술전공 제7대 학생회 'CUBE'입니다.\n" +
       'CUBE는 하나, 둘씩 조각을 맞춰가는 큐브처럼 학우분들께 빛나는 학교 생활의 조각을 맞춰 드리고자 하는 다짐을 담았습니다. 여러분이 디인예에서 겪게 되는 순간들의 조각이 모여 반짝이고 찬란하게 빛나는 디인예의 미래가 되길 바라며 더욱 발전하고 찬란한 경험으로 가득 찰 2025년을 약속 드리겠습니다. 앞으로도 디지털인문예술전공에 많은 기대와 관심 부탁 드립니다.\n' +
       '감사합니다.',
+    introEn:
+      'Hello. We are CUBE, the 7th Student Council of Digital Arts and Humanities.\nLike a cube assembled piece by piece, CUBE carries our promise to piece together the shining moments of your school life. We hope the fragments of the moments you experience in DAH come together into a sparkling, brilliant future for the major, and we promise a 2025 filled with further growth and brilliant experiences. We ask for your continued interest and support for Digital Arts and Humanities.\nThank you.',
     members: [
       { role: '학회장', name: '권서영', majors: '디지털인문예술전공' },
       { role: '부학회장', name: '최서연', majors: '디지털인문예술전공' },
@@ -67,6 +71,8 @@ export const councils = [
       '한 해 동안 정말 수고 많으셨습니다.\n' +
       '더욱 발전할 디지털인문예술전공 많은 기대와 관심 부탁드립니다.\n' +
       '감사합니다.',
+    introEn:
+      'Hello. We are Chaeum, the 6th Student Council of Digital Arts and Humanities.\nChaeum takes its meaning from the Korean word for filling, carrying our promise to fill your school life with experiences and good memories.\nHaving done our best, though imperfect, so that your time in DAH leaves only good memories and helps you grow, Chaeum closes with this semester.\nThank you for all your hard work this year.\nWe ask for your continued interest and support for the ever-growing Digital Arts and Humanities.\nThank you.',
     members: [
       { role: '학회장', name: '송유경', majors: '디지털인문예술전공' },
       { role: '부학회장', name: '심재연', majors: '디지털인문예술전공' },
@@ -87,6 +93,8 @@ export const councils = [
       "DX는 User experience에서 의미를 가져와 '디인예 학우님들께 더 나은 경험을 제공해드리자'는 의미를 가지고 있습니다.\n" +
       '여러분의 디인예 생활이 좋은 기억만 남기고 여러분들이 발전할 수 있도록 DX가 성실히 활동할 것을 약속드리겠습니다.\n' +
       '디지털인문예술을 이해하고 학우님들을 배려하고 전공을 발전시키도록 하겠습니다. 한 해 동안 잘 부탁드립니다.',
+    introEn:
+      'Hello. We are DX, the 5th Student Council of Digital Arts and Humanities.\nDX takes its meaning from user experience, with the intent to provide a better experience for the students of DAH.\nWe promise that DX will work diligently so that your time in DAH leaves only good memories and helps you grow.\nWe will understand Digital Arts and Humanities, care for our fellow students, and advance the major. We ask for your support throughout the year.',
     members: [
       { role: '학회장', name: '윤호용', majors: '디지털인문예술 전공 19' },
       { role: '부학회장', name: '원수정', majors: '디지털인문예술 전공 21' },
@@ -106,6 +114,8 @@ export const councils = [
       'OPEN은 학우님들에게 저희 모든 것을 보여드리고 공유하는 마음으로 학생회를 만들어 가겠다는 의미를 가지고 있습니다.\n' +
       '여러분의 디인예 생활이 즐겁고 유익하도록 OPEN이 성실히 활동할 것을 약속드리겠습니다.\n' +
       '언제나 학생들의 목소리에 귀 기울이고 자유로운 논의가 가능해질 수 있는 전공을 만들겠습니다. 한 해 동안 잘 부탁드립니다.',
+    introEn:
+      "Hello. We are OPEN, the 4th Student Council of Digital Arts and Humanities.\nOPEN carries the intent to build a student council that shows and shares everything we have with our fellow students.\nWe promise that OPEN will work diligently to make your time in DAH enjoyable and rewarding.\nWe will always listen to students' voices and build a major where open discussion is possible. We ask for your support throughout the year.",
     members: [
       { role: '학회장', name: '곽선재', majors: '디지털인문예술 전공 19' },
       { role: '부학회장', name: '윤숙영', majors: '사회학과 19' },
@@ -123,6 +133,8 @@ export const councils = [
       '안녕하세요. 디지털인문예술전공 제3대 학생회 DEAR입니다.\n' +
       "DEAR는 두 가지의 의미를 담고 있습니다. 첫째는 '친애하는'이란 뜻으로 학우님들과 자유롭게 의견을 주고 받을 수 있는 친밀한 관계를 조성하겠다는 뜻입니다. 둘째는 DAH의 소리를 듣는다(EAR)라는 뜻으로 언제나 학우님들의 소리에 경청하겠다는 다짐입니다. 언제나 학생들의 목소리에 귀 기울이고 자유로운 논의가 가능해질 수 있는 전공을 만들고자 합니다.\n" +
       'DEAR의 활동이 본 전시회를 끝으로 마무리됩니다. 한 학기 동안 감사했습니다.',
+    introEn:
+      "Hello. We are DEAR, the 3rd Student Council of Digital Arts and Humanities.\nDEAR carries two meanings. First, dear: our intent to build a close relationship where we exchange opinions freely with our fellow students. Second, listening to the voice of DAH (EAR): our promise to always listen to what students have to say. We aim to build a major that always listens to students' voices and makes open discussion possible.\nDEAR's activities conclude with this exhibition. Thank you for this semester.",
     members: [
       { role: '학회장', name: '안유미', majors: '디지털미디어콘텐츠18' },
       { role: '부학회장', name: '오소민', majors: '광고홍보19' },
@@ -141,6 +153,8 @@ export const councils = [
       '디인예 활동 및 전시회 기획, 유치 등을 할 수 있는 기회를 주신 모든 분들께 감사드립니다.\n' +
       '저희 이름대로 항상 어우러져서 저희만의 독특한 장점을 가지는 디인예가 되길 바랍니다.\n' +
       '감사합니다.',
+    introEn:
+      'Hello, we are HARMONIES, the 2nd Student Council of Digital Arts and Humanities.\nSo that your efforts can shine even brighter,\nwe thank everyone who gave us the opportunity to plan and host DAH activities and exhibitions.\nTrue to our name, we hope DAH always comes together in harmony and keeps its own unique strengths.\nThank you.',
     members: [
       { role: '학회장', name: '김도경' },
       { role: '부학회장', name: '정예찬' },

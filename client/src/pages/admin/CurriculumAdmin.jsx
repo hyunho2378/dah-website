@@ -34,6 +34,7 @@ const FIELDS = [
       { value: '2', label: '2학기' },
     ],
   },
+  { key: 'credit', label: '학점-강의-실습', placeholder: '예: 3-2-2' },
   { key: 'track', label: '트랙', kind: 'select', default: 'common', options: TRACKS, span2: true },
   { key: 'sort', label: '정렬 순서', kind: 'number' },
 ]
@@ -54,6 +55,7 @@ function fromItem(item) {
     name_en: item.name_en || '',
     grade: String(item.grade ?? 1),
     semester: String(item.semester ?? 1),
+    credit: item.credit || '',
     track: item.track || 'common',
     sort: item.sort ?? 0,
   }
@@ -84,7 +86,7 @@ function CurriculumAdmin() {
       orderable={false}
       display={(item) => ({
         title: item.name_ko,
-        meta: `${item.grade}학년 ${item.semester ?? '-'}학기 · ${TRACK_LABEL[item.track] || item.track}`,
+        meta: `${item.grade}학년 ${item.semester ?? '-'}학기 · ${TRACK_LABEL[item.track] || item.track}${item.credit ? ` · ${item.credit}` : ''}`,
       })}
     />
   )

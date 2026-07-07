@@ -39,6 +39,15 @@ export function switchHref(pathname) {
   return pathname === '/' ? '/en' : `/en${pathname}`
 }
 
+// J4.1: 내부 경로에 현재 언어 프리픽스 보존 — EN 상태에서 내비게이션해도 /en 유지.
+// 어드민·제출 플로우(국문 전용)와 이미 프리픽스된 경로는 그대로 둔다.
+export function localizeTo(lang, to) {
+  if (lang !== 'en' || typeof to !== 'string' || !to.startsWith('/')) return to
+  if (to === '/en' || to.startsWith('/en/') || to.startsWith('/admin') || to.startsWith('/submit'))
+    return to
+  return to === '/' ? '/en' : `/en${to}`
+}
+
 // 기본값: Provider 미장착 상태(BR 조립 전)에서도 ko로 안전 동작
 const LangContext = createContext({
   lang: 'ko',
