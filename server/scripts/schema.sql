@@ -44,6 +44,11 @@ CREATE INDEX IF NOT EXISTS idx_posts_type_published ON posts (type, published, p
 -- 마이그레이션 안전: 기존 posts 테이블에도 컬럼 없으면 추가 (IF NOT EXISTS).
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS attachments JSONB;
 
+-- P5-2: 시드 멱등 키. 시드가 삽입한 posts를 seed_key로 식별해 ON CONFLICT (seed_key) DO NOTHING으로
+-- 중복·덮어쓰기를 막는다. CMS 작성분은 seed_key NULL(유니크 인덱스는 NULL 다수 허용).
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS seed_key TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_posts_seed_key ON posts (seed_key);
+
 -- 교수진
 CREATE TABLE IF NOT EXISTS professors (
   id        SERIAL PRIMARY KEY,

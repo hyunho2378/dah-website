@@ -5,7 +5,7 @@ import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
 import Tag from '../../components/common/Tag'
 import { EditPencil } from '../../components/content/EditControls'
-import { useApi } from '../../hooks/useApi'
+import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 
 const NOT_FOUND_TEXT = '쇼케이스 항목을 찾을 수 없습니다'
@@ -22,7 +22,7 @@ function MetaRow({ label, children }) {
 function ShowcaseDetail() {
   const { id } = useParams()
   const { data, loading } = useApi(`/content/showcase/${id}`)
-  const item = data && !data.items ? data : null
+  const item = itemOf(data)
   useTitle(item?.title ?? '쇼케이스')
 
   const tools = Array.isArray(item?.tools) ? item.tools : []

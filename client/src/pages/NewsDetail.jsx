@@ -9,7 +9,7 @@ import Tag from '../components/common/Tag'
 import RichBody from '../components/content/RichBody'
 import AttachmentViewer from '../components/content/AttachmentViewer'
 import { EditPencil } from '../components/content/EditControls'
-import { useApi } from '../hooks/useApi'
+import { useApi, itemOf } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { notices } from '../data/notices'
@@ -20,7 +20,7 @@ function NewsDetail() {
   const { data, loading, offline } = useApi(`/content/notice/${id}`)
 
   const fallback = offline ? notices.find((n) => n.id === id) : null
-  const post = data && !data.items ? data : fallback
+  const post = itemOf(data) ?? fallback
 
   // en 번역(title_en/body_en)이 있으면 영문 렌더, 없으면 국문 + Korean only 뱃지
   const title = post?.title_ko ?? post?.title ?? ''

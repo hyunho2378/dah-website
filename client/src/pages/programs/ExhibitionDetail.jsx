@@ -7,7 +7,7 @@ import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
 import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
-import { useApi } from '../../hooks/useApi'
+import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 
 const NOT_FOUND_TEXT = '전시회를 찾을 수 없습니다'
@@ -77,7 +77,7 @@ function GallerySection({ label, images, title }) {
 function ExhibitionDetail() {
   const { id } = useParams()
   const { data, loading } = useApi(`/content/exhibitions/${id}`)
-  const item = data && !data.items ? data : null
+  const item = itemOf(data)
   useTitle(item?.title ?? '전시회')
 
   const galleries = normalizeGalleries(item?.gallery)

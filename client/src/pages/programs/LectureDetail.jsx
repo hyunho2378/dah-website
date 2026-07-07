@@ -7,7 +7,7 @@ import Button from '../../components/common/Button'
 import Tag from '../../components/common/Tag'
 import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
-import { useApi } from '../../hooks/useApi'
+import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 
 const NOT_FOUND_TEXT = '특강을 찾을 수 없습니다'
@@ -24,7 +24,7 @@ function MetaRow({ label, children }) {
 function LectureDetail() {
   const { id } = useParams()
   const { data, loading } = useApi(`/content/lecture/${id}`)
-  const item = data && !data.items ? data : null
+  const item = itemOf(data)
   const title = item?.title_ko ?? item?.title
   useTitle(title ?? '특강')
 

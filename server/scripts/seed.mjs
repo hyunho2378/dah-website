@@ -1,13 +1,12 @@
 // scripts/seed.mjs — client/src/data/*.js 원문 → DB 주입 (12_BACKEND.md 7절 1단계: 파일→DB 시드)
 // 실행: server/ 안에서 `node scripts/seed.mjs` (server/.env의 DATABASE_URL 사용)
 //
-// 멱등 방식 (명시): "truncate 후 삽입"
-//   - professors, mentors, curriculum, careers, portfolios, council: TRUNCATE 후 전량 삽입
-//   - posts: 시드 소유 type(notice·achievement·lecture·contest·resource·club)만 DELETE 후 삽입
-//     (재실행 시 해당 type의 CMS 작성분은 초기화됨 — 시드는 최초 1회 용도)
-//   - exhibitions: DELETE 후 전량 삽입 (원문 아카이브가 진실)
+// 멱등 방식 (P5-2 개편): "덮어쓰기 금지, 없는 것만 추가" — 재시드가 사용자 입력을 절대 지우지 않는다.
+//   - professors, mentors, curriculum, careers, portfolios, council, exhibitions: 비어있을 때만 전량 삽입(empty-guard)
+//   - posts: seed_key(안정 키)로 INSERT ... ON CONFLICT (seed_key) DO NOTHING. CMS 작성분(seed_key NULL) 불변
 //   - showcase: 비로그인 제출 테이블 → 비어있을 때만 데모 1건 삽입(사용자 제출 보존)
-//   - site_settings, codesharing, users(owner): upsert
+//   - site_settings: 없는 키만 삽입(DO NOTHING). codesharing: body가 NULL일 때만 채움. users(owner): role upsert
+//   ⚠ TRUNCATE/DELETE 사용 금지. 개별 성과만 재주입: scripts/seed-achievements.mjs
 //
 // F7·F8 추가 시드: council(운영위 LUCID + 역대), clubs(4종 → posts type=club),
 //   각 유형 최소 1건(notice·lecture·contest·exhibition·resource·club·showcase·careers·portfolio) 빈 화면 방지
@@ -83,57 +82,69 @@ async function main() {
 
     await client.query('BEGIN')
 
-    // 1) 독립 테이블: truncate 후 삽입 (원문·파일이 진실인 참조 테이블 — council 포함)
-    await client.query('TRUNCATE professors, mentors, curriculum, careers, portfolios, council RESTART IDENTITY')
+    // P5-2 원칙(사용자 지시): 재시드가 사용자 입력을 지우지 않도록 어떤 테이블도 TRUNCATE/DELETE하지 않는다.
+    //   참조 테이블(파일이 진실)은 "비어있을 때만" 전량 삽입(empty-guard). 이미 데이터가 있으면 건너뛴다.
+    const isEmpty = async (t) =>
+      (await client.query(`SELECT COUNT(*)::int AS c FROM ${t}`)).rows[0].c === 0
+    const skip = (t) => console.log(`[seed] ${t} 기존 데이터 존재 — 건너뜀(덮어쓰기 방지)`)
 
-    for (const [i, p] of professors.entries()) {
-      // title_ko=role(원문 직함), links jsonb에 원문 부가정보(website·겸무 소속·주임 여부) 보존
-      await client.query(
-        `INSERT INTO professors (name_ko, name_en, title_ko, title_en, email, photo_url, links, sort, active)
-         VALUES ($1, $2, $3, NULL, $4, NULL, $5, $6, TRUE)`,
-        [p.nameKr, p.nameEn, p.role, p.email, JSON.stringify({ website: p.link, affiliation: p.affiliation, lead: p.lead }), i]
-      )
-    }
-    console.log(`[seed] professors ${professors.length}건`)
+    // 1) 독립 참조 테이블: 비어있을 때만 삽입 (파일이 진실. council 포함)
+    if (await isEmpty('professors')) {
+      for (const [i, p] of professors.entries()) {
+        // title_ko=role(원문 직함), links jsonb에 원문 부가정보(website·겸무 소속·주임 여부) 보존
+        await client.query(
+          `INSERT INTO professors (name_ko, name_en, title_ko, title_en, email, photo_url, links, sort, active)
+           VALUES ($1, $2, $3, NULL, $4, NULL, $5, $6, TRUE)`,
+          [p.nameKr, p.nameEn, p.role, p.email, JSON.stringify({ website: p.link, affiliation: p.affiliation, lead: p.lead }), i]
+        )
+      }
+      console.log(`[seed] professors ${professors.length}건`)
+    } else skip('professors')
 
-    for (const [i, m] of mentors.entries()) {
-      await client.query(
-        `INSERT INTO mentors (name, company, title, link, sort, active) VALUES ($1, $2, $3, $4, $5, TRUE)`,
-        [m.name, m.company, m.role, m.companyUrl, i]
-      )
-    }
-    console.log(`[seed] mentors ${mentors.length}건`)
+    if (await isEmpty('mentors')) {
+      for (const [i, m] of mentors.entries()) {
+        await client.query(
+          `INSERT INTO mentors (name, company, title, link, sort, active) VALUES ($1, $2, $3, $4, $5, TRUE)`,
+          [m.name, m.company, m.role, m.companyUrl, i]
+        )
+      }
+      console.log(`[seed] mentors ${mentors.length}건`)
+    } else skip('mentors')
 
-    for (const [i, c] of curriculum.entries()) {
-      // semester: 원본 데이터 구조에 필드 없음(주석만) → NULL. code('1.1')는 스키마에 없어 미이관(정렬은 sort 보존)
-      await client.query(
-        `INSERT INTO curriculum (grade, semester, track, name_ko, name_en, sort) VALUES ($1, NULL, $2, $3, NULL, $4)`,
-        [c.year, TRACK_MAP[c.track], c.name, i]
-      )
-    }
-    console.log(`[seed] curriculum ${curriculum.length}건`)
+    if (await isEmpty('curriculum')) {
+      for (const [i, c] of curriculum.entries()) {
+        // semester: 원본 데이터 구조에 필드 없음(주석만) → NULL. code('1.1')는 스키마에 없어 미이관(정렬은 sort 보존)
+        await client.query(
+          `INSERT INTO curriculum (grade, semester, track, name_ko, name_en, sort) VALUES ($1, NULL, $2, $3, NULL, $4)`,
+          [c.year, TRACK_MAP[c.track], c.name, i]
+        )
+      }
+      console.log(`[seed] curriculum ${curriculum.length}건`)
+    } else skip('curriculum')
 
-    for (const [i, c] of careers.entries()) {
-      await client.query(
-        `INSERT INTO careers (grad_name, majors, company, company_url, position, year, sort)
-         VALUES ($1, $2, $3, $4, $5, NULL, $6)`,
-        [c.name, c.majors, c.company, c.companyUrl, c.role, i]
-      )
-    }
-    console.log(`[seed] careers ${careers.length}건`)
+    if (await isEmpty('careers')) {
+      for (const [i, c] of careers.entries()) {
+        await client.query(
+          `INSERT INTO careers (grad_name, majors, company, company_url, position, year, sort)
+           VALUES ($1, $2, $3, $4, $5, NULL, $6)`,
+          [c.name, c.majors, c.company, c.companyUrl, c.role, i]
+        )
+      }
+      console.log(`[seed] careers ${careers.length}건`)
+    } else skip('careers')
 
-    for (const [i, p] of portfolios.entries()) {
-      await client.query(
-        `INSERT INTO portfolios (student_no, name, majors, link, sort) VALUES ($1, $2, $3, $4, $5)`,
-        [p.studentNo, p.name, p.majors, p.url, i]
-      )
-    }
-    console.log(`[seed] portfolios ${portfolios.length}건`)
+    if (await isEmpty('portfolios')) {
+      for (const [i, p] of portfolios.entries()) {
+        await client.query(
+          `INSERT INTO portfolios (student_no, name, majors, link, sort) VALUES ($1, $2, $3, $4, $5)`,
+          [p.studentNo, p.name, p.majors, p.url, i]
+        )
+      }
+      console.log(`[seed] portfolios ${portfolios.length}건`)
+    } else skip('portfolios')
 
-    // 2) posts: 시드 소유 type 리셋 후 삽입 (CMS 작성분과 섞이지 않게. 시드는 최초 1회 용도)
-    const SEED_POST_TYPES = ['notice', 'achievement', 'lecture', 'contest', 'resource', 'club']
-    const del = await client.query(`DELETE FROM posts WHERE type = ANY($1)`, [SEED_POST_TYPES])
-    if (del.rowCount > 0) console.log(`[seed] 기존 posts(${SEED_POST_TYPES.join('·')}) ${del.rowCount}건 삭제 (시드 리셋)`)
+    // 2) posts: 삭제 없이 seed_key(안정 키)로 멱등 삽입. ON CONFLICT (seed_key) DO NOTHING.
+    //    이미 있는 시드 행과 무관한 CMS 작성분(seed_key NULL)은 절대 건드리지 않는다.
 
     // F8.1: 첫 게시물(notice-01) 본문 — 사용자 제공 원문 그대로(요약·변경 금지).
     //   메달 이모지만 "1등/2등/3등" 텍스트로 치환. RichBody(Tiptap doc JSON) 계약에 맞춰 문단화.
@@ -168,9 +179,10 @@ async function main() {
       const tag = isFeatured ? '대내' : n.org
       const body = isFeatured ? featuredBody : null
       await client.query(
-        `INSERT INTO posts (type, title_ko, body, tag, external_url, pinned, published, created_at, updated_at)
-         VALUES ('notice', $1, $2, $3, $4, $5, TRUE, $6, $6)`,
-        [n.title, body ? JSON.stringify(body) : null, tag, n.url, isFeatured, `${n.date}T09:00:00+09:00`]
+        `INSERT INTO posts (type, title_ko, body, tag, external_url, pinned, seed_key, published, created_at, updated_at)
+         VALUES ('notice', $1, $2, $3, $4, $5, $6, TRUE, $7, $7)
+         ON CONFLICT (seed_key) DO NOTHING`,
+        [n.title, body ? JSON.stringify(body) : null, tag, n.url, isFeatured, n.id, `${n.date}T09:00:00+09:00`]
       )
     }
     console.log(`[seed] notices → posts ${notices.length}건 (첫 게시물 대내·고정)`)
@@ -180,9 +192,10 @@ async function main() {
     const lectureSrc = notices.find((n) => n.id === 'notice-09')
     if (lectureSrc) {
       await client.query(
-        `INSERT INTO posts (type, title_ko, tag, external_url, published, created_at, updated_at)
-         VALUES ('lecture', $1, NULL, $2, TRUE, $3, $3)`,
-        [lectureSrc.title, lectureSrc.url, `${lectureSrc.date}T09:00:00+09:00`]
+        `INSERT INTO posts (type, title_ko, tag, external_url, seed_key, published, created_at, updated_at)
+         VALUES ('lecture', $1, NULL, $2, $3, TRUE, $4, $4)
+         ON CONFLICT (seed_key) DO NOTHING`,
+        [lectureSrc.title, lectureSrc.url, `lecture-${lectureSrc.id}`, `${lectureSrc.date}T09:00:00+09:00`]
       )
       console.log('[seed] lecture → posts 1건 (특강 안내 공지 원문 파생)')
     }
@@ -202,11 +215,12 @@ async function main() {
         host: ['디지털인문예술전공 제1대 운영위원회 LUCID'],
       },
     ]
-    for (const c of contests) {
+    for (const [i, c] of contests.entries()) {
       await client.query(
-        `INSERT INTO posts (type, title_ko, body, tag, published, created_at, updated_at)
-         VALUES ('contest', $1, $2, NULL, TRUE, $3, $3)`,
-        [c.title, JSON.stringify({ host: c.host }), `2026-01-01T09:00:00+09:00`]
+        `INSERT INTO posts (type, title_ko, body, tag, seed_key, published, created_at, updated_at)
+         VALUES ('contest', $1, $2, NULL, $3, TRUE, $4, $4)
+         ON CONFLICT (seed_key) DO NOTHING`,
+        [c.title, JSON.stringify({ host: c.host }), `contest-${i + 1}`, `2026-01-01T09:00:00+09:00`]
       )
     }
     console.log(`[seed] contests → posts ${contests.length}건`)
@@ -214,13 +228,15 @@ async function main() {
     // 2-3) 자료실(resource) — source '자료실' 항목엔 독립 원문 없음(892행 언급뿐).
     //      빈 화면 방지용 1건: 코드쉐어링 인정원(89행 승인과정 원문). 첨부(HWP) 파일은 원문 미제공 → attachments NULL.
     await client.query(
-      `INSERT INTO posts (type, title_ko, body, tag, attachments, published, created_at, updated_at)
-       VALUES ('resource', $1, $2, NULL, NULL, TRUE, $3, $3)`,
+      `INSERT INTO posts (type, title_ko, body, tag, attachments, seed_key, published, created_at, updated_at)
+       VALUES ('resource', $1, $2, NULL, NULL, $3, TRUE, $4, $4)
+       ON CONFLICT (seed_key) DO NOTHING`,
       [
         '코드쉐어링 인정원',
         JSON.stringify({
           paragraphs: ['승인과정 : 타과 교과목 이수 → 학점 취득 → 코드쉐어링 인정원 작성 → 학과행정실 제출(통합스쿨 교학팀)'],
         }),
+        'resource-codesharing',
         `2026-01-01T09:00:00+09:00`,
       ]
     )
@@ -229,12 +245,14 @@ async function main() {
     // 2-4) 동아리(club) — clubs.js 4종 전부 posts(type=club). body에 분야·소개·활동·추천대상 원문 보존
     for (const c of clubs) {
       await client.query(
-        `INSERT INTO posts (type, title_ko, body, tag, published, created_at, updated_at)
-         VALUES ('club', $1, $2, $3, TRUE, now(), now())`,
+        `INSERT INTO posts (type, title_ko, body, tag, seed_key, published, created_at, updated_at)
+         VALUES ('club', $1, $2, $3, $4, TRUE, now(), now())
+         ON CONFLICT (seed_key) DO NOTHING`,
         [
           c.name,
           JSON.stringify({ field: c.field, intro: c.intro, activities: c.activities, targets: c.targets }),
           c.field,
+          `club-${c.name}`,
         ]
       )
     }
@@ -242,19 +260,21 @@ async function main() {
 
     for (const a of achievements) {
       await client.query(
-        `INSERT INTO posts (type, title_ko, body, tag, published, created_at, updated_at)
-         VALUES ('achievement', $1, $2, $3, TRUE, $4, $4)`,
+        `INSERT INTO posts (type, title_ko, body, tag, seed_key, published, created_at, updated_at)
+         VALUES ('achievement', $1, $2, $3, $4, TRUE, $5, $5)
+         ON CONFLICT (seed_key) DO NOTHING`,
         [
           a.title,
           JSON.stringify({ awardee: a.awardee, host: a.host, desc: a.desc, year: a.year }),
           String(a.year),
+          a.id, // seed_key(안정 키)
           `${a.year}-01-01T09:00:00+09:00`, // 연도 정렬용 합성 타임스탬프
         ]
       )
     }
     console.log(`[seed] achievements → posts ${achievements.length}건`)
 
-    // 3) site_settings upsert
+    // 3) site_settings: 없는 키만 삽입(DO NOTHING). 어드민이 편집한 hero 버튼·문구 등을 덮어쓰지 않는다.
     const settings = {
       site,
       hero,
@@ -266,16 +286,18 @@ async function main() {
     for (const [key, value] of Object.entries(settings)) {
       await client.query(
         `INSERT INTO site_settings (key, value) VALUES ($1, $2)
-         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+         ON CONFLICT (key) DO NOTHING`,
         [key, JSON.stringify(value)]
       )
     }
-    console.log(`[seed] site_settings ${Object.keys(settings).length}키 upsert`)
+    console.log(`[seed] site_settings ${Object.keys(settings).length}키 (없는 키만 삽입)`)
 
-    // 4) codesharing 단일 문서 upsert (tracks.js codeSharing 원문)
+    // 4) codesharing 단일 문서: 비어있을 때만 채운다(schema.sql이 NULL 자리행을 선삽입하므로
+    //    DO NOTHING이면 영영 안 채워짐 → body가 NULL일 때만 UPDATE. 이미 채워진 어드민 편집분은 보존).
     await client.query(
       `INSERT INTO codesharing (id, body, depts, hwp_url) VALUES (1, $1, $2, NULL)
-       ON CONFLICT (id) DO UPDATE SET body = EXCLUDED.body, depts = EXCLUDED.depts`,
+       ON CONFLICT (id) DO UPDATE SET body = EXCLUDED.body, depts = EXCLUDED.depts
+       WHERE codesharing.body IS NULL`,
       [
         JSON.stringify({
           definition: codeSharing.definition,
@@ -288,8 +310,9 @@ async function main() {
     )
     console.log('[seed] codesharing 문서 upsert')
 
-    // 4-1) 운영위원회(council) — council.js 원문 (F7). TRUNCATE는 위 1)에서 완료.
+    // 4-1) 운영위원회(council) — council.js 원문 (F7). 비어있을 때만 삽입(empty-guard).
     //   LUCID(제1대 운영위원회) 1건 + 역대 학생회(councilHistory) 9건. members jsonb에 원문 보존.
+    if (await isEmpty('council')) {
     await client.query(
       `INSERT INTO council (ordinal, name, intro, members, year_label, sort)
        VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -323,9 +346,11 @@ async function main() {
       )
     }
     console.log(`[seed] council ${1 + councilHistory.length}건 (LUCID + 역대 ${councilHistory.length})`)
+    } else skip('council')
 
-    // 4-2) 전시회(exhibitions) — source '프로젝트 전시회' 절 295~339행 원문. 시드 소유 아카이브 → 전량 리셋.
-    await client.query('DELETE FROM exhibitions')
+    // 4-2) 전시회(exhibitions) — source '프로젝트 전시회' 절 원문 아카이브.
+    // P5-2: 삭제 금지. 비어있을 때만 전량 삽입(empty-guard) → CMS 편집(poster_url·body·site_url) 보존.
+    //   과거 아카이브 포스터는 client/public/images/exhibitions/에 파일로 두고 poster 경로로 참조 가능.
     const exhibitions = [
       {
         semester_label: '제18회 디지털인문예술전공 프로젝트 전시회',
@@ -354,14 +379,23 @@ async function main() {
       { title: '「2018-1 프로젝트 전시회」' },
       { title: '「2017-2 프로젝트 전시회」' },
     ]
-    for (const e of exhibitions) {
-      await client.query(
-        `INSERT INTO exhibitions (semester_label, title, intro, published)
-         VALUES ($1, $2, $3, TRUE)`,
-        [e.semester_label ?? null, e.title, e.intro ?? null]
-      )
-    }
-    console.log(`[seed] exhibitions ${exhibitions.length}건`)
+    // 역대 전시회 포스터(과거 아카이브) — client/public/images/exhibitions/<학기>.png.
+    // 위 exhibitions 배열은 최신→과거 순서라 학기 역순과 1:1 대응(마지막 3건이 2018-2·2018-1·2017-2로 정합 확인).
+    const EX_POSTERS = [
+      '2026-1', '2025-2', '2025-1', '2024-2', '2024-1', '2023-2', '2023-1', '2022-2', '2022-1',
+      '2021-2', '2021-1', '2020-2', '2020-1', '2019-2', '2019-1', '2018-2', '2018-1', '2017-2',
+    ].map((s) => `/images/exhibitions/${s}.png`)
+    if (await isEmpty('exhibitions')) {
+      for (const [i, e] of exhibitions.entries()) {
+        await client.query(
+          `INSERT INTO exhibitions (semester_label, title, poster_url, intro, published)
+           VALUES ($1, $2, $3, $4, TRUE)`,
+          // poster: 명시값(파일 경로/Blob URL) 우선, 없으면 학기 아카이브 포스터 경로.
+          [e.semester_label ?? null, e.title, e.poster ?? EX_POSTERS[i] ?? null, e.intro ?? null]
+        )
+      }
+      console.log(`[seed] exhibitions ${exhibitions.length}건 (포스터 경로 포함)`)
+    } else skip('exhibitions')
 
     // 4-3) 쇼케이스(showcase) — 비로그인 제출 테이블. 사용자 제출분 보존을 위해 비어있을 때만 데모 1건 삽입.
     //   원문 미제공 → 학생 성과 원문(2025 AI 에듀테크 소프트랩 해커톤 대상작) 파생. [판단 필요]

@@ -18,7 +18,8 @@ const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 function PosterCard({ item }) {
   return (
     <Link to={`/programs/exhibitions/${item.id}`} className="group block h-full">
-      <GlassCard hover className="flex h-full flex-col gap-12">
+      {/* P5-3: 카드 radius 과한 glass(20) → lg(16)로 통일, 내부 패딩 p-12 */}
+      <GlassCard hover className="flex h-full flex-col gap-12 !rounded-lg p-12">
         <figure className="aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
           {item.poster_url ? (
             <img
@@ -50,7 +51,10 @@ function PosterCard({ item }) {
 
 function Exhibitions() {
   useTitle('전시회')
-  const { data, loading, error, offline } = useApi('/content/exhibitions')
+  // 아카이브는 단일 페이지에 전량 노출(페이지네이션 UI 없음) — 서버 최대치(100)로 요청
+  const { data, loading, error, offline } = useApi('/content/exhibitions', {
+    params: { pageSize: 100 },
+  })
   const items = data?.items ?? []
 
   return (

@@ -92,7 +92,8 @@ export const CONTENT_TYPES = {
     columns: ['semester_label', 'title', 'poster_url', 'site_url', 'intro', 'body', 'gallery', 'held_at', 'published'],
     jsonb: ['body', 'gallery'],
     required: ['title'],
-    orderBy: 'held_at DESC NULLS LAST, id DESC',
+    // held_at은 아카이브 대부분 null → semester_label('YYYY-S' 문자열 역순=학기 역순)로 정렬
+    orderBy: 'held_at DESC NULLS LAST, semester_label DESC NULLS LAST, id DESC',
     publicWhere: 'published = TRUE',
     searchCols: ['title', 'semester_label'],
   },

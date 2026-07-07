@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LoginModalProvider } from './context/LoginModalContext'
 import { LangProvider } from './i18n/LangContext'
-import StarField from './components/cosmos/StarField'
+import CosmosBackground from './components/cosmos/CosmosBackground'
 import ScrollToTop from './components/layout/ScrollToTop'
 import Header from './components/layout/Header'
 import GlassDock from './components/layout/GlassDock'
@@ -73,7 +73,7 @@ function App() {
       <LangProvider>
         <AuthProvider>
           <LoginModalProvider>
-          <StarField />
+          <CosmosBackground />
           <ScrollToTop />
           <Header />
           <main className="relative">

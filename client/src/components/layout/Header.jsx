@@ -174,9 +174,11 @@ function Header() {
         </div>
       </Container>
 
-      {/* 풀폭 메가메뉴 — KPC 방식. 즉답성 우선(11_DESIGN_V2 5절), 전환 애니메이션 없음 */}
+      {/* 풀폭 메가메뉴 — KPC 방식. 즉답성 우선(11_DESIGN_V2 5절), 전환 애니메이션 없음.
+          P5-5: 헤더(positioned) 바로 아래 top-full 고정. 배경 완전 불투명(bg-cosmos-depth1)으로
+          아래 콘텐츠 비침 차단 + 하단 그림자로 분리. z-20으로 헤더 바(z-10 Container) 위. */}
       {menuOpen && (
-        <div className="absolute inset-x-0 top-full z-10 hidden border-b border-glass-line bg-cosmos-depth1/[0.96] backdrop-blur-glass lg:block">
+        <div className="absolute inset-x-0 top-full z-20 hidden border-b border-glass-line bg-cosmos-depth1 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.7)] lg:block">
           <Container
             as="nav"
             aria-label={`${navLabel(active)} ${t('aria.submenu')}`}

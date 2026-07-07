@@ -63,11 +63,33 @@
 - [x] COSMOS-TONE 히어로 톤 연결: (1) HeroSection 하단 페이드 96→240px + QuickLinks 상단 여백 pt-80 확대 (2) tokens.js cosmos.accentViolet rgba(139,127,232,0.05)·accentTeal rgba(64,180,160,0.05) 추가, star 오프화이트 rgba(242,242,252,0.9)로 미세 보라 (3) tailwind bg-nebula-violet(좌상)·bg-nebula-teal(우하) 정적 radial 글로우 → StarField 전역 성운 2겹(blur 미사용, reduced-motion 무관) (4) GlassCard 상단 하이라이트 1px 화이트10% + 하단 그림자, hover 시 보라/청록 글로우 0.06 상한 (5) 모노크롬 유지(텍스트·보더 미채색)
 - [x] 검증: `npm run build` 성공(2004 modules), nebula-violet·nebula-teal CSS 방출 확인, `node --check seed.mjs` 통과. 잔여: 로컬 Postgres 미기동 → achievement/notice 라이브 COUNT·렌더는 DB 연결 후 재확인 필요
 
+## PHASE 5 — 배포 진단 기반 수정 (17_PHASE5_FIXES)
+- [x] P5-1 상세 응답 파싱 수정: 서버 GET /content/:type/:id 는 { item }로 감싸 반환하는데 상세 페이지들이 최상위(data.title/poster_url)를 읽어 전부 undefined → "NO POSTER". useApi.js에 itemOf(data) 언랩 헬퍼 추가({item}→내부, 스냅샷 단일객체→그대로, {items}→null). 5개 상세 전수 적용: ExhibitionDetail·ContestDetail·LectureDetail·ShowcaseDetail·NewsDetail
+- [x] P5-2 배포 Neon 시드 주입: server/.env가 이미 배포 Neon(ep-dark-grass…neon.tech) 지향 → node scripts/seed.mjs 실행 성공. 배포 DB SELECT COUNT 검증: achievement 41, notice 19(본문 시드 1=notice-01 원문), professors 11, mentors 14, curriculum 35, careers 26, portfolios 8, council 10, exhibitions 18. GET /content/achievement 이제 실건수 반환
+- [!] P5-2 부작용(전시회) → 복구 방침 확정(사용자: Neon PITR 후 성과만 재시드): 재시드가 배포 전시회의 CMS 입력 미디어(poster/body/site_url)를 삭제함. 아래 복구 런북 대기 중(사용자가 Neon 콘솔에서 PITR 수행 후 스크립트 실행)
+- [x] P5-2 후속(시드 전면 additive 개편, 사용자 지시 2): seed.mjs에서 TRUNCATE/DELETE 완전 제거. 참조 테이블(professors·mentors·curriculum·careers·portfolios·council·exhibitions)은 empty-guard(비었을 때만 삽입), posts는 seed_key(안정 키)+ON CONFLICT DO NOTHING, site_settings는 DO NOTHING, codesharing은 body NULL일 때만. schema.sql에 posts.seed_key + uq_posts_seed_key 인덱스 추가. 재시드가 사용자 입력을 다시는 지우지 않음
+- [x] P5-2 후속(타깃 스크립트, 지시 1): server/scripts/seed-achievements.mjs — achievement만 seed_key로 ON CONFLICT DO NOTHING 삽입, 다른 테이블 미변경. seed_key 없는 기존 achievement 감지 시 중단(PITR 미완료 중복삽입 방지)
+- [x] P5-2 후속(포스터 파일경로 지원, 지시 3): 역대 전시회 포스터를 client/public/images/exhibitions/<학기>.png로 이관(18장), seed가 학기 역순으로 poster_url 매핑. 복구 후 적용용 seed-exhibition-posters.mjs 추가(poster_url IS NULL인 행만 채움 → 복구된 Against the Flow의 CMS 포스터 보존)
+- [x] P5-3 전시회 목록 카드: GlassCard 과한 radius(glass 20) → !rounded-lg(16)로 통일 + p-12 내부 패딩. 포스터는 기존 aspect-[2/3] object-cover 유지. NO POSTER는 poster_url 없을 때만(정상 항목의 오표시는 P5-1 원인이었음)
+- [x] P5-4 StarField 전면 제거: StarField.jsx 삭제 + App에서 언마운트. 별/트윙클/캔버스/rAF 제거. 대체 CosmosBackground.jsx(정적 성운 글로우 3겹: 좌상 보라·우하 청록·중앙 상단 초저채도 보강, 전부 radial-gradient·blur 미사용·reduced-motion 무관)로 우주 톤만 유지
+- [x] P5-5 메가메뉴: 패널 배경 반투명(depth1/0.96)+blur → 완전 불투명 bg-cosmos-depth1 + 하단 그림자로 콘텐츠 비침 차단, z-20으로 헤더 바 위. 위치는 헤더(positioned) 바로 아래 absolute top-full 유지(딤 오버레이 기존)
+- [x] P5-6 스크롤 초기화: ScrollToTop이 window.scrollTo({behavior:'instant'})로 전역 smooth 무시하고 즉시 최상단 이동 + 마운트 시 history.scrollRestoration='manual'(새로고침·복귀 시 위치 복원 차단)
+- [x] P5-7 푸터 로고 축소: h-24/md:h-28 → h-16(약 1/4, ≤24)
+- [x] P5-8 언어 토글: 텍스트 링크 → 스위치 UI(KR·EN 세그먼트 병렬, 현재 언어 채움 강조). role="switch"+aria-checked, switchHref로 /en 미러 전환
+- [x] 검증: `npm run build` 성공(2004 modules), nebula-violet·teal·soft CSS 방출, seed 배포 실행+COUNT 확인. 잔여: 배포 재빌드·배포(Vercel) 후 육안 QA, 전시회 미디어 복구 결정
+
 ## 데이터 갭 (사용자 확인 필요)
 - [!] 교수 개별 사진: 미보유 → 이니셜 플레이스홀더로 v1 출시, 사진 확보 시 교체
 - [!] 수상 실적 원문 중 2021~2025 구간: source_content.md에서 확인 후 이관 (원문에 있는 것만)
 - [!] 재학생·전체 수치(재학생 수 등): 공식 수치 미보유 → Stats에 미포함 유지
 - [ ] OG 이미지 1600x840: 03_ASSET_PROMPTS.md B4로 제작 후 public/og.png
+
+## 전시회 아카이브 시드 완료 (P5-2 부작용 해소)
+- [x] 전시회 18건 메타 정합화: 이전 seed로 이미 존재하던 18행(id 2~19)을 제자리 UPDATE(중복·삭제 없음). server/scripts/seed-exhibitions-archive.mjs 신규 — 최신 학기부터 semester_label('2026-1'~'2017-2') + poster_url('/images/exhibitions/{label}.png', 실제 파일 18개 존재) + 평문 제목(「」 제거, 사용자 목록 원문) 설정. intro/body/site_url/gallery/held_at 미변경(2026-1 intro 보존 확인). poster_url은 COALESCE로 기존값 보존. 멱등(행수≠18이면 중단)
+- [x] 정렬 수정: content-config exhibitions orderBy `held_at DESC NULLS LAST, id DESC` → `held_at DESC NULLS LAST, semester_label DESC NULLS LAST, id DESC`. 전 행 held_at null이라 기존엔 id역순(2017-2가 최상단)으로 뒤집혀 있었음 → semester_label 문자열 역순=학기 역순으로 교정(held_at 미조작)
+- [x] 목록 페이지네이션 상한: Exhibitions.jsx `/content/exhibitions` 요청에 pageSize=100 추가(기본 12 상한이라 18중 12만 노출되던 것 해소, 아카이브는 단일 페이지 전량 노출)
+- [x] 검증(로컬 서버→배포 Neon): GET /content/exhibitions?pageSize=100 → total 18·18건 반환, 2026-1 최상단·2017-2 최하단 학기 역순 확인. 상세 /content/exhibitions/2(2026-1, intro 보존)·/19(2017-2) 정상 item 반환, 잘못된 id→404. client `npm run build` 성공(P5-1 itemOf 언랩 전제)
+- [ ] 잔여: 서버(Render)·클라(Vercel) 재배포 후 /programs/exhibitions 육안 QA(18카드 학기역순·포스터 표시)
 
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트

@@ -78,6 +78,20 @@ async function readSnapshot(path) {
 }
 
 /**
+ * itemOf — 상세 응답 언랩 (P5-1). 라이브 서버는 단건을 { item }로 감싸 반환(content.js
+ * GET /:type/:id), 스냅샷 폴백(readSnapshot)은 단일 객체를 그대로 반환한다. 목록형({items})은
+ * 상세에서 취급하지 않으므로 null. 모든 :id 상세 페이지는 이 헬퍼로 일관되게 데이터를 꺼낸다.
+ * @param {any} data - useApi로 받은 원본 응답
+ * @returns {any|null}
+ */
+export function itemOf(data) {
+  if (!data) return null
+  if (data.item !== undefined) return data.item
+  if (data.items !== undefined) return null
+  return data
+}
+
+/**
  * useApi — 조회 전용 훅.
  * @param {string|null} path - '/content/notice' 형태. null이면 조회하지 않음
  * @param {{ params?: Object }} [options] - 쿼리 파라미터
