@@ -89,7 +89,8 @@ export const CONTENT_TYPES = {
     columns: ['ordinal', 'name', 'logo_url', 'intro', 'members', 'year_label', 'sort'],
     jsonb: ['members'],
     required: ['name'],
-    orderBy: 'ordinal DESC, sort ASC, id ASC',
+    // H3: 연도 내림차순(2026 현 운영위 선두). ordinal은 운영위/학생회 대수가 섞여 정렬 키로 부적합
+    orderBy: 'year_label DESC NULLS LAST, sort ASC, id ASC',
     searchCols: ['name', 'year_label'],
   },
   exhibitions: {

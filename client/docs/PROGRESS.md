@@ -110,6 +110,20 @@
 - [!] Privacy·Terms 법률 문안 EN: 감수 없는 번역 위험 → KR+뱃지 유지. 감수 번역 확보 시 교체
 - [!] 어드민·접수 플로우는 국문 전용(v2 스코프) — i18n 제외 유지
 
+## PHASE 7 — 크리틱 반영 수정 (19_PHASE7_FIXES)
+- [x] H1 헤더 IA 재수정: About=홈(/, 하위 없음, end 매칭) / 전공 소개(전공소개·교육 과정·교수진·멘토) / 학과 행사 / 학생 활동(운영위·동아리·성과·웹&앱 쇼케이스·취업 현황) / 공지사항 / 자료실. 멘토단→멘토·진로→취업 현황 전수(페이지·어드민·사전), 쇼케이스 최상위 제거→학생 활동 하위, /about/people#mentors 앵커(id) 신설. i18n ko/en 동시 갱신
+- [x] H2 목록 원복: 학과 행사 3종(전시회·공모전·특강) 카드 p-20/28 → p-12로 되돌림. 포스터 2:3 대형 유지, 여백은 그리드 간격으로만
+- [x] H3 운영위 재시드: data/council.js를 사용자 원문 전량으로 재작성(2026 LUCID~2017 임시학생회, 소개문·임원 명단 원문 그대로, members [{role,name,majors}]). seed-council.mjs(대상 테이블 한정 삭제+재삽입) 배포 Neon 실행 — 10건, 2026 선두(sort 0)·구성원 전량(10/12/7/6/5/4/6/2/2/2) 검증. content-config orderBy year_label DESC. Council 페이지: 2026 첫 탭 강조(font-bold+큰 사이즈), intro whitespace-pre-line, 폴백도 councils 사용
+- [x] H4 i18n 잔여: (1)/about lang 분기 기반영 확인 (2)PageBanner 두 언어 동일 구조 — eyebrow(EN 캡스) 항상 유지 + 헤드라인만 교체(en은 proper-case) (3)히어로 subEn/bodyEn(site.js)·트랙 summaryEn/keywordsEn(tracks.js) 추가, Hero·TracksSection lang 분기 (4)언어 전환 시 스크롤 유지 — ScrollToTop이 /en 정규화 경로 동일하면 스킵(앵커는 예외 처리)
+- [x] H5 4K 정렬: 홈 프로그램(ProgramShowcase)·3개 트랙(TracksSection)·공지사항(NewsSection) 자체 max-w-container(1280/1440) 래퍼 → 공용 Container로 교체. 2560·3840에서 헤더와 동일 토큰 정렬(코드 보증)
+- [x] H6 공지 상세 가독성: 본문만 bg.invert(#F7F8F8) 밝은 카드(radius 4, p-24/40) 반전. index.css .rich-on-light 오버라이드(text.invert, border.invert 토큰 신설) — 페이지 배경·메타는 다크 유지
+- [x] H7 어드민 5종: (1)ImageUpload 미리보기 object-contain + poster는 2:3 세로 프레임 (2)Toggle 켜짐=화이트 채움+어두운 노브/꺼짐=아웃라인 (3)사이드바 lg:sticky 유지 + 어드민 내부 이동 시 스크롤 점프 제거(ScrollToTop /admin→/admin 스킵) (4)쇼케이스 큐→웹&앱 쇼케이스(사이드바·페이지 타이틀) (5)헤더 설정 아이콘 -mr-8로 Container 우측선 정렬
+- [x] H8 푸터 TEL 033-248-3556 (주소 아래 줄, 가로 배치 유지)
+- [x] H9 배경 고급화: CosmosBackground를 depth1→depth0 세로 그라데이션(토큰 경유)으로, 성운 글로우(보라 0.05·청록 0.05·소프트 0.03) 실적용 + 스크롤 패럴랙스(0.1/0.06배, rAF·transform만, reduced-motion 시 정지). ProgramShowcase의 불투명 bg-bg-base 제거(그라데이션 비침)
+- [x] H10 접수 노출: 어드민 UI 기존재 확인(/admin/settings 노출 허용 토글+위치, /admin/exhibition 기간 datetime 편집). Header에 show_button 판정 버튼 신설 — header 모드는 헤더 우측, floating 모드는 우하단 고정, /submit 이동. 어드민 미리보기 우회: manager+ 로그인 후 /submit?preview=1(기간 검증 우회, 실제 제출은 서버 403 차단 유지)
+- [!] H10 테스트 절차: (1)관리자 로그인 → /submit?preview=1 로 폼 화면 즉시 테스트, 또는 (2)/admin/exhibition에서 접수 기간을 현재 포함으로 설정 + /admin/settings에서 노출 허용 on → 헤더(또는 플로팅) "전시회 접수" 버튼 노출 확인
+- [ ] 배포 후 실사이트 H1~H10 육안 검증 (아래 배포 절 참조)
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

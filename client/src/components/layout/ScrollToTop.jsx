@@ -1,5 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
+
+// /en 프리픽스를 무시한 정규화 경로 — 언어 전환은 "같은 페이지"로 취급 (H4.4)
+const normalize = (p) => (p === '/en' ? '/' : p.startsWith('/en/') ? p.slice(3) : p)
 
 // ROUTES.md: pathname 변경 시 최상단 이동, hash 있으면 해당 id로 스크롤
 // P5-6: 라우트 전환·새로고침·창 복귀 시 무조건 최상단에서 시작.
@@ -7,6 +10,7 @@ import { useLocation } from 'react-router-dom'
 //   - 전역 scroll-behavior:smooth(index.css)를 무시하고 즉시 이동(behavior 'instant')
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
+  const prevRef = useRef(pathname)
 
   // 새로고침·뒤로가기 시 브라우저가 이전 스크롤 위치를 복원하지 않게 함(마운트 시 1회)
   useEffect(() => {
@@ -16,6 +20,9 @@ function ScrollToTop() {
   }, [])
 
   useEffect(() => {
+    const prev = prevRef.current
+    prevRef.current = pathname
+    // 앵커(hash) 이동은 항상 처리 — 같은 페이지 내 이동 포함
     if (hash) {
       const el = document.getElementById(hash.slice(1))
       if (el) {
@@ -26,6 +33,10 @@ function ScrollToTop() {
         return
       }
     }
+    // H4.4: KR↔EN 전환(정규화 경로 동일)은 현재 스크롤 위치 유지
+    if (normalize(prev) === normalize(pathname)) return
+    // H7.3: 어드민 내부 이동은 콘텐츠 영역만 갱신 — 최상단 점프 금지
+    if (prev.startsWith('/admin') && pathname.startsWith('/admin')) return
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [pathname, hash])
 

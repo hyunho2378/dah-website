@@ -2,6 +2,7 @@ import SectionLabel from '../common/SectionLabel'
 import Reveal from '../common/Reveal'
 import ArrowLink from '../common/ArrowLink'
 import NoticeItem from '../common/NoticeItem'
+import Container from '../layout/Container'
 import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 import { notices } from '../../data/notices'
 import { motion } from '../../styles/tokens.js'
@@ -19,7 +20,7 @@ function NewsSection() {
 
   return (
     <section className="py-section-m lg:py-section-d">
-      <div className="mx-auto w-full max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide">
+      <Container>
         <Reveal>
           <SectionLabel index="04" text="NEWS" />
           <div className="mt-24 flex flex-wrap items-center gap-12">
@@ -41,7 +42,7 @@ function NewsSection() {
         <div className="mt-48">
           <ArrowLink href="/news">{t('actions.viewAll')}</ArrowLink>
         </div>
-      </div>
+      </Container>
     </section>
   )
 }

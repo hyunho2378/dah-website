@@ -44,10 +44,13 @@ function ImageUpload({
   return (
     <div className="flex min-w-0 flex-col gap-8">
       {value && preview && (
+        /* H7.1: 원본 비율 유지(contain) — 찌그러짐 방지. 포스터는 세로 2:3 프레임 */
         <img
           src={value}
           alt="업로드 미리보기"
-          className="aspect-video w-full max-w-sm rounded-md border border-border-subtle bg-bg-elev object-cover"
+          className={`w-full rounded-md border border-border-subtle bg-bg-elev object-contain ${
+            usage === 'poster' ? 'aspect-[2/3] max-w-[240px]' : 'aspect-video max-w-sm'
+          }`}
         />
       )}
       {value && !preview && (

@@ -39,7 +39,7 @@ function HeroBackground() {
 // 버튼 2쌍은 site_settings.hero로 오버라이드(13_CMS_SPEC 1절 '히어로 버튼'),
 // settings 미수신(서버 슬립·오프라인) 시 아래 v2 기본값 렌더.
 function HeroSection({ settings }) {
-  const { t } = useLang()
+  const { lang, t } = useLang()
 
   if (!hero) return null
 
@@ -47,7 +47,8 @@ function HeroSection({ settings }) {
     { label: t('hero.ctaAbout'), to: '/about', external: false },
     { label: t('hero.ctaExhibition'), href: site.links.exhibition, external: true },
   ]
-  const remoteCtas = settings?.hero?.ctas
+  // /settings/public 응답은 { settings, exhibition } — hero는 settings.settings.hero
+  const remoteCtas = (settings?.settings?.hero ?? settings?.hero)?.ctas
   const ctas =
     Array.isArray(remoteCtas) && remoteCtas.length > 0 ? remoteCtas : defaultCtas
 
@@ -73,10 +74,10 @@ function HeroSection({ settings }) {
             ))}
           </h1>
           <p className="mt-24 text-h2-m font-bold leading-heading text-text-pri lg:text-h2-d">
-            {hero.subKr}
+            {lang === 'en' && hero.subEn ? hero.subEn : hero.subKr}
           </p>
           <p className="mt-16 max-w-xl text-body-l-m leading-body text-text-sec lg:text-body-l-d">
-            {hero.body}
+            {lang === 'en' && hero.bodyEn ? hero.bodyEn : hero.body}
           </p>
           <div className="mt-40 flex flex-wrap items-center gap-16">
             {ctas.map((cta, i) => (

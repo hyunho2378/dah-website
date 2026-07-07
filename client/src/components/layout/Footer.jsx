@@ -27,6 +27,10 @@ function Footer() {
               <p className="text-small-m text-text-meta md:text-small-d">
                 {t('footer.address')}
               </p>
+              {/* H8: 대표 전화 */}
+              <p className="text-small-m text-text-meta md:text-small-d">
+                TEL 033-248-3556
+              </p>
             </div>
           </div>
 

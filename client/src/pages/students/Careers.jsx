@@ -142,7 +142,7 @@ function Careers() {
   return (
     <>
       <PageBanner
-        titleKo="진로"
+        titleKo="취업 현황"
         titleEn="CAREERS"
         breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.activities') }, { label: t('titles.careers'), to: '/students/careers' }]}
         nebulaX="36%"

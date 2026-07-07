@@ -3,12 +3,14 @@
 // 개인/팀 분기 폼: 인적사항·과목·연락처·작품명·작품 설명(100자)·이미지(최대 5)·수정용 이메일+비밀번호.
 // 비밀번호는 서버 검증 전용 — 클라이언트 저장 금지.
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import PageBanner from '../../components/layout/PageBanner'
 import GlassCard from '../../components/common/GlassCard'
 import Button from '../../components/common/Button'
 import { api, useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import { useAuth } from '../../context/AuthContext'
 import { Field, ImagesField, MemberRows, ScheduleList } from './exhibitFormKit'
 import {
   DESC_MAX,
@@ -55,9 +57,15 @@ function Banner() {
 function ExhibitSubmit() {
   useTitle('전시회 접수')
   const { data: settings, loading: settingsLoading } = useApi('/settings/public')
+  const { hasRole } = useAuth()
+  const [searchParams] = useSearchParams()
   const exhibition = settings?.exhibition ?? null
+  // H10.3: 어드민 전용 미리보기 — manager+ 로그인 상태에서 /submit?preview=1 이면 기간 검증 우회
+  //   (실제 제출은 서버가 기간 밖 403으로 차단 — 화면 테스트 용도)
+  const previewBypass = searchParams.get('preview') === '1' && hasRole('manager')
   // 설정 조회 실패 시에도 폼은 노출 — 기간 밖 제출은 서버가 403으로 차단한다
-  const submitOpenNow = exhibition ? exhibition.is_submit_period === true : true
+  const submitOpenNow =
+    previewBypass || (exhibition ? exhibition.is_submit_period === true : true)
 
   const [form, setForm] = useState(INITIAL_FORM)
   const [members, setMembers] = useState([{ ...EMPTY_MEMBER }])

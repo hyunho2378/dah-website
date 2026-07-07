@@ -1,54 +1,199 @@
 /**
- * council.js — 운영위원회 (source_content.md '운영위원회' 절 359~419행 원문 전량 이관)
+ * council.js — 운영위원회·역대 학생회 (H3, 19_PHASE7 사용자 제공 원문 전량 이관)
  *
- * 대원칙: 원문 한 글자도 요약·윤문·재작성·오타수정 없음. 이모지만 예외.
+ * 대원칙: 원문 한 글자도 요약·윤문·재작성·오타수정 없음.
  *
- * export 계약 (T4 아카이브 렌더 · 페이지 에이전트 소비용, 필드명 고정):
+ * councils: 2026(현 LUCID) 맨 앞 → 2017까지 내림차순. 렌더·시드가 이 배열 순서를 그대로 쓴다.
+ *   { year, ordinalLabel, name, title(표시명), intro(원문, 줄바꿈 \n 보존),
+ *     members: [{ role, name, majors? }] }
  *
- *   lucid = {
- *     title,                         // 제1대 운영위원회 표제
- *     intro,                         // 소개문 3문단 원문 (373~378행)
- *     activity: { description, events }, // 382행 소개 + 384행 괄호 활동 목록
- *     committee: [{ role, name?, dept?, members? }],  // 388~396행 위원회 구성
- *     links: { instagram, youtube }, // 418~419행
- *   }
- *
- *   councilHistory = [{ year, ordinal, name, president, vicePresident }]
- *     // 400~416행. 최신(2025 제7대) → 과거(2017 임시학생회) 순.
- *     // 2018·2017 임시학생회는 ordinal='임시학생회', name=null.
+ * lucid: 활동 소개·링크(source_content.md 382~419행 원문) — Council 페이지 부가 정보용 유지.
  */
 
+export const councils = [
+  {
+    year: 2026,
+    ordinalLabel: '제1대 운영위원회',
+    name: 'LUCID',
+    title: '제1대 운영위원회 LUCID',
+    intro:
+      '물감은 섞일수록 어두워지지만, 빛은 섞일수록 밝고 투명해집니다. LUCID는 인문과 기술, 다양한 전공이 모인 이곳에서 나다움을 잃지 않으면서도 서로를 빛내주는 시너지를 만들고자 합니다. 다양한 색이 모여 만드는 가장 눈부신 가능성을 마음껏 펼칠 수 있도록 2026년 한 해 동안 여러분의 길잡이가 되겠습니다.',
+    members: [
+      { role: '위원장', name: '주현호', majors: '디지털인문예술 22' },
+      { role: '부위원장', name: '윤현아', majors: '디지털인문예술 23' },
+      { role: '기획부', name: '한수빈' },
+      { role: '기획부', name: '김소연' },
+      { role: '홍보부', name: '여동규' },
+      { role: '홍보부', name: '김지연' },
+      { role: '홍보부', name: '송은채' },
+      { role: '홍보부', name: '정민서' },
+      { role: '웹전시부', name: '임지우' },
+      { role: '웹전시부', name: '임세연' },
+    ],
+  },
+  {
+    year: 2025,
+    ordinalLabel: '제7대 학생회',
+    name: 'CUBE',
+    title: '제7대 학생회 CUBE',
+    intro:
+      "안녕하세요. 디지털인문예술전공 제7대 학생회 'CUBE'입니다.\n" +
+      'CUBE는 하나, 둘씩 조각을 맞춰가는 큐브처럼 학우분들께 빛나는 학교 생활의 조각을 맞춰 드리고자 하는 다짐을 담았습니다. 여러분이 디인예에서 겪게 되는 순간들의 조각이 모여 반짝이고 찬란하게 빛나는 디인예의 미래가 되길 바라며 더욱 발전하고 찬란한 경험으로 가득 찰 2025년을 약속 드리겠습니다. 앞으로도 디지털인문예술전공에 많은 기대와 관심 부탁 드립니다.\n' +
+      '감사합니다.',
+    members: [
+      { role: '학회장', name: '권서영', majors: '디지털인문예술전공' },
+      { role: '부학회장', name: '최서연', majors: '디지털인문예술전공' },
+      { role: '전시', name: '감주희' },
+      { role: '전시', name: '강대승' },
+      { role: '전시', name: '김소연' },
+      { role: '전시', name: '주현호' },
+      { role: '대외', name: '김찬민' },
+      { role: '대외', name: '윤현아' },
+      { role: '홍보', name: '신현서' },
+      { role: '홍보', name: '송은채' },
+      { role: '기획', name: '우세희' },
+      { role: '기획', name: '김채린' },
+    ],
+  },
+  {
+    year: 2024,
+    ordinalLabel: '제 6대 학생회',
+    name: '채움',
+    title: '제 6대 학생회 채움',
+    intro:
+      "안녕하세요. 디지털인문예술전공 제 6대 학생회 '채움'입니다.\n" +
+      "채움은 '채우다'에서 의미를 가져와 학우분들께 학교 생활의 경험과 좋은 추억을 채워주고자 하는 다짐을 담았습니다.\n" +
+      '여러분의 디인예 생활이 좋은 기억만 남기고 여러분들이 발전할 수 있도록 부족했지만 최선을 다한 채움은 이번 학기를 끝으로 막을 내립니다.\n' +
+      '한 해 동안 정말 수고 많으셨습니다.\n' +
+      '더욱 발전할 디지털인문예술전공 많은 기대와 관심 부탁드립니다.\n' +
+      '감사합니다.',
+    members: [
+      { role: '학회장', name: '송유경', majors: '디지털인문예술전공' },
+      { role: '부학회장', name: '심재연', majors: '디지털인문예술전공' },
+      { role: '홍보', name: '권서영', majors: '디지털인문예술전공' },
+      { role: '홍보', name: '최도윤', majors: '디지털인문예술전공' },
+      { role: '디자인', name: '최서연', majors: '디지털인문예술전공' },
+      { role: '디자인', name: '이예린', majors: '디지털인문예술전공' },
+      { role: '기획', name: '정재훈', majors: '디지털인문예술전공' },
+    ],
+  },
+  {
+    year: 2023,
+    ordinalLabel: '제 5대 학생회',
+    name: 'DX',
+    title: '제 5대 학생회 DX',
+    intro:
+      "안녕하세요. 디지털인문예술전공 제 5대 학생회 'DX'입니다.\n" +
+      "DX는 User experience에서 의미를 가져와 '디인예 학우님들께 더 나은 경험을 제공해드리자'는 의미를 가지고 있습니다.\n" +
+      '여러분의 디인예 생활이 좋은 기억만 남기고 여러분들이 발전할 수 있도록 DX가 성실히 활동할 것을 약속드리겠습니다.\n' +
+      '디지털인문예술을 이해하고 학우님들을 배려하고 전공을 발전시키도록 하겠습니다. 한 해 동안 잘 부탁드립니다.',
+    members: [
+      { role: '학회장', name: '윤호용', majors: '디지털인문예술 전공 19' },
+      { role: '부학회장', name: '원수정', majors: '디지털인문예술 전공 21' },
+      { role: '홍보', name: '정민주', majors: '디지털인문예술 전공 22' },
+      { role: '총괄', name: '송유경', majors: '디지털인문예술 전공 22' },
+      { role: '기획', name: '심재연', majors: '디지털인문예술 전공 21' },
+      { role: '기획', name: '최선', majors: '디지털인문예술 전공 22' },
+    ],
+  },
+  {
+    year: 2022,
+    ordinalLabel: '제 4대 학생회',
+    name: 'OPEN',
+    title: '제 4대 학생회 OPEN',
+    intro:
+      "안녕하세요. 디지털인문예술전공 제 4대 학생회 'OPEN'입니다.\n" +
+      'OPEN은 학우님들에게 저희 모든 것을 보여드리고 공유하는 마음으로 학생회를 만들어 가겠다는 의미를 가지고 있습니다.\n' +
+      '여러분의 디인예 생활이 즐겁고 유익하도록 OPEN이 성실히 활동할 것을 약속드리겠습니다.\n' +
+      '언제나 학생들의 목소리에 귀 기울이고 자유로운 논의가 가능해질 수 있는 전공을 만들겠습니다. 한 해 동안 잘 부탁드립니다.',
+    members: [
+      { role: '학회장', name: '곽선재', majors: '디지털인문예술 전공 19' },
+      { role: '부학회장', name: '윤숙영', majors: '사회학과 19' },
+      { role: '기획팀', name: '허민', majors: '사회학과 19' },
+      { role: '홍보팀', name: '김희경', majors: '경영학과 20' },
+      { role: '홍보팀', name: '박시영', majors: '디지털인문예술 전공 20' },
+    ],
+  },
+  {
+    year: 2021,
+    ordinalLabel: '제3대 학생회',
+    name: 'DEAR',
+    title: '제3대 학생회 DEAR',
+    intro:
+      '안녕하세요. 디지털인문예술전공 제3대 학생회 DEAR입니다.\n' +
+      "DEAR는 두 가지의 의미를 담고 있습니다. 첫째는 '친애하는'이란 뜻으로 학우님들과 자유롭게 의견을 주고 받을 수 있는 친밀한 관계를 조성하겠다는 뜻입니다. 둘째는 DAH의 소리를 듣는다(EAR)라는 뜻으로 언제나 학우님들의 소리에 경청하겠다는 다짐입니다. 언제나 학생들의 목소리에 귀 기울이고 자유로운 논의가 가능해질 수 있는 전공을 만들고자 합니다.\n" +
+      'DEAR의 활동이 본 전시회를 끝으로 마무리됩니다. 한 학기 동안 감사했습니다.',
+    members: [
+      { role: '학회장', name: '안유미', majors: '디지털미디어콘텐츠18' },
+      { role: '부학회장', name: '오소민', majors: '광고홍보19' },
+      { role: '기획국장', name: '오유진', majors: '광고홍보19' },
+      { role: '홍보국장', name: '박민주', majors: '광고홍보19' },
+    ],
+  },
+  {
+    year: 2020,
+    ordinalLabel: '제2대 학생회',
+    name: 'HARMONIES',
+    title: '제2대 학생회 HARMONIES',
+    intro:
+      '안녕하세요 디지털인문예술 전공 제2대 학생회 HARMONIES입니다.\n' +
+      '여러분들의 노력이 더 빛날 수 있게\n' +
+      '디인예 활동 및 전시회 기획, 유치 등을 할 수 있는 기회를 주신 모든 분들께 감사드립니다.\n' +
+      '저희 이름대로 항상 어우러져서 저희만의 독특한 장점을 가지는 디인예가 되길 바랍니다.\n' +
+      '감사합니다.',
+    members: [
+      { role: '학회장', name: '김도경' },
+      { role: '부학회장', name: '정예찬' },
+      { role: '기획국장', name: '유이상' },
+      { role: '총무국장', name: '이나라' },
+      { role: '홍보국장', name: '최단비' },
+      { role: '기획부장', name: '윤호용' },
+    ],
+  },
+  {
+    year: 2019,
+    ordinalLabel: '제1대 학생회',
+    name: 'Curtain Up',
+    title: '제1대 학생회 Curtain Up',
+    intro: null,
+    members: [
+      { role: '회장', name: '송채원' },
+      { role: '부회장', name: '박재정' },
+    ],
+  },
+  {
+    year: 2018,
+    ordinalLabel: '임시학생회',
+    name: null,
+    title: '임시학생회',
+    intro: null,
+    members: [
+      { role: '회장', name: '주영훈' },
+      { role: '부회장', name: '김도경' },
+    ],
+  },
+  {
+    year: 2017,
+    ordinalLabel: '임시학생회',
+    name: null,
+    title: '임시학생회',
+    intro: null,
+    members: [
+      { role: '회장', name: '신소령' },
+      { role: '부회장', name: '이해솔' },
+    ],
+  },
+];
+
+// 활동 소개·링크 (source_content.md 382~419행 원문) — Council 페이지 부가 정보
 export const lucid = {
   title: '제1대 운영위원회 「LUCID」',
-  intro:
-    '물감은 섞일수록 어두워지지만, 빛은 섞일수록 밝고 투명해집니다.\n\n' +
-    'LUCID는 인문과 기술, 다양한 전공이 모인 이곳에서 나다움을 잃지 않으면서도 서로를 빛내주는 시너지를 만들고자 합니다.\n\n' +
-    '다양한 색이 모여 만드는 가장 눈부신 가능성을 마음껏 펼칠 수 있도록 2026년 한 해 동안 여러분의 길잡이가 되겠습니다.',
   activity: {
     description: '디지털인문예술전공 자치기구로서 학우들의 참여를 통해 전공 내외의 다양한 행사를 운영합니다.',
     events: ['개강총회', '공모전 전시회', '전공박람회', '전공 프로젝트 전시회', '동아리 전시회', '종강총회', '전공 교류 행사'],
   },
-  committee: [
-    { role: '위원장', name: '주현호', dept: '디지털인문예술 22' },
-    { role: '부위원장', name: '윤현아', dept: '디지털인문예술 23' },
-    { role: '기획부', members: ['한수빈', '김소연'] },
-    { role: '홍보부', members: ['여동규', '김지연', '송은채', '정민서'] },
-    { role: '웹전시부', members: ['임지우', '임세연'] },
-  ],
   links: {
     instagram: 'https://www.instagram.com/hallym_lucid/',
     youtube: 'https://www.youtube.com/channel/UCS6MHVy-n8OTgN2WRgNafXw',
   },
 };
-
-export const councilHistory = [
-  { year: 2025, ordinal: '제7대', name: 'CUBE', president: '권서영', vicePresident: '최서연' },
-  { year: 2024, ordinal: '제6대', name: '채움', president: '송유경', vicePresident: '심재연' },
-  { year: 2023, ordinal: '제5대', name: 'DX', president: '윤호용', vicePresident: '원수정' },
-  { year: 2022, ordinal: '제4대', name: 'OPEN', president: '곽선재', vicePresident: '윤숙영' },
-  { year: 2021, ordinal: '제3대', name: 'DEAR', president: '안유미', vicePresident: '오소민' },
-  { year: 2020, ordinal: '제2대', name: 'Harmonies', president: '김도경', vicePresident: '정예찬' },
-  { year: 2019, ordinal: '제1대', name: 'Curtain Up', president: '송채원', vicePresident: '박재정' },
-  { year: 2018, ordinal: '임시학생회', name: null, president: '주영훈', vicePresident: '김도경' },
-  { year: 2017, ordinal: '임시학생회', name: null, president: '신소령', vicePresident: '이해솔' },
-];

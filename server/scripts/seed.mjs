@@ -63,7 +63,7 @@ async function main() {
       { history },
       { site, hero, newsbar, finalCta, about },
       { codeSharing },
-      { lucid, councilHistory },
+      { councils },
       { clubs },
     ] = await Promise.all([
       importData('professors.js'),
@@ -312,42 +312,25 @@ async function main() {
     )
     console.log('[seed] codesharing 문서 upsert')
 
-    // 4-1) 운영위원회(council) — council.js 원문 (F7). 비어있을 때만 삽입(empty-guard).
-    //   LUCID(제1대 운영위원회) 1건 + 역대 학생회(councilHistory) 9건. members jsonb에 원문 보존.
+    // 4-1) 운영위원회(council) — H3 원문(councils, 2026 선두 연도 내림차순). 비어있을 때만 삽입.
+    //   members jsonb: [{role, name, majors?}] 배열 원문 그대로(페이지 렌더 계약). sort = 배열 순서(0=현역 LUCID).
     if (await isEmpty('council')) {
-    await client.query(
-      `INSERT INTO council (ordinal, name, intro, members, year_label, sort)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [
-        1,
-        'LUCID',
-        lucid.intro,
-        JSON.stringify({
-          kind: 'operating-committee',
-          title: lucid.title,
-          activity: lucid.activity,
-          committee: lucid.committee,
-          links: lucid.links,
-        }),
-        '2026',
-        0,
-      ]
-    )
-    for (const [i, h] of councilHistory.entries()) {
-      const ord = /^제(\d+)대$/.exec(h.ordinal)?.[1] // '제7대'→7, '임시학생회'→undefined
-      await client.query(
-        `INSERT INTO council (ordinal, name, intro, members, year_label, sort)
-         VALUES ($1, $2, NULL, $3, $4, $5)`,
-        [
-          ord ? Number(ord) : null,
-          h.name ?? h.ordinal, // 임시학생회는 name=null → ordinal 라벨을 name으로 (council.name NOT NULL)
-          JSON.stringify({ kind: 'student-council', ordinalLabel: h.ordinal, president: h.president, vicePresident: h.vicePresident }),
-          String(h.year),
-          i + 1,
-        ]
-      )
-    }
-    console.log(`[seed] council ${1 + councilHistory.length}건 (LUCID + 역대 ${councilHistory.length})`)
+      for (const [i, c] of councils.entries()) {
+        const ord = /제\s?(\d+)대/.exec(c.ordinalLabel)?.[1]
+        await client.query(
+          `INSERT INTO council (ordinal, name, intro, members, year_label, sort)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            ord ? Number(ord) : null,
+            c.title,
+            c.intro,
+            JSON.stringify(c.members),
+            String(c.year),
+            i,
+          ]
+        )
+      }
+      console.log(`[seed] council ${councils.length}건 (2026 선두, 원문)`)
     } else skip('council')
 
     // 4-2) 전시회(exhibitions) — source '프로젝트 전시회' 절 원문 아카이브.

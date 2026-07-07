@@ -87,11 +87,12 @@ function About() {
   return (
     <>
       <PageBanner
-        titleKo="About"
+        titleKo="전공소개"
         titleEn="ABOUT"
         breadcrumb={[
           { label: t('nav.home'), to: '/' },
-          { label: t('nav.about'), to: '/about' },
+          { label: t('nav.people'), to: '/about' },
+          { label: t('titles.about'), to: '/about' },
         ]}
         nebulaX="20%"
         nebulaY="30%"

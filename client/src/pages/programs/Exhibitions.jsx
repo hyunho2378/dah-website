@@ -16,8 +16,8 @@ const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 function PosterCard({ item }) {
   return (
     <Link to={`/programs/exhibitions/${item.id}`} className="group block h-full">
-      {/* G4: radius 토큰 4px 통일(rounded-glass=4), 내부 여백 모바일 20 / 데스크탑 28 */}
-      <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
+      {/* H2: 포스터 축소 원복 — 여백은 그리드 간격+소패딩(p-12)으로만, 포스터는 크게(2:3) */}
+      <GlassCard hover className="flex h-full flex-col gap-12 p-12">
         <figure className="aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
           {item.poster_url ? (
             <img

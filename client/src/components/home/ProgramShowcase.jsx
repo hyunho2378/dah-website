@@ -4,11 +4,9 @@ import { ArrowRight, ChevronDown } from 'lucide-react'
 import SectionLabel from '../common/SectionLabel'
 import Reveal from '../common/Reveal'
 import ArrowLink from '../common/ArrowLink'
+import Container from '../layout/Container'
 import { useApi } from '../../hooks/useApi'
 import { useLang } from '../../i18n/LangContext'
-
-const CONTAINER =
-  'mx-auto w-full max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d 3xl:max-w-container-wide'
 
 // 홈 v2 #3 프로그램 마스터-디테일 (10_IA_V2 4절, KPC SERVICE 이식)
 // 좌 카테고리 hover/focus → 우 글래스 패널 crossfade 200ms + 미세 translateY(11_DESIGN_V2 5절 명시값).
@@ -80,8 +78,8 @@ function ProgramShowcase() {
   }
 
   return (
-    <section className="bg-bg-base py-section-m lg:py-section-d">
-      <div className={CONTAINER}>
+    <section className="py-section-m lg:py-section-d">
+      <Container>
         <Reveal>
           <SectionLabel index="01" text="PROGRAMS" />
           <h2 className="mt-24 text-h1-m font-extrabold leading-snug tracking-display text-text-pri lg:text-h1-d">
@@ -191,7 +189,7 @@ function ProgramShowcase() {
             })}
           </ul>
         </div>
-      </div>
+      </Container>
     </section>
   )
 }

@@ -7,37 +7,19 @@ import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
-import { lucid, councilHistory } from '../../data/council'
+import { councils } from '../../data/council'
 
 const toMember = (member) =>
   typeof member === 'string' ? { name: member } : member
 
-// F7 폴백: 서버 오프라인·빈 응답 시 data/council.js 원문을 기수 아카이브로 렌더.
-// LUCID(현 운영위, 2026) + 역대 학생회(councilHistory)를 연도 내림차순으로.
-const FALLBACK_ITEMS = [
-  {
-    id: 'lucid',
-    name: lucid.title,
-    year: 2026,
-    year_label: '2026',
-    intro: lucid.intro,
-    members: (lucid.committee ?? []).flatMap((c) =>
-      Array.isArray(c.members)
-        ? c.members.map((m) => ({ name: m, role: c.role }))
-        : [{ name: c.name, role: c.role, majors: c.dept }]
-    ),
-  },
-  ...(councilHistory ?? []).map((h) => ({
-    id: `council-${h.year}`,
-    name: h.name ? `${h.ordinal} ${h.name}` : h.ordinal,
-    year: h.year,
-    year_label: String(h.year),
-    members: [
-      h.president ? { name: h.president, role: '회장' } : null,
-      h.vicePresident ? { name: h.vicePresident, role: '부회장' } : null,
-    ].filter(Boolean),
-  })),
-]
+// H3 폴백: data/council.js 원문(councils) — 2026(현 LUCID) 맨 앞, 이후 연도 내림차순
+const FALLBACK_ITEMS = councils.map((c) => ({
+  id: `council-${c.year}`,
+  name: c.title,
+  year_label: String(c.year),
+  intro: c.intro,
+  members: c.members,
+}))
 
 function Council() {
   const { t } = useLang()
@@ -47,10 +29,12 @@ function Council() {
     params: { pageSize: 100 },
   })
   const remote = data?.items ?? []
-  // 원격 데이터 있으면 ordinal 내림차순, 없으면 원문 폴백(연도 내림차순)
+  // H3: 연도(year_label) 내림차순 — 2026(현 운영위)이 항상 맨 앞
   const items =
     remote.length > 0
-      ? [...remote].sort((a, b) => (b.ordinal ?? 0) - (a.ordinal ?? 0))
+      ? [...remote].sort(
+          (a, b) => Number(b.year_label ?? 0) - Number(a.year_label ?? 0)
+        )
       : FALLBACK_ITEMS
 
   const [selectedId, setSelectedId] = useState(null)
@@ -82,7 +66,11 @@ function Council() {
                   type="button"
                   aria-pressed={isActive}
                   onClick={() => setSelectedId(c.id)}
-                  className={`-mb-px cursor-pointer border-b-2 pb-8 font-mono text-small-m transition-colors duration-fast ease-out md:text-small-d ${
+                  className={`-mb-px cursor-pointer border-b-2 pb-8 font-mono transition-colors duration-fast ease-out ${
+                    c === items[0]
+                      ? 'text-body-m font-bold md:text-body-d'
+                      : 'text-small-m md:text-small-d'
+                  } ${
                     isActive
                       ? 'border-text-pri text-text-pri'
                       : 'border-transparent text-text-meta hover:text-text-sec'
@@ -122,12 +110,7 @@ function Council() {
               </div>
               <div className="flex min-w-0 flex-col gap-12">
                 <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-                  {[
-                    active.ordinal ? `제${active.ordinal}대` : null,
-                    active.year_label,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
+                  {active.year_label}
                 </p>
                 <div className="flex flex-wrap items-center gap-12">
                   <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
@@ -136,7 +119,7 @@ function Council() {
                   <EditPencil type="council" to="/admin/council" />
                 </div>
                 {active.intro && (
-                  <p className="max-w-container text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
+                  <p className="max-w-[760px] whitespace-pre-line text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
                     {active.intro}
                   </p>
                 )}

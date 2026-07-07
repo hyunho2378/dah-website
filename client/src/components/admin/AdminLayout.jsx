@@ -21,7 +21,7 @@ const NAV_GROUPS = [
       { to: '/admin/posts/achievement', label: '학생 성과' },
       { to: '/admin/posts/club', label: '동아리' },
       { to: '/admin/posts/portfolios', label: '포트폴리오' },
-      { to: '/admin/showcase', label: '쇼케이스 큐' },
+      { to: '/admin/showcase', label: '웹&앱 쇼케이스' },
     ],
   },
   {
@@ -29,11 +29,11 @@ const NAV_GROUPS = [
     role: 'admin',
     items: [
       { to: '/admin/professors', label: '교수진' },
-      { to: '/admin/mentors', label: '멘토단' },
+      { to: '/admin/mentors', label: '멘토' },
       { to: '/admin/curriculum', label: '교과목' },
       { to: '/admin/codesharing', label: '코드쉐어링' },
       { to: '/admin/council', label: '운영위원회' },
-      { to: '/admin/careers', label: '진로' },
+      { to: '/admin/careers', label: '취업 현황' },
     ],
   },
   {

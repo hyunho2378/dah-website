@@ -7,13 +7,19 @@ import Container from './Container'
 // 성운(bg-nebula)은 CSS 변수 --x/--y 좌표만 페이지별로 다르게 → "같은 우주, 다른 좌표"
 // 시그니처 계약 고정 — B4·B5가 이대로 사용한다:
 // <PageBanner titleKo titleEn breadcrumb={[{label,to}]} nebulaX="30%" nebulaY="20%" />
+// EN 캡스 eyebrow → 헤드라인용 표기(단어별 첫 글자만 대문자)
+function properCase(caps) {
+  return String(caps)
+    .toLowerCase()
+    .replace(/(^|\s|&)\S/g, (c) => c.toUpperCase())
+}
+
 function PageBanner({ titleKo, titleEn, breadcrumb = [], nebulaX = '30%', nebulaY = '20%' }) {
   const { lang, t } = useLang()
-  // /en 미러: 영문 타이틀이 있으면 헤드라인으로 승격, 없으면 국문 폴백(기계번역 금지 원칙).
-  // ko 모드: 기존 문법 유지(영문은 헤드라인 위 데코 eyebrow).
-  const showEn = lang === 'en' && Boolean(titleEn)
-  const headline = showEn ? titleEn : titleKo
-  const eyebrow = showEn ? null : titleEn
+  // H4.2: 두 언어 모두 동일 구조(eyebrow + 제목) 유지 — 레이아웃 변형 금지.
+  // eyebrow는 항상 EN 캡스, 헤드라인만 언어에 맞게 교체(en: titleEn proper-case, ko: 국문).
+  const headline = lang === 'en' && titleEn ? properCase(titleEn) : titleKo
+  const eyebrow = titleEn
 
   return (
     <section

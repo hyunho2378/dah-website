@@ -1,11 +1,11 @@
 /**
  * nav.js — 헤더·GlassDock가 공유하는 단일 진실 소스
- * G8(18_PHASE6) 헤더 IA 개편 — 1차 메뉴 8개:
- * About / 전공 소개 / 교육과정 / 학과 행사 / 학생 활동 / 쇼케이스 / 공지사항 / 자료실
- * - "전공 소개"를 About에서 분리해 최상위로(교수진·멘토단 하위)
- * - About은 개요·미션·비전·연혁(/about 단일 페이지)
- * - 프로그램 → 학과 행사, 학생 → 학생 활동 (라벨만 변경, 라우트 유지)
- * - 소식 메뉴 폐지: 공지사항·자료실 각각 최상위
+ * H1(19_PHASE7) 헤더 IA 확정 — 1차 메뉴 6개:
+ * About(=홈, 하위 없음) / 전공 소개 / 학과 행사 / 학생 활동 / 공지사항 / 자료실
+ * - About 클릭 = / (홈) 이동
+ * - 전공 소개 하위: 전공소개(/about) · 교육 과정(/curriculum) · 교수진 · 멘토
+ * - 학생 활동 하위: 운영위원회 · 동아리 · 학생 성과 · 웹&앱 쇼케이스 · 취업 현황
+ * - "멘토단" 표기는 전부 "멘토", "진로"는 "취업 현황"
  *
  * @typedef {Object} NavChild
  * @property {string} label - 하위 메뉴 라벨(KR, 명사형)
@@ -15,32 +15,25 @@
  * @typedef {Object} NavItem
  * @property {string} label - 1차 메뉴 라벨(KR)
  * @property {string} labelEn - 1차 메뉴 라벨(EN)
- * @property {string} to - 대표 경로(첫 하위 페이지)
+ * @property {string} to - 대표 경로
  * @property {NavChild[]} children - 메가메뉴 하위 페이지(없으면 단일 링크)
  */
 export const nav = [
   {
     label: 'About',
     labelEn: 'About',
-    to: '/about',
+    to: '/',
     children: [],
   },
   {
     label: '전공 소개',
-    labelEn: 'People',
-    to: '/about/people',
+    labelEn: 'Major',
+    to: '/about',
     children: [
+      { label: '전공소개', labelEn: 'Overview', to: '/about' },
+      { label: '교육 과정', labelEn: 'Curriculum', to: '/curriculum' },
       { label: '교수진', labelEn: 'Faculty', to: '/about/people' },
-      { label: '멘토단', labelEn: 'Mentors', to: '/about/people#mentors' },
-    ],
-  },
-  {
-    label: '교육과정',
-    labelEn: 'Curriculum',
-    to: '/curriculum',
-    children: [
-      { label: '교육과정', labelEn: 'Curriculum', to: '/curriculum' },
-      { label: '코드쉐어링', labelEn: 'Code Sharing', to: '/curriculum/codesharing' },
+      { label: '멘토', labelEn: 'Mentors', to: '/about/people#mentors' },
     ],
   },
   {
@@ -61,14 +54,9 @@ export const nav = [
       { label: '운영위원회', labelEn: 'Student Council', to: '/students/council' },
       { label: '동아리', labelEn: 'Clubs', to: '/students/clubs' },
       { label: '학생 성과', labelEn: 'Achievements', to: '/students/achievements' },
-      { label: '진로', labelEn: 'Careers', to: '/students/careers' },
+      { label: '웹&앱 쇼케이스', labelEn: 'Web & App Showcase', to: '/showcase' },
+      { label: '취업 현황', labelEn: 'Employment', to: '/students/careers' },
     ],
-  },
-  {
-    label: '쇼케이스',
-    labelEn: 'Showcase',
-    to: '/showcase',
-    children: [],
   },
   {
     label: '공지사항',

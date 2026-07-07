@@ -22,7 +22,7 @@ const TABS = [
 ]
 
 function ShowcaseQueue() {
-  useTitle('쇼케이스 큐')
+  useTitle('웹&앱 쇼케이스')
   const [tab, setTab] = useState('pending')
   const [page, setPage] = useState(1)
   const { data, loading, error, offline, refetch } = useApi('/admin/content/showcase', {
@@ -58,7 +58,7 @@ function ShowcaseQueue() {
 
   return (
     <section className="flex flex-col gap-24">
-      <PageHead title="쇼케이스 큐" desc="pending 제출물 승인·반려" offline={offline} />
+      <PageHead title="웹&앱 쇼케이스" desc="pending 제출물 승인·반려" offline={offline} />
 
       <div role="tablist" aria-label="쇼케이스 상태" className="flex items-center gap-8">
         {TABS.map((t) => (

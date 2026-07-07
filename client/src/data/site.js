@@ -55,7 +55,10 @@ export const hero = {
   eyebrow: 'HALLYM UNIVERSITY SINCE 2017',
   titleEn: ['DIGITAL ARTS', '& HUMANITIES'],
   subKr: '미래를 디자인하는 창의적 리더 양성',
+  // H4.3: EN 대역(정보 증감 없는 번역) — /en 미러에서 히어로 문구 교체용
+  subEn: 'Educating creative leaders who design the future',
   body: '디지털인문예술전공은 글로벌 혁신을 주도하는 디지털·정보통신기술, 인간을 위한 가치를 구현하는 디자인, 그리고 사람과 사회를 이해하는 인문사회학적 소양을 융합하여 미래의 주역이 될 인재를 양성하는 새로운 융합 프로그램입니다.',
+  bodyEn: 'Digital Arts and Humanities is a new convergence program that unites digital and information technologies driving global innovation, design that realizes human-centered value, and humanistic insight into people and society, educating students who will lead the future.',
   ctas: [
     { label: '트랙 살펴보기', to: '/tracks', external: false },
     { label: '전시회 보러가기', href: 'https://26-1-dah-exhibition.vercel.app', external: true },

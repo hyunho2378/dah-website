@@ -22,8 +22,9 @@ function period(item) {
 function CardBody({ item, external }) {
   const { t } = useLang()
   const title = item.title_ko ?? item.title
+  // H2: 포스터 축소 원복 — p-12 소패딩만, 포스터 크게 유지
   return (
-    <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
+    <GlassCard hover className="flex h-full flex-col gap-12 p-12">
       <figure className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
         {item.poster_url ? (
           <img

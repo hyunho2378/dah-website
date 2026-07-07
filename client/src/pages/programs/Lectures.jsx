@@ -16,7 +16,8 @@ function LectureCard({ item }) {
 
   return (
     <Link to={`/programs/lectures/${item.id}`} className="group block h-full">
-      <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
+      {/* H2: 포스터 축소 원복 — p-12 소패딩만, 포스터 크게 유지 */}
+      <GlassCard hover className="flex h-full flex-col gap-12 p-12">
         <figure className="aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
           {item.poster_url ? (
             <img

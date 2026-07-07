@@ -125,11 +125,11 @@ function People() {
   return (
     <>
       <PageBanner
-        titleKo="교수진·멘토단"
+        titleKo="교수진·멘토"
         titleEn="PEOPLE"
         breadcrumb={[
           { label: t('nav.home'), to: '/' },
-          { label: t('nav.about'), to: '/about' },
+          { label: t('nav.people'), to: '/about' },
           { label: t('titles.people'), to: '/about/people' },
         ]}
         nebulaX="40%"
@@ -163,7 +163,7 @@ function People() {
           )}
         </section>
         <Divider />
-        <section className="py-section-m lg:py-section-d">
+        <section id="mentors" className="scroll-mt-header py-section-m lg:py-section-d">
           <Reveal>
             <SectionLabel index="02" text="INDUSTRY MENTORS" />
             <div className="mt-24 flex flex-wrap items-center gap-12">

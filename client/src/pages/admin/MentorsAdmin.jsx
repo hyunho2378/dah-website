@@ -14,11 +14,11 @@ const FIELDS = [
 ]
 
 function MentorsAdmin() {
-  useTitle('멘토단 관리')
+  useTitle('멘토 관리')
   return (
     <EntityCrud
       type="mentors"
-      title="멘토단"
+      title="멘토"
       fields={FIELDS}
       display={(item) => ({
         title: item.name,

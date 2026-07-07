@@ -41,6 +41,27 @@
 }
 
 @layer components {
+  /* H6 — 공지 상세 밝은 카드: RichBody(토큰 다크 텍스트 클래스)를 라이트 배경용으로 반전.
+     텍스트는 text.invert(#08090A), 구분선·표·코드 배경은 다크 톤 파생값. */
+  .rich-on-light :is(p, li, dd, td, span, em, s, u) {
+    @apply text-text-invert;
+  }
+  .rich-on-light :is(h2, h3, strong, th, a, blockquote) {
+    @apply text-text-invert;
+  }
+  .rich-on-light :is(hr, blockquote, td, th, img, pre) {
+    @apply border-border-invert;
+  }
+  .rich-on-light li {
+    @apply marker:text-text-invert/50;
+  }
+  .rich-on-light :is(pre, code, th) {
+    @apply bg-text-invert/5;
+  }
+  .rich-on-light a {
+    @apply decoration-text-invert/40 hover:decoration-text-invert;
+  }
+
   /* DESIGN.md 4절 — 링크 언더라인 좌→우 draw (250ms).
      텍스트 요소에 .link-underline 적용, 부모 a/버튼에 group 클래스가 있으면 hover 연동. */
   .link-underline {

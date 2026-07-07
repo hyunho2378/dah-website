@@ -81,16 +81,17 @@ export function Toggle({ checked = false, onChange, label, disabled = false }) {
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange && onChange(!checked)}
+      // H7.2: 켜짐 = 내부 전체 화이트 채움 + 어두운 노브, 꺼짐 = 아웃라인만
       className={`inline-flex h-24 w-40 shrink-0 cursor-pointer items-center rounded-sm border px-4 transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
         checked
-          ? 'justify-end border-border-strong bg-glass-strong'
-          : 'justify-start border-border-subtle bg-bg-panel'
+          ? 'justify-end border-bg-invert bg-bg-invert'
+          : 'justify-start border-border-strong bg-transparent'
       }`}
     >
       <span
         aria-hidden="true"
         className={`h-16 w-16 rounded-sm transition duration-fast ease-out ${
-          checked ? 'bg-text-pri' : 'bg-text-meta'
+          checked ? 'bg-text-invert' : 'bg-text-meta'
         }`}
       />
     </button>

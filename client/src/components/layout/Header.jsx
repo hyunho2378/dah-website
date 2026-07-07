@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Settings } from 'lucide-react'
+import { CalendarCheck, Settings } from 'lucide-react'
 import { nav } from '../../data/nav'
 import { useLang } from '../../i18n/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLoginModal } from '../../context/LoginModalContext'
+import { useApi } from '../../hooks/useApi'
 import { cosmos } from '../../styles/tokens'
 import Container from './Container'
 import LangToggle from './LangToggle'
@@ -40,6 +41,11 @@ function Header() {
   const { openLogin } = useLoginModal()
   const { pathname } = useLocation()
   const headerRef = useRef(null)
+  // H10: 전시회 접수 버튼 — /settings/public의 exhibition.show_button(기간 중 + 노출 허용) 판정
+  const { data: pub } = useApi('/settings/public')
+  const exhibitionState = pub?.exhibition
+  const showSubmit = exhibitionState?.show_button === true
+  const submitMode = exhibitionState?.button_mode || 'header'
 
   // 스크롤 rAF 스로틀 (80px 이후 높이 72→56)
   useEffect(() => {
@@ -141,6 +147,7 @@ function Header() {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.to === '/'}
               aria-expanded={item.children.length > 0 ? openIndex === i : undefined}
               onMouseEnter={() => setOpenIndex(i)}
               onFocus={() => setOpenIndex(i)}
@@ -156,6 +163,16 @@ function Header() {
         </nav>
 
         <div onMouseEnter={close} className="flex shrink-0 items-center gap-16">
+          {/* H10: 접수 기간 중 헤더 접수 버튼 (button_mode=header) */}
+          {showSubmit && submitMode === 'header' && (
+            <Link
+              to="/submit"
+              className="inline-flex h-32 items-center gap-8 rounded-sm bg-bg-invert px-16 text-small-m font-semibold text-text-invert transition-opacity duration-fast ease-out hover:opacity-90 md:text-small-d"
+            >
+              <CalendarCheck size={16} aria-hidden="true" />
+              {t('actions.submitExhibition')}
+            </Link>
+          )}
           {/* EN 토글은 데스크탑 유틸만 — lg 미만은 GlassDock 확장부에 노출 */}
           <span className="hidden lg:block">
             <LangToggle />
@@ -167,7 +184,8 @@ function Header() {
               to="/admin"
               title={`${user.role} ${t('actions.admin')}`}
               aria-label={`${user.role} ${t('actions.admin')}`}
-              className="flex h-32 w-32 items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri"
+              /* H7.5: 아이콘 시각 여백(7px)을 상쇄해 Container 우측선에 정렬 */
+              className="-mr-8 flex h-32 w-32 items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri"
             >
               <Settings size={18} aria-hidden="true" />
             </Link>
@@ -217,6 +235,16 @@ function Header() {
       </header>
       {/* G9: fixed 헤더가 차지하던 자리를 본문에서 확보하는 스페이서 */}
       <div aria-hidden="true" className="h-header-s lg:h-header" />
+      {/* H10: 접수 버튼 플로팅 모드 (button_mode=floating) — 우하단 고정 */}
+      {showSubmit && submitMode === 'floating' && (
+        <Link
+          to="/submit"
+          className="fixed bottom-24 right-24 z-40 inline-flex h-48 items-center gap-8 rounded-sm bg-bg-invert px-24 text-body-m font-semibold text-text-invert shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] transition-opacity duration-fast ease-out hover:opacity-90"
+        >
+          <CalendarCheck size={16} aria-hidden="true" />
+          {t('actions.submitExhibition')}
+        </Link>
+      )}
     </>
   )
 }

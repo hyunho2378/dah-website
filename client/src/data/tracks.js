@@ -17,6 +17,10 @@ export const tracks = [
     summary:
       '미래융합디자인 트랙은 인문사회학의 토대 위에 디지털 기술과 디자인을 결합하여 미래의 경험을 창안하는 미래 디자인을 추구합니다. 경험 디자인, 사회혁신디자인, AI디자인을 3대 미래 디자인으로 규정하여 중점적으로 다루며 디자인의 기초 역량을 다지는 차원에서 디지털 디자인 교육을 병행합니다.',
     keywords: ['경험 디자인', '사회혁신디자인', 'AI디자인'],
+    // H4.3 EN 대역
+    summaryEn:
+      "The Future Convergence Design track pursues future design that creates tomorrow's experiences by combining digital technology and design on a humanities and social sciences foundation. It focuses on experience design, social innovation design, and AI design as the three pillars of future design, alongside digital design education that builds core design skills.",
+    keywordsEn: ['Experience Design', 'Social Innovation Design', 'AI Design'],
     courses: [
       'UX 디자인',
       '디지털 디자인 1',
@@ -38,6 +42,9 @@ export const tracks = [
     summary:
       'AI디지털인문학 트랙은 디지털 및 인공지능 기술에 기반하여 인문학 연구에 새로운 관점과 통찰을 발굴하는 것을 추구합니다. 인문학 분야에 AI를 비롯한 디지털 도구를 적용하여 학문적 깊이와 범위를 확장하는 역량을 키우는 데 중점을 두며, 혁신적인 인문학 연구 방법론에 대한 이론적 지식과 실무적 역량을 키울 수 있습니다.',
     keywords: ['AI', '디지털 도구', '인문학 연구 방법론'],
+    summaryEn:
+      'The AI Digital Humanities track pursues new perspectives and insights for humanities research based on digital and AI technology. It focuses on building the capacity to expand the depth and scope of scholarship by applying AI and other digital tools to the humanities, developing both theoretical knowledge and practical skills in innovative research methods.',
+    keywordsEn: ['AI', 'Digital Tools', 'Research Methods'],
     courses: [
       '빅데이터인문학',
       'AI 서비스와 DB',
@@ -56,6 +63,9 @@ export const tracks = [
     summary:
       '문화예술콘텐츠 트랙은 디지털 기술과 문화예술의 융합을 기반으로 한 창의적인 콘텐츠의 기획과 개발을 추구합니다. 디지털 콘텐츠의 본질을 이해하고 디지털 기술을 활용한 혁신적인 문화·예술 콘텐츠를 창안하는데 중점을 두며, 콘텐츠 기획 및 분석에 있어 인문학적 기반의 견고한 이론 지식과 디지털 기술을 활용한 새로운 표현의 가능성을 탐구합니다.',
     keywords: ['콘텐츠 기획', '문화예술', '디지털 기술'],
+    summaryEn:
+      'The Culture and Arts Content track pursues the planning and development of creative content grounded in the convergence of digital technology and the arts. It focuses on understanding the nature of digital content and creating innovative cultural and artistic content with digital technology, exploring solid humanities-based theory and new expressive possibilities.',
+    keywordsEn: ['Content Planning', 'Culture & Arts', 'Digital Technology'],
     courses: [
       '디지털문화콘텐츠마케팅',
       '문화원형과 고전콘텐츠',

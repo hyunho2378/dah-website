@@ -72,7 +72,10 @@ function NewsDetail() {
               </h1>
             </header>
             {post.body ? (
-              <RichBody body={post.body} />
+              /* H6: 본문만 밝은 카드(bg.invert + 다크 텍스트)로 반전 — 페이지 배경·메타는 다크 유지 */
+              <div className="rounded-md bg-bg-invert p-24 md:p-40">
+                <RichBody body={post.body} className="rich-on-light" />
+              </div>
             ) : (
               <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
                 {t('news.bodyElsewhere')}
