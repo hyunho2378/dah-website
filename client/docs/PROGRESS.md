@@ -122,7 +122,17 @@
 - [x] H9 배경 고급화: CosmosBackground를 depth1→depth0 세로 그라데이션(토큰 경유)으로, 성운 글로우(보라 0.05·청록 0.05·소프트 0.03) 실적용 + 스크롤 패럴랙스(0.1/0.06배, rAF·transform만, reduced-motion 시 정지). ProgramShowcase의 불투명 bg-bg-base 제거(그라데이션 비침)
 - [x] H10 접수 노출: 어드민 UI 기존재 확인(/admin/settings 노출 허용 토글+위치, /admin/exhibition 기간 datetime 편집). Header에 show_button 판정 버튼 신설 — header 모드는 헤더 우측, floating 모드는 우하단 고정, /submit 이동. 어드민 미리보기 우회: manager+ 로그인 후 /submit?preview=1(기간 검증 우회, 실제 제출은 서버 403 차단 유지)
 - [!] H10 테스트 절차: (1)관리자 로그인 → /submit?preview=1 로 폼 화면 즉시 테스트, 또는 (2)/admin/exhibition에서 접수 기간을 현재 포함으로 설정 + /admin/settings에서 노출 허용 on → 헤더(또는 플로팅) "전시회 접수" 버튼 노출 확인
-- [ ] 배포 후 실사이트 H1~H10 육안 검증 (아래 배포 절 참조)
+- [x] 커밋·푸시: 6135e2e → main (36 files, +527/-207). Vercel·Render가 GitHub 연동이면 자동 배포, 미연동이면 대시보드에서 수동 배포 1회 필요
+- [!] 실사이트 검증(사용자 수행 확정) — 체크리스트:
+  (H1) 헤더 6메뉴: About 클릭=홈 / 전공 소개 하위 4종 / 학생 활동 하위 5종(쇼케이스·취업 현황 포함) / 멘토단·진로 표기 0건
+  (H2) /programs/exhibitions 포스터 대형(카드 p-12), 특강·공모전 동일
+  (H3) /students/council 첫 탭 2026(강조) → 2017, 각 기수 소개문+임원 명단 원문 전량
+  (H4) /en 홈 히어로·트랙 영문, /en/about 영문, 페이지 배너 eyebrow+제목 구조 동일, EN↔KR 전환 시 스크롤 유지
+  (H5) 2560+에서 홈 프로그램·트랙·공지 좌측선 = 헤더 로고 좌측선
+  (H6) 공지 상세 본문 흰 카드+어두운 텍스트
+  (H7) 어드민: 포스터 미리보기 비율 유지, 토글 켜짐 화이트 채움, 사이드바 이동 시 스크롤 유지, "웹&앱 쇼케이스" 명칭, 우측 유틸 정렬
+  (H8) 푸터 TEL 033-248-3556 / (H9) 배경 그라데이션+스크롤 성운 이동(reduced-motion 정지)
+  (H10) /admin/exhibition 기간을 현재로 설정 + /admin/settings 노출 on → 헤더(또는 플로팅) 접수 버튼 → /submit. 즉시 테스트: 관리자 로그인 후 /submit?preview=1
 
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
