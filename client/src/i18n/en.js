@@ -121,6 +121,7 @@ export const en = {
     description: 'About',
     tools: 'Tools',
     projectLink: 'Project Link',
+    host: 'Host',
   },
   notFoundPage: {
     exhibitions: 'Exhibition not found',

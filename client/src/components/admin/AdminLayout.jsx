@@ -13,6 +13,11 @@ import { RequireRole, useAuth } from '../../context/AuthContext'
 
 const NAV_GROUPS = [
   {
+    label: 'OWNER',
+    role: 'owner',
+    items: [{ to: '/admin/users', label: '사용자' }],
+  },
+  {
     label: 'CONTENT',
     role: 'manager',
     items: [
@@ -49,11 +54,6 @@ const NAV_GROUPS = [
       { to: '/admin/settings', label: '사이트 설정' },
       { to: '/admin/consultations', label: '상담 신청' },
     ],
-  },
-  {
-    label: 'OWNER',
-    role: 'owner',
-    items: [{ to: '/admin/users', label: '사용자' }],
   },
 ]
 

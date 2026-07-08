@@ -1,12 +1,16 @@
-// /students/clubs — 동아리 (카드 그리드)
+// /students/clubs — 동아리 (로고 중심 카드 그리드, 데스크탑 4열)
+import { useEffect, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
+import ImageFrame from '../../components/common/ImageFrame'
 import Reveal from '../../components/common/Reveal'
 import Tag from '../../components/common/Tag'
-import { AddButton, EditPencil } from '../../components/content/EditControls'
-import { useApi } from '../../hooks/useApi'
+import { DragHandle, useDragSort } from '../../components/common/DragHandle'
+import InlineEditBar from '../../components/content/InlineEditBar'
+import { EditPencil } from '../../components/content/EditControls'
+import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
 import { clubs as staticClubs } from '../../data/clubs'
@@ -20,25 +24,24 @@ const FALLBACK_CLUBS = (staticClubs ?? []).map((c) => ({
   intro: c.intro,
 }))
 
-function ClubCard({ item }) {
+function ClubCard({ item, sorting }) {
   const title = item.title_ko ?? item.title
 
-  // J8: 로고 중앙 상단 + 이름·설명 중앙 정렬. 로고 없으면 이니셜 플레이스홀더.
+  // J8: 로고 중앙 상단(정사각) + 이름·설명 중앙 정렬. 투명 PNG는 bg(has_bg)로 중성 배경 부여.
   const content = (
     <>
-      <div className="flex h-96 w-96 items-center justify-center overflow-hidden rounded-sm border border-border-subtle bg-bg-panel">
-        {item.poster_url ? (
-          <img
-            src={item.poster_url}
-            alt={`${title} 로고`}
-            loading="lazy"
-            className="h-full w-full object-contain"
-          />
-        ) : (
-          <span aria-hidden="true" className="font-mono text-h2-m text-text-meta">
-            {(title || '').trim().charAt(0)}
-          </span>
-        )}
+      <div className="w-full max-w-[140px]">
+        <ImageFrame
+          src={item.poster_url || undefined}
+          alt={`${title} 로고`}
+          ratio="1/1"
+          bg={item.has_bg}
+          placeholder={
+            <span aria-hidden="true" className="font-mono text-h2-m text-text-meta">
+              {(title || '').trim().charAt(0)}
+            </span>
+          }
+        />
       </div>
       <h3 className="text-h3-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-h3-d">
         {title}
@@ -52,15 +55,20 @@ function ClubCard({ item }) {
     </>
   )
 
-  // 중첩 앵커 금지 — EditPencil(내부 링크)은 외부 링크 앵커 밖에 둔다
+  // 중첩 앵커 금지 — EditPencil(내부 링크)은 외부 링크 앵커 밖에 둔다. 정렬 모드에선 링크 비활성.
   return (
-    <GlassCard hover className="flex h-full flex-col p-20 md:p-28">
-      {item.external_url ? (
+    <GlassCard hover className="flex h-full flex-col p-20 md:p-24">
+      {sorting && (
+        <div className="mb-8 flex justify-center">
+          <DragHandle />
+        </div>
+      )}
+      {item.external_url && !sorting ? (
         <a
           href={item.external_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex min-w-0 flex-1 flex-col items-center gap-16 text-center"
+          className="group flex min-w-0 flex-1 flex-col items-center gap-12 text-center"
         >
           {content}
           <ArrowUpRight
@@ -70,7 +78,7 @@ function ClubCard({ item }) {
           />
         </a>
       ) : (
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-16 text-center">
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-12 text-center">
           {content}
         </div>
       )}
@@ -88,7 +96,23 @@ function Clubs() {
   const { data, loading, error, offline } = useApi('/content/club', {
     params: { pageSize: 100 },
   })
-  const items = data?.items?.length ? data.items : FALLBACK_CLUBS
+
+  const [sorting, setSorting] = useState(false)
+  const [items, setItems] = useState([])
+  useEffect(() => {
+    setItems(data?.items?.length ? data.items : FALLBACK_CLUBS)
+  }, [data])
+
+  // 정렬: 드롭 시 새 순서대로 sort 재계산 — 값이 달라진 항목만 순차 PUT (12_BACKEND api.put)
+  const { dragIndex, overIndex, rowProps } = useDragSort((from, to) => {
+    const next = [...items]
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
+    setItems(next)
+    next.forEach((it, i) => {
+      if (it.sort !== i) api.put(`/admin/content/club/${it.id}`, { sort: i }).catch(() => {})
+    })
+  })
 
   return (
     <>
@@ -100,9 +124,14 @@ function Clubs() {
         nebulaY="26%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
-        <div className="flex flex-wrap items-center justify-end gap-16">
-          <AddButton type="club" to="/admin/posts/club/new" />
-        </div>
+        <InlineEditBar
+          type="club"
+          addTo="/admin/posts/club/new"
+          manageTo="/admin/posts/club"
+          sortable
+          sorting={sorting}
+          onToggleSort={() => setSorting((s) => !s)}
+        />
         {loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : items.length === 0 ? (
@@ -110,13 +139,24 @@ function Clubs() {
             {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
-          <ul className="mt-32 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
-            {/* K2-14: 카드 그리드 유동화 — 300px = 기존 lg 3열 카드폭(약 360px) 근사 하한,
-                min(…,100%)으로 320px 초협폭 오버플로 방지 */}
+          <ul className="mt-32 grid grid-cols-1 gap-16 sm:grid-cols-2 md:gap-24 lg:grid-cols-4">
+            {/* J8: 데스크탑 4열 — 로고 크게, 스크롤 없이 한눈에 4개 */}
             {items.map((item, index) => (
-              <Reveal as="li" key={item.id} delay={staggerDelay(index)} className="min-w-0">
-                <ClubCard item={item} />
-              </Reveal>
+              <li
+                key={item.id}
+                className={`min-w-0 rounded-glass transition-opacity duration-fast ${
+                  dragIndex === index ? 'opacity-40' : ''
+                } ${
+                  overIndex === index && dragIndex !== null && dragIndex !== index
+                    ? 'bg-glass-bg'
+                    : ''
+                }`}
+                {...(sorting ? rowProps(index) : {})}
+              >
+                <Reveal delay={sorting ? 0 : staggerDelay(index)}>
+                  <ClubCard item={item} sorting={sorting} />
+                </Reveal>
+              </li>
             ))}
           </ul>
         )}

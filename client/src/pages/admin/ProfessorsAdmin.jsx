@@ -23,6 +23,8 @@ const FIELDS = [
   },
   { key: 'sort', label: '정렬 순서', kind: 'number' },
   { key: 'active', label: '표시 여부', kind: 'toggle', default: true },
+  // i18n: admin.field.hasBg — 투명 로고를 중성 배경 프레임 위에 표시 (ImageFrame bg)
+  { key: 'has_bg', label: '배경', kind: 'toggle', default: false, hint: '투명 로고를 배경 프레임 위에 표시합니다' },
 ]
 
 // J2: 시드 links는 {website, affiliation, lead} 객체 — pairs 배열로 변환해 프리필(크래시 원인 해소).
@@ -45,6 +47,7 @@ function fromItem(item) {
     links: Array.isArray(links) ? links : [],
     sort: item.sort ?? 0,
     active: item.active !== false,
+    has_bg: Boolean(item.has_bg),
   }
 }
 

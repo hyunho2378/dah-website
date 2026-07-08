@@ -1,12 +1,13 @@
 // /students/achievements — 학생 성과 (F6: 성좌 폐기 → 연도별 원문 리스트)
 // PageBanner + 연도 앵커 네비(존재 연도만) + 연도별 수직 리스트.
-// 항목: 제목(title 원문) + 본문(desc 원문) + 수상자(awardee)·주최(host) 서브.
+// 항목: 제목(title 원문) + 본문(desc 원문). (M3-4: desc에 이미 담긴 수상자 중복 표시 블록 제거)
 // API: GET /content/achievement 우선, offline·오류 시 src/data/achievements 폴백.
 // 원문 보존 원칙 — 조사 오류 등 일절 수정하지 않고 데이터 원문 그대로 렌더.
 import { ArrowUpRight } from 'lucide-react'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
-import { AddButton, EditPencil } from '../../components/content/EditControls'
+import InlineEditBar from '../../components/content/InlineEditBar'
+import { EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
@@ -26,8 +27,6 @@ function normalize(post) {
     id: String(post.id),
     year: Number.isFinite(year) && year > 0 ? year : null,
     title: post.title ?? post.title_ko ?? '',
-    awardee: post.awardee ?? body.awardee ?? null,
-    host: post.host ?? body.host ?? null,
     url: post.external_url ?? post.url ?? null,
     desc: post.desc ?? body.desc ?? null,
   }
@@ -45,12 +44,6 @@ function AwardItem({ item }) {
           to={`/admin/posts/achievement/${item.id}/edit`}
         />
       </div>
-      {(item.awardee || item.host) && (
-        <p className="flex flex-wrap gap-x-16 gap-y-4 font-mono text-caption-m text-text-meta">
-          {item.awardee && <span>{item.awardee}</span>}
-          {item.host && <span>{item.host}</span>}
-        </p>
-      )}
       {item.desc && (
         <p className="break-keep text-body-m leading-relaxed text-text-sec md:text-body-d">
           {item.desc}
@@ -105,7 +98,11 @@ function Achievements() {
           </p>
         )}
         <div className="flex flex-wrap items-center justify-end gap-16">
-          <AddButton type="achievement" to="/admin/posts/achievement/new" />
+          <InlineEditBar
+            type="achievement"
+            addTo="/admin/posts/achievement/new"
+            manageTo="/admin/posts/achievement"
+          />
         </div>
 
         {items.length === 0 ? (

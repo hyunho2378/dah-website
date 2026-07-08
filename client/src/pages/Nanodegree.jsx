@@ -6,6 +6,7 @@ import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import GlassCard from '../components/common/GlassCard'
+import { EditPencil } from '../components/content/EditControls'
 import { useApi, itemOf } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
@@ -48,7 +49,11 @@ function Nanodegree() {
         {/* 01 개요 — 원문 intro */}
         <Container as="section" className="pt-section-m md:pt-section-d">
           <Reveal>
-            <SectionLabel index="01" text="OVERVIEW" />
+            <div className="flex flex-wrap items-center gap-12">
+              <SectionLabel index="01" text="OVERVIEW" />
+              {/* 나노디그리 단일 문서 편집(admin+). 비로그인 미렌더 */}
+              <EditPencil type="nanodegree" to="/admin/nanodegree" />
+            </div>
             <h2 className="mt-24 text-h1-m font-extrabold leading-tight tracking-display text-text-pri md:mt-32 md:text-h1-d">
               {t('sections.nanodegree')}
             </h2>

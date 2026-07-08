@@ -32,6 +32,7 @@ export const nav = [
     children: [
       { label: '전공소개', labelEn: 'Overview', to: '/about' },
       { label: '교육 과정', labelEn: 'Curriculum', to: '/curriculum' },
+      { label: '코드쉐어링', labelEn: 'Code Sharing', to: '/curriculum/codesharing' },
       { label: '나노디그리', labelEn: 'Nanodegree', to: '/curriculum/nanodegree' },
       { label: '교수진', labelEn: 'Faculty', to: '/about/people' },
       { label: '멘토', labelEn: 'Mentors', to: '/about/people#mentors' },

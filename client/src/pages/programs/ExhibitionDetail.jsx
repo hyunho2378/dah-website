@@ -5,7 +5,9 @@ import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
+import ImageFrame from '../../components/common/ImageFrame'
 import RichBody from '../../components/content/RichBody'
+import InlineEditBar from '../../components/content/InlineEditBar'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
@@ -33,6 +35,14 @@ function normalizeGalleries(gallery) {
 }
 
 const toImage = (img) => (typeof img === 'string' ? { url: img, alt: '' } : img)
+
+// 전시 기간: start_date~end_date(DATE 문자열), 없으면 held_at 폴백
+function periodText(start, end, fallback) {
+  const s = (start ?? '').slice(0, 10)
+  const e = (end ?? '').slice(0, 10)
+  if (s && e) return `${s} ~ ${e}`
+  return s || e || (fallback ?? null)
+}
 
 function MetaRow({ label, children }) {
   return (
@@ -97,6 +107,9 @@ function ExhibitionDetail() {
         nebulaY="30%"
       />
       <Container as="section" className="py-section-m lg:py-section-d">
+        <div className="mb-32 flex flex-wrap items-center justify-end gap-16">
+          <InlineEditBar type="exhibitions" manageTo="/admin/posts/exhibitions" />
+        </div>
         {loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : !item ? (
@@ -110,22 +123,13 @@ function ExhibitionDetail() {
           <article className="flex min-w-0 flex-col gap-64">
             <div className="grid gap-32 lg:grid-cols-3 lg:gap-48">
               <figure className="mx-auto w-full max-w-container lg:col-span-1">
-                <div className="aspect-[2/3] w-full overflow-hidden rounded-glass border border-glass-line bg-bg-elev">
-                  {item.poster_url ? (
-                    <img
-                      src={item.poster_url}
-                      alt={`${item.title} 포스터`}
-                      loading="lazy"
-                      width={800}
-                      height={1200}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-full w-full items-center justify-center font-mono text-caption-m text-text-meta">
-                      NO POSTER
-                    </span>
-                  )}
-                </div>
+                <ImageFrame
+                  src={item.poster_url}
+                  alt={`${item.title} 포스터`}
+                  ratio="2/3"
+                  loading="eager"
+                  placeholder={item.semester_label || item.title}
+                />
               </figure>
               <div className="flex min-w-0 flex-col gap-24 lg:col-span-2">
                 <div className="flex flex-wrap items-start justify-between gap-16">
@@ -141,8 +145,11 @@ function ExhibitionDetail() {
                   {item.semester_label && (
                     <MetaRow label={t('meta.semester')}>{item.semester_label}</MetaRow>
                   )}
-                  {item.held_at && <MetaRow label={t('meta.heldAt')}>{item.held_at}</MetaRow>}
-                  {item.intro && <MetaRow label={t('meta.intro')}>{item.intro}</MetaRow>}
+                  {periodText(item.start_date, item.end_date, item.held_at) && (
+                    <MetaRow label={t('meta.period')}>
+                      {periodText(item.start_date, item.end_date, item.held_at)}
+                    </MetaRow>
+                  )}
                 </dl>
                 <div className="flex flex-wrap items-center gap-16">
                   {item.site_url && (
@@ -154,7 +161,13 @@ function ExhibitionDetail() {
                 </div>
               </div>
             </div>
-            {item.body && <RichBody body={item.body} />}
+            {item.body ? (
+              <RichBody body={item.body} />
+            ) : item.intro ? (
+              <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
+                {item.intro}
+              </p>
+            ) : null}
             {galleries.map((g) => (
               <GallerySection
                 key={g.label}

@@ -4,9 +4,11 @@ import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import GlassCard from '../components/common/GlassCard'
+import ImageFrame from '../components/common/ImageFrame'
 import Divider from '../components/common/Divider'
 import ArrowLink from '../components/common/ArrowLink'
-import { EditPencil, AddButton } from '../components/content/EditControls'
+import InlineEditBar from '../components/content/InlineEditBar'
+import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
 import { professors } from '../data/professors'
@@ -34,6 +36,25 @@ function initialsOf(nameEn, nameKr) {
   return nameKr ? nameKr[0] : ''
 }
 
+// M3-1: API(교수진 테이블: name_ko/title_ko/photo_url/links[])와 정적 원문(nameKr/role/link)을
+// 카드가 쓰는 단일 형태로 정규화. undefined 안전 — 사진 없으면 photo_url null → 이니셜 플레이스홀더.
+function normalizeProfessor(p) {
+  const links = Array.isArray(p.links) ? p.links : []
+  return {
+    id: p.id,
+    nameKr: p.name_ko ?? p.nameKr ?? '',
+    nameEn: p.name_en ?? p.nameEn ?? '',
+    role: p.title_ko ?? p.role ?? null,
+    roleEn: p.title_en ?? p.roleEn ?? null,
+    affiliation: p.affiliation ?? null,
+    affiliationEn: p.affiliationEn ?? null,
+    email: p.email ?? null,
+    link: p.link ?? links[0]?.url ?? null,
+    photo_url: p.photo_url ?? null,
+    has_bg: p.has_bg ?? false,
+  }
+}
+
 function ProfessorCard({ professor, lang }) {
   const { nameKr, nameEn, email, link } = professor
   // J5: EN 모드는 직함·소속 영문 필드 우선(없으면 국문 폴백)
@@ -44,14 +65,18 @@ function ProfessorCard({ professor, lang }) {
   return (
     <GlassCard hover className="h-full p-24 md:p-32">
       <div className="flex flex-col gap-16">
-        <div
-          className="flex aspect-square items-center justify-center rounded-md bg-bg-panel"
-          aria-hidden="true"
-        >
-          <span className="font-mono text-h2-m text-text-meta md:text-h2-d">
-            {initialsOf(nameEn, nameKr)}
-          </span>
-        </div>
+        {/* M3-1: 사진(306x427 세로)은 object-cover로 꽉 채움, 미보유 시 이니셜 플레이스홀더 */}
+        <ImageFrame
+          src={professor.photo_url || undefined}
+          alt={nameKr}
+          ratio="306/427"
+          bg={professor.has_bg}
+          placeholder={
+            <span aria-hidden="true" className="font-mono text-h2-m text-text-meta md:text-h2-d">
+              {initialsOf(nameEn, nameKr)}
+            </span>
+          }
+        />
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-8">
             <h3 className="text-h3-m font-extrabold leading-snug text-text-pri md:text-h3-d">
@@ -125,6 +150,9 @@ function MentorCard({ mentor }) {
 function People() {
   const { lang, t } = useLang()
   useTitle(t('titles.people'))
+  // M3-1: 교수 사진은 어드민(API)에 저장 — API 우선, 미기동·빈 응답 시 정적 원문 폴백
+  const { data } = useApi('/content/professors', { params: { pageSize: 100 } })
+  const professorList = (data?.items?.length ? data.items : professors).map(normalizeProfessor)
 
   return (
     <>
@@ -148,17 +176,16 @@ function People() {
               <h2 className="text-h2-m font-extrabold leading-snug text-text-pri md:text-h2-d">
                 {t('sections.faculty')}
               </h2>
-              <EditPencil type="professors" to="/admin/professors" />
-              <AddButton type="professors" to="/admin/professors" />
+              <InlineEditBar type="professors" manageTo="/admin/professors" />
             </div>
           </Reveal>
-          {professors.length === 0 ? (
+          {professorList.length === 0 ? (
             <p className="py-64 font-mono text-caption-m text-text-meta md:text-caption-d">
               {t('common.empty')}
             </p>
           ) : (
             <div className="mt-48 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
-              {professors.map((professor, index) => (
+              {professorList.map((professor, index) => (
                 <Reveal key={professor.id} delay={staggerDelay(index)}>
                   <ProfessorCard professor={professor} lang={lang} />
                 </Reveal>
@@ -174,8 +201,7 @@ function People() {
               <h2 className="text-h2-m font-extrabold leading-snug text-text-pri md:text-h2-d">
                 {t('sections.mentors')}
               </h2>
-              <EditPencil type="mentors" to="/admin/mentors" />
-              <AddButton type="mentors" to="/admin/mentors" />
+              <InlineEditBar type="mentors" manageTo="/admin/mentors" />
             </div>
           </Reveal>
           {mentors.length === 0 ? (

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import PageBanner from '../components/layout/PageBanner'
 import Container from '../components/layout/Container'
 import BoardList from '../components/board/BoardList'
-import { AddButton } from '../components/content/EditControls'
+import InlineEditBar from '../components/content/InlineEditBar'
 import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
@@ -83,7 +83,13 @@ function Resources() {
           searchValue={q}
           searchPlaceholder={t('news.resourceSearchPlaceholder')}
           statusText={statusText}
-          actions={<AddButton type="resource" to="/admin/posts/resource/new" />}
+          actions={
+            <InlineEditBar
+              type="resource"
+              addTo="/admin/posts/resource/new"
+              manageTo="/admin/posts/resource"
+            />
+          }
         />
       </Container>
     </>

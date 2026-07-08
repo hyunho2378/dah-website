@@ -2,8 +2,9 @@
 // 교수진·멘토단·교과목·운영위·진로 어드민이 공유. API: /admin/content/:type (B1 계약).
 
 import { useState } from 'react'
-import { GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useApi, api } from '../../hooks/useApi'
+import { DragHandle, useDragSort } from '../common/DragHandle'
 import ImageUpload from './ImageUpload'
 import {
   EmptyNote,
@@ -172,9 +173,6 @@ function EntityCrud({
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
   const [saveError, setSaveError] = useState(null)
-  // K1-7: HTML5 DnD 정렬 상태
-  const [dragIndex, setDragIndex] = useState(null)
-  const [overIndex, setOverIndex] = useState(null)
 
   const raw = data?.items || (Array.isArray(data) ? data : [])
   const items = [...raw].sort(
@@ -224,19 +222,12 @@ function EntityCrud({
     }
   }
 
-  // K1-7: 드롭 시 변경된 순서대로 sort 재계산 — 값이 달라진 행만 순차 PUT
-  const clearDrag = () => {
-    setDragIndex(null)
-    setOverIndex(null)
-  }
-
-  const handleDrop = async (targetIndex) => {
-    const from = dragIndex
-    clearDrag()
-    if (from === null || from === targetIndex) return
+  // C3(22_PHASE10): 공용 useDragSort — 드롭 시 재정렬 후 값이 달라진 행만 순차 PUT
+  const reorder = async (from, to) => {
+    if (from === to) return
     const next = [...items]
     const [moved] = next.splice(from, 1)
-    next.splice(targetIndex, 0, moved)
+    next.splice(to, 0, moved)
     try {
       for (const [i, it] of next.entries()) {
         if (it.sort !== i) await api.put(`/admin/content/${type}/${it.id}`, { sort: i })
@@ -246,6 +237,7 @@ function EntityCrud({
     }
     refetch()
   }
+  const { dragIndex, overIndex, rowProps } = useDragSort(reorder)
 
   // K1-6: 공용 폼 패널 — '추가'는 목록 상단, '수정'은 해당 행 자리에서 렌더
   const formPanel = form && (
@@ -323,38 +315,12 @@ function EntityCrud({
             return (
               <li
                 key={item.id}
-                draggable={draggable}
-                onDragStart={draggable ? () => setDragIndex(i) : undefined}
-                onDragOver={
-                  draggable
-                    ? (e) => {
-                        e.preventDefault()
-                        if (dragIndex !== null) setOverIndex(i)
-                      }
-                    : undefined
-                }
-                onDrop={
-                  draggable
-                    ? (e) => {
-                        e.preventDefault()
-                        handleDrop(i)
-                      }
-                    : undefined
-                }
-                onDragEnd={draggable ? clearDrag : undefined}
+                {...(draggable ? rowProps(i) : {})}
                 className={`flex min-w-0 items-center gap-12 border-b border-border-subtle py-12 transition duration-fast ease-out first:border-t ${
                   dragIndex === i ? 'opacity-40' : ''
                 } ${overIndex === i && dragIndex !== null && dragIndex !== i ? 'bg-glass-bg' : ''}`}
               >
-                {orderable && (
-                  <span
-                    aria-label="드래그하여 순서 이동"
-                    title="드래그하여 순서 이동"
-                    className="flex h-32 w-24 shrink-0 cursor-grab items-center justify-center text-text-meta"
-                  >
-                    <GripVertical size={16} />
-                  </span>
-                )}
+                {orderable && <DragHandle />}
                 {d.thumb && (
                   <img
                     src={d.thumb}

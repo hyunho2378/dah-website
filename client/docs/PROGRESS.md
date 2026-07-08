@@ -198,6 +198,37 @@
 - [!] 실사이트 육안(사용자): 공지 글쓰기 태그 선택·생성 / 자료실 hwp 업로드 / 이미지·첨부 분리 / 링크 표시 이름 / 어드민 인라인 수정·드래그 정렬 / 상담 /consult 제출→알림 / 나노디그리 페이지·어드민 / 공지 상세 다크 가독 / 운영위 로고 1.5배 / 반응형 연속 축소
 - [!] achievement 유형은 이미지 섹션 제외(성좌 전용) — 의도적. nanodegree DB body는 KR 3필드만 저장(EN은 파일 렌더)
 
+## PHASE 10 — 병렬 3에이전트 배치 (22_PHASE10_FIXES, M1 서버·어드민 / M2 전시·공모전 / M3 동아리·교수·쇼케이스)
+### 공용 선결 (통합자 생성)
+- [x] C1 ImageFrame(components/common/ImageFrame.jsx): ratio·bg prop. bg=false→object-cover 꽉 채움(사진·포스터), bg=true→투명 로고 object-contain+중성배경(bg-bg-frame). tokens.bg.frame #202227 신설
+- [x] C2 InlineEditBar(components/content/InlineEditBar.jsx): 로그인+canEdit 시 추가·정렬·전체관리 한 곳. 비로그인 미렌더
+- [x] C3 DragHandle+useDragSort(components/common/DragHandle.jsx): 노션식 6점 HTML5 DnD 자체구현(라이브러리 없음), 어드민·공개 공용
+### M1 서버·어드민 (완료)
+- [x] M1-1 has_bg: professors·council·showcase·posts 컬럼(schema+migrate+content-config). ProfessorsAdmin·CouncilAdmin·PostForm(club)에 "배경" 토글
+- [x] M1-2 전시회 스키마: start_date·end_date·is_featured 컬럼. exhibitions.body(JSONB)=리치 인트로(RichEditor), intro 평문 유지. PostForm exhibition에 시작·종료일·상단고정·리치본문
+- [x] M1-3 공모전: posts.body={host(여러 줄), editions[{semester_label,poster_url,period,link}]}(신규 컬럼 없음). PostForm contest에 host+회차 리피터(type==='contest' 게이팅)
+- [x] M1-5 어드민 사용자(OWNER 그룹) 최상단 이동. 상담 SYSTEM 그룹 확인
+- [x] M1-6 신규 필드 작성·수정 폼 프리필·저장 검증. EntityCrud 정렬을 공용 DragHandle로 교체(기존 화살표·자체 DnD 제거)
+### M2 전시회·공모전 (완료)
+- [x] M2-1 전시회 피처드: is_featured 전시회를 목록 최상단 히어로(좌 포스터 ImageFrame 2:3, 우 타이틀+기간+리치인트로+긴 CTA). 나머지 그리드
+- [x] M2-2 전시회 상세: 기간(start~end, 폴백 held_at), 리치 인트로(RichBody), 포스터 2:3 ImageFrame
+- [x] M2-3 공모전 재구성: 공모전별 블록(제목+주최 원문+회차 가로 나열 ImageFrame 카드). 포스터 없는 회차 깔끔 플레이스홀더
+- [x] M2-4 공모전 상세: 포스터 좌·주최/기간/설명 우
+### M3 동아리·교수·쇼케이스 (완료)
+- [x] M3-1 [최우선] 교수 사진 버그: 근본원인 (a)ProfessorCard가 photo_url 미렌더(이니셜만) (b)People이 정적만 읽고 API(저장처) 미조회. 수정: /content/professors 우선 로드+normalize, ImageFrame ratio='306/427'(cover), 없으면 이니셜
+- [x] M3-2 동아리 재설계: 로고 ImageFrame(1:1, bg={has_bg}) 중앙 상단·크게, lg 4열, DragHandle 정렬
+- [x] M3-3 쇼케이스 카드 확대(ImageFrame 16:9, 밀도↑)
+- [x] M3-4 학생 성과 중복 수상자 블록 제거(제목+본문만, 원문 텍스트 유지)
+- [x] M3-5 공개 편집 버튼 InlineEditBar 전환(Clubs·People·Showcase·Achievements·Resources·CodeSharing·Nanodegree)
+- [x] M3-6 헤더 전공소개 메가메뉴에 코드쉐어링·나노디그리 링크(nav.js)
+### M4-1 통합 (완료)
+- [x] 충돌 0(소유 계약 준수, 공용 컴포넌트 통합자 선생성·에이전트 import만, 전역 파일 통합자만 편집)
+- [x] 통합 픽스: club sortable(content-config, 정렬 영구저장) + AuthContext EDIT_MIN_ROLE nanodegree:'admin'(+Nanodegree type 교정) + meta.host i18n ko/en('주최'/'Host') 스왑
+- [x] migrate-phase10.mjs 배포 Neon 실행: has_bg 4테이블·exhibitions 3컬럼 추가 검증. 2026-1 is_featured=true 설정(피처드 히어로 노출)
+- [x] npm run build 성공, 서버 node --check 통과, EN 반영(신규 공개 문자열 meta.host만, 나머지 어드민=국문 스코프)
+- [!] 콘텐츠 입력 후속(버그 아님): 전시회 start/end·리치인트로는 어드민 입력 전까지 빈 값(기간 미표시), 공모전 editions는 어드민에서 회차 추가 전까지 단일 폴백, 쇼케이스 has_bg는 전용 어드민 폼 부재(제출·큐만)로 미노출, contest edition.link는 상세로만 링크
+- [!] 실사이트 육안(사용자): 교수 사진 렌더 / 전시 피처드 히어로 / 공모전 회차 블록·주최 / 동아리 4열·로고 배경옵션 / 쇼케이스 확대 / 인라인 편집 바(로그인)
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

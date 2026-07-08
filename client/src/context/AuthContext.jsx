@@ -29,6 +29,7 @@ const EDIT_MIN_ROLE = {
   mentors: 'admin',
   curriculum: 'admin',
   codesharing: 'admin',
+  nanodegree: 'admin',
   council: 'admin',
   career: 'admin',
   careers: 'admin',

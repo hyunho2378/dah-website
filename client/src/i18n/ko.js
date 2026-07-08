@@ -124,6 +124,7 @@ export const ko = {
     description: '설명',
     tools: '활용 툴',
     projectLink: '프로젝트 링크',
+    host: '주최',
   },
   notFoundPage: {
     exhibitions: '전시회를 찾을 수 없습니다',

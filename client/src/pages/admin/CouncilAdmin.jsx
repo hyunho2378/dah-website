@@ -21,6 +21,8 @@ const FIELDS = [
     ],
   },
   { key: 'sort', label: '정렬 순서', kind: 'number' },
+  // i18n: admin.field.hasBg — 투명 로고를 중성 배경 프레임 위에 표시 (ImageFrame bg)
+  { key: 'has_bg', label: '배경', kind: 'toggle', default: false, hint: '투명 로고를 배경 프레임 위에 표시합니다' },
 ]
 
 function toPayload(form) {

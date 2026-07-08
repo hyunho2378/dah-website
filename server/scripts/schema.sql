@@ -209,6 +209,18 @@ CREATE TABLE IF NOT EXISTS nanodegree (
   body JSONB
 );
 
+-- ─── Phase 10 (22_PHASE10) ─────────────────────────────────────
+-- M1-1: 이미지 배경 옵션 — 투명 로고 등을 중성 배경 프레임 위에 렌더할지 여부.
+ALTER TABLE professors  ADD COLUMN IF NOT EXISTS has_bg BOOLEAN DEFAULT FALSE;
+ALTER TABLE council     ADD COLUMN IF NOT EXISTS has_bg BOOLEAN DEFAULT FALSE;
+ALTER TABLE showcase    ADD COLUMN IF NOT EXISTS has_bg BOOLEAN DEFAULT FALSE;
+ALTER TABLE posts       ADD COLUMN IF NOT EXISTS has_bg BOOLEAN DEFAULT FALSE; -- 동아리 로고용
+
+-- M1-2: 전시회 기간·상단 고정. held_at은 레거시 유지.
+ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS start_date  DATE;
+ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS end_date    DATE;
+ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE;
+
 -- ─── 초기 데이터 ───────────────────────────────────────────────
 
 -- 전시회 접수 2026-2 일정 초기값 (12_BACKEND.md 5절. 11-24 00:00부터 신규·수정 전면 차단)

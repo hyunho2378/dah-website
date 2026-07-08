@@ -5,6 +5,7 @@ import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
+import ImageFrame from '../../components/common/ImageFrame'
 import Tag from '../../components/common/Tag'
 import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
@@ -21,6 +22,13 @@ function MetaRow({ label, children }) {
   )
 }
 
+// 주최 원문: 배열이면 줄바꿈 join, 문자열이면 그대로(whitespace-pre-line로 여러 줄 보존)
+function hostText(host) {
+  if (!host) return null
+  if (Array.isArray(host)) return host.join('\n')
+  return String(host)
+}
+
 function ContestDetail() {
   const { t } = useLang()
   const { id } = useParams()
@@ -32,6 +40,9 @@ function ContestDetail() {
   const start = (item?.event_start ?? '').slice(0, 10)
   const end = (item?.event_end ?? '').slice(0, 10)
   const gallery = Array.isArray(item?.gallery) ? item.gallery : []
+  const host = hostText(item?.body?.host)
+  const editions = Array.isArray(item?.body?.editions) ? item.body.editions : []
+  const posterUrl = item?.poster_url || editions[0]?.poster_url
 
   return (
     <>
@@ -61,20 +72,13 @@ function ContestDetail() {
           <article className="flex min-w-0 flex-col gap-64">
             <div className="grid gap-32 lg:grid-cols-3 lg:gap-48">
               <figure className="w-full lg:col-span-1">
-                <div className="aspect-[2/3] w-full overflow-hidden rounded-glass border border-glass-line bg-bg-elev">
-                  {item.poster_url ? (
-                    <img
-                      src={item.poster_url}
-                      alt={`${title} 포스터`}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-full w-full items-center justify-center font-mono text-caption-m text-text-meta">
-                      NO POSTER
-                    </span>
-                  )}
-                </div>
+                <ImageFrame
+                  src={posterUrl}
+                  alt={`${title} 포스터`}
+                  ratio="2/3"
+                  loading="eager"
+                  placeholder={title}
+                />
               </figure>
               <div className="flex min-w-0 flex-col gap-24 lg:col-span-2">
                 <div className="flex flex-wrap items-start justify-between gap-16">
@@ -86,6 +90,17 @@ function ContestDetail() {
                   </div>
                   <EditPencil type="contest" to={`/admin/posts/contest/${id}/edit`} />
                 </div>
+                {host && (
+                  <div className="flex min-w-0 flex-col gap-4">
+
+                    <p className="font-mono text-caption-m uppercase tracking-label text-text-meta">
+                      {t('meta.host')}
+                    </p>
+                    <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
+                      {host}
+                    </p>
+                  </div>
+                )}
                 <dl className="border-t border-border-subtle">
                   {(start || end) && (
                     <MetaRow label={t('meta.period')}>

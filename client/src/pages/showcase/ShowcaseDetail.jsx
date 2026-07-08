@@ -2,6 +2,7 @@
 import { useParams } from 'react-router-dom'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
+import ImageFrame from '../../components/common/ImageFrame'
 import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
 import Tag from '../../components/common/Tag'
@@ -54,20 +55,14 @@ function ShowcaseDetail() {
           </div>
         ) : (
           <article className="flex min-w-0 flex-col gap-48">
-            {/* 메인 이미지 16:9 고정 */}
-            <figure className="aspect-video w-full overflow-hidden rounded-glass border border-glass-line bg-bg-elev">
-              {item.main_img ? (
-                <img
-                  src={item.main_img}
-                  alt={`${item.title} 메인 이미지`}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center font-mono text-caption-m text-text-meta">
-                  NO IMAGE
-                </span>
-              )}
-            </figure>
+            {/* M3-3: 메인 이미지 16:9 고정 (ImageFrame) */}
+            <ImageFrame
+              src={item.main_img || undefined}
+              alt={`${item.title} 메인 이미지`}
+              ratio="16/9"
+              loading="eager"
+              placeholder="NO IMAGE"
+            />
 
             <div className="flex min-w-0 flex-col gap-24">
               <div className="flex flex-wrap items-start justify-between gap-16">
@@ -115,14 +110,11 @@ function ShowcaseDetail() {
                 <ul className="grid grid-cols-1 gap-16 md:grid-cols-2">
                   {subImgs.map((url, idx) => (
                     <li key={url} className="min-w-0">
-                      <figure className="aspect-video w-full overflow-hidden rounded-md border border-border-subtle bg-bg-elev">
-                        <img
-                          src={url}
-                          alt={`${item.title} 서브 이미지 ${idx + 1}`}
-                          loading="lazy"
-                          className="h-full w-full object-cover"
-                        />
-                      </figure>
+                      <ImageFrame
+                        src={url}
+                        alt={`${item.title} 서브 이미지 ${idx + 1}`}
+                        ratio="16/9"
+                      />
                     </li>
                   ))}
                 </ul>

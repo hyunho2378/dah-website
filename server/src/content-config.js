@@ -4,7 +4,7 @@
 
 const POST_COLUMNS = [
   'title_ko', 'title_en', 'body', 'tag', 'poster_url', 'gallery',
-  'external_url', 'event_start', 'event_end', 'published', 'pinned',
+  'external_url', 'event_start', 'event_end', 'published', 'pinned', 'has_bg',
 ]
 const POST_JSONB = ['body', 'gallery']
 const POST_ORDER = 'pinned DESC, created_at DESC, id DESC'
@@ -41,13 +41,14 @@ export const CONTENT_TYPES = {
     orderBy: 'tag DESC, sort ASC NULLS LAST, id ASC',
   }),
   resource: postType('resource', 'manager', { attachments: true }),
-  club: postType('club', 'manager'),
+  // M3-2: 동아리 DragHandle 정렬 저장 — sort 컬럼 화이트리스트 + sort 오름차순
+  club: postType('club', 'manager', { sortable: true, orderBy: 'sort ASC NULLS LAST, id ASC' }),
 
   // ── 독립 테이블 계열 ──
   professors: {
     table: 'professors',
     minRole: 'admin',
-    columns: ['name_ko', 'name_en', 'title_ko', 'title_en', 'email', 'photo_url', 'links', 'sort', 'active'],
+    columns: ['name_ko', 'name_en', 'title_ko', 'title_en', 'email', 'photo_url', 'links', 'sort', 'active', 'has_bg'],
     jsonb: ['links'],
     required: ['name_ko'],
     orderBy: 'sort ASC, id ASC',
@@ -96,7 +97,7 @@ export const CONTENT_TYPES = {
   council: {
     table: 'council',
     minRole: 'admin',
-    columns: ['ordinal', 'name', 'logo_url', 'intro', 'members', 'year_label', 'sort'],
+    columns: ['ordinal', 'name', 'logo_url', 'intro', 'members', 'year_label', 'sort', 'has_bg'],
     jsonb: ['members'],
     required: ['name'],
     // H3: 연도 내림차순(2026 현 운영위 선두). ordinal은 운영위/학생회 대수가 섞여 정렬 키로 부적합
@@ -106,7 +107,7 @@ export const CONTENT_TYPES = {
   exhibitions: {
     table: 'exhibitions',
     minRole: 'manager', // 13_CMS: 전시회 manager+
-    columns: ['semester_label', 'title', 'poster_url', 'site_url', 'intro', 'body', 'gallery', 'held_at', 'published'],
+    columns: ['semester_label', 'title', 'poster_url', 'site_url', 'intro', 'body', 'gallery', 'held_at', 'start_date', 'end_date', 'is_featured', 'published'],
     jsonb: ['body', 'gallery'],
     required: ['title'],
     // held_at은 아카이브 대부분 null → semester_label('YYYY-S' 문자열 역순=학기 역순)로 정렬
@@ -117,14 +118,14 @@ export const CONTENT_TYPES = {
   showcase: {
     table: 'showcase',
     minRole: 'manager', // 승인 큐 (status pending → published)
-    columns: ['title', 'topic', 'creator', 'description', 'tools', 'link', 'main_img', 'sub_imgs', 'semester_label', 'status'],
+    columns: ['title', 'topic', 'creator', 'description', 'tools', 'link', 'main_img', 'sub_imgs', 'semester_label', 'status', 'has_bg'],
     jsonb: ['tools', 'sub_imgs'],
     required: ['title'],
     orderBy: 'created_at DESC, id DESC',
     publicWhere: "status = 'published'",
     searchCols: ['title', 'creator', 'topic'],
     // 공개 응답에서 수정용 비밀번호 해시 제외
-    select: 'id, title, topic, creator, description, tools, link, main_img, sub_imgs, semester_label, status, created_at',
+    select: 'id, title, topic, creator, description, tools, link, main_img, sub_imgs, semester_label, status, has_bg, created_at',
   },
   careers: {
     table: 'careers',

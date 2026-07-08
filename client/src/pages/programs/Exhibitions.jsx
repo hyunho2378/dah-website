@@ -1,11 +1,14 @@
-// /programs/exhibitions — 전시회 아카이브 (포스터 그리드, 2017~)
-// 포스터는 원색 유지(grayscale 금지 — 전시 포스터 정체성). 로드 전 bg-elev, lazy, alt.
+// /programs/exhibitions — 전시회 아카이브 (상단 피처드 히어로 + 포스터 그리드, 2017~)
+// 포스터는 원색 유지(grayscale 금지 — 전시 포스터 정체성). ImageFrame(2:3)로 통일.
 import Link from '../../components/common/LangLink'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
+import ImageFrame from '../../components/common/ImageFrame'
+import Button from '../../components/common/Button'
+import RichBody from '../../components/content/RichBody'
 import Reveal from '../../components/common/Reveal'
-import { AddButton } from '../../components/content/EditControls'
+import InlineEditBar from '../../components/content/InlineEditBar'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
@@ -13,27 +16,74 @@ import { useLang } from '../../i18n/LangContext'
 // P9: 스태거 지연은 최대 6개까지만
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
+// 전시 기간: start_date~end_date(DATE 문자열), 없으면 held_at 폴백
+function periodText(start, end, fallback) {
+  const s = (start ?? '').slice(0, 10)
+  const e = (end ?? '').slice(0, 10)
+  if (s && e) return `${s} ~ ${e}`
+  return s || e || (fallback ?? null)
+}
+
+// 피처드 전시(is_featured) — 목록 최상단 큰 히어로 블록
+function FeaturedExhibition({ item }) {
+  const heading = item.semester_label || item.title
+  const period = periodText(item.start_date, item.end_date, item.held_at)
+  const ctaLabel = item.semester_label || item.title
+  return (
+    <GlassCard className="grid gap-24 p-16 md:p-24 lg:grid-cols-2 lg:gap-48">
+      <ImageFrame
+        src={item.poster_url}
+        alt={`${item.title} 포스터`}
+        ratio="2/3"
+        loading="eager"
+        placeholder={heading}
+      />
+      <div className="flex min-w-0 flex-col gap-16 lg:justify-center">
+        <div className="flex min-w-0 flex-col gap-8">
+          <h2 className="min-w-0 text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
+            {heading}
+          </h2>
+          {item.semester_label && item.title && item.title !== item.semester_label && (
+            <p className="min-w-0 text-body-l-m text-text-sec md:text-body-l-d">{item.title}</p>
+          )}
+          {period && (
+            <p className="font-mono text-caption-m text-text-meta">{period}</p>
+          )}
+        </div>
+        {item.body ? (
+          <RichBody body={item.body} />
+        ) : item.intro ? (
+          <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
+            {item.intro}
+          </p>
+        ) : null}
+        <div className="mt-4">
+          {item.site_url ? (
+            <Button variant="primary" href={item.site_url} external>
+              {ctaLabel}
+            </Button>
+          ) : (
+            <Button variant="primary" href={`/programs/exhibitions/${item.id}`}>
+              {ctaLabel}
+            </Button>
+          )}
+        </div>
+      </div>
+    </GlassCard>
+  )
+}
+
 function PosterCard({ item }) {
   return (
     <Link to={`/programs/exhibitions/${item.id}`} className="group block h-full">
       {/* H2: 포스터 축소 원복 — 여백은 그리드 간격+소패딩(p-12)으로만, 포스터는 크게(2:3) */}
       <GlassCard hover className="flex h-full flex-col gap-12 p-12">
-        <figure className="aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
-          {item.poster_url ? (
-            <img
-              src={item.poster_url}
-              alt={`${item.title} 포스터`}
-              loading="lazy"
-              width={600}
-              height={900}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center font-mono text-caption-m text-text-meta">
-              NO POSTER
-            </span>
-          )}
-        </figure>
+        <ImageFrame
+          src={item.poster_url}
+          alt={`${item.title} 포스터`}
+          ratio="2/3"
+          placeholder={item.semester_label || item.title}
+        />
         <div className="flex min-w-0 flex-col gap-4">
           {item.semester_label && (
             <p className="font-mono text-caption-m text-text-meta">
@@ -57,6 +107,8 @@ function Exhibitions() {
     params: { pageSize: 100 },
   })
   const items = data?.items ?? []
+  const featured = items.find((it) => it?.is_featured)
+  const rest = items.filter((it) => it !== featured)
 
   return (
     <>
@@ -69,7 +121,11 @@ function Exhibitions() {
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-end gap-16">
-          <AddButton type="exhibitions" to="/admin/posts/exhibitions/new" />
+          <InlineEditBar
+            type="exhibitions"
+            addTo="/admin/posts/exhibitions/new"
+            manageTo="/admin/posts/exhibitions"
+          />
         </div>
         {loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
@@ -78,15 +134,24 @@ function Exhibitions() {
             {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
-          <ul className="mt-32 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
-            {/* K2-14: 포스터 그리드 유동화 — 220px는 기존 lg 4열 카드폭(약 260px) 근사 하한,
-                40vw 상한으로 모바일 2열 유지. 열 수가 뷰포트에 연속 대응(급전환 없음) */}
-            {items.map((item, index) => (
-              <Reveal as="li" key={item.id} delay={staggerDelay(index)} className="min-w-0">
-                <PosterCard item={item} />
+          <div className="mt-32 flex min-w-0 flex-col gap-48">
+            {featured && (
+              <Reveal className="min-w-0">
+                <FeaturedExhibition item={featured} />
               </Reveal>
-            ))}
-          </ul>
+            )}
+            {rest.length > 0 && (
+              <ul className="grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
+                {/* K2-14: 포스터 그리드 유동화 — 220px는 기존 lg 4열 카드폭(약 260px) 근사 하한,
+                    40vw 상한으로 모바일 2열 유지. 열 수가 뷰포트에 연속 대응(급전환 없음) */}
+                {rest.map((item, index) => (
+                  <Reveal as="li" key={item.id} delay={staggerDelay(index)} className="min-w-0">
+                    <PosterCard item={item} />
+                  </Reveal>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </Container>
     </>

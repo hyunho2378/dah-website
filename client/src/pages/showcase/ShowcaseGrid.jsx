@@ -3,10 +3,11 @@ import Link from '../../components/common/LangLink'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
+import ImageFrame from '../../components/common/ImageFrame'
 import Reveal from '../../components/common/Reveal'
 import Tag from '../../components/common/Tag'
 import Button from '../../components/common/Button'
-import { AddButton } from '../../components/content/EditControls'
+import InlineEditBar from '../../components/content/InlineEditBar'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
@@ -18,20 +19,13 @@ function ShowcaseCard({ item }) {
   return (
     <Link to={`/showcase/${item.id}`} className="group block h-full">
       <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
-        <figure className="aspect-video w-full overflow-hidden rounded-md bg-bg-elev">
-          {item.main_img ? (
-            <img
-              src={item.main_img}
-              alt={`${item.title} 메인 이미지`}
-              loading="lazy"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center font-mono text-caption-m text-text-meta">
-              NO IMAGE
-            </span>
-          )}
-        </figure>
+        {/* M3-3: 카드 메인 이미지 16:9 (사진 → object-cover로 꽉 채움) */}
+        <ImageFrame
+          src={item.main_img || undefined}
+          alt={`${item.title} 메인 이미지`}
+          ratio="16/9"
+          placeholder="NO IMAGE"
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-8">
           <h3 className="min-w-0 text-body-l-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-body-l-d">
             {item.title}
@@ -72,12 +66,10 @@ function ShowcaseGrid() {
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         <div className="flex flex-wrap items-center justify-end gap-16">
-          <div className="flex flex-wrap items-center gap-12">
-            <AddButton type="showcase" to="/admin/showcase" />
-            <Button variant="secondary" href="/showcase/submit">
-              {t('actions.submitShowcase')}
-            </Button>
-          </div>
+          <InlineEditBar type="showcase" manageTo="/admin/showcase" />
+          <Button variant="secondary" href="/showcase/submit">
+            {t('actions.submitShowcase')}
+          </Button>
         </div>
         {loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
@@ -86,8 +78,8 @@ function ShowcaseGrid() {
             {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
-          <ul className="mt-32 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
-            {/* K2-14: 카드 그리드 유동화 — 300px = 기존 lg 3열 카드폭 근사 하한 */}
+          <ul className="mt-32 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
+            {/* M3-3: 그리드 밀도↑·이미지 비중↑ — md 2열 / lg 3열 고정 */}
             {items.map((item, index) => (
               <Reveal as="li" key={item.id} delay={staggerDelay(index)} className="min-w-0">
                 <ShowcaseCard item={item} />

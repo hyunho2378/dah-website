@@ -273,9 +273,68 @@ function GalleryField({ value = [], onChange, usage = 'exhibition' }) {
   )
 }
 
+/** 공모전 회차 리피터 — body.editions [{ semester_label, poster_url, period, link }] (M1-3) */
+function EditionsField({ value = [], onChange }) {
+  const rows = Array.isArray(value) ? value : []
+  const setRow = (i, key, v) =>
+    onChange(rows.map((row, idx) => (idx === i ? { ...row, [key]: v } : row)))
+  return (
+    <div className="flex flex-col gap-16">
+      {rows.map((row, i) => (
+        <div key={i} className="flex flex-col gap-12 rounded-md border border-border-subtle p-16">
+          <div className="flex items-center justify-between gap-8">
+            <span className="font-mono text-caption-m text-text-meta">회차 {i + 1}</span>
+            <button
+              type="button"
+              onClick={() => onChange(rows.filter((_, idx) => idx !== i))}
+              aria-label="회차 제거"
+              className={ICON_BTN}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
+            <Field label="학기 라벨" hint="예: 2026-2">
+              <Input
+                value={row.semester_label || ''}
+                onChange={(e) => setRow(i, 'semester_label', e.target.value)}
+              />
+            </Field>
+            <Field label="기간" hint="예: 11.02 - 11.13">
+              <Input value={row.period || ''} onChange={(e) => setRow(i, 'period', e.target.value)} />
+            </Field>
+            <Field label="링크">
+              <Input
+                type="url"
+                value={row.link || ''}
+                onChange={(e) => setRow(i, 'link', e.target.value)}
+              />
+            </Field>
+            <div className="md:col-span-2">
+              <Field label="포스터">
+                <ImageUpload
+                  value={row.poster_url || ''}
+                  onChange={(v) => setRow(i, 'poster_url', v)}
+                  usage="poster"
+                />
+              </Field>
+            </div>
+          </div>
+        </div>
+      ))}
+      <div>
+        <GhostButton onClick={() => onChange([...rows, {}])}>
+          <Plus size={16} aria-hidden="true" />
+          회차 추가
+        </GhostButton>
+      </div>
+    </div>
+  )
+}
+
 // ── 템플릿별 폼 상태 ↔ 페이로드 매핑 ─────────────────────────────
 
-function emptyForm(template) {
+function emptyForm(template, type) {
   switch (template) {
     case 'achievement':
       return {
@@ -298,13 +357,16 @@ function emptyForm(template) {
         body: null,
         gallery: [],
         held_at: '',
+        start_date: '',
+        end_date: '',
+        is_featured: false,
         published: true,
       }
     case 'portfolio':
       return { student_no: '', name: '', majors: '', link: '', sort: 0 }
-    default:
+    default: {
       // t1 · t2 공용 (posts). gallery = 이미지 URL 배열, attachments = [{name,url}] 문서 (K1-3 분리)
-      return {
+      const base = {
         title_ko: '',
         title_en: '',
         tag: '',
@@ -317,12 +379,20 @@ function emptyForm(template) {
         attachments: [],
         published: true,
         pinned: false,
+        has_bg: false, // M1-1: 동아리 로고 배경 프레임
       }
+      // M1-3: 공모전 body = { host, editions } — 전용 폼 상태
+      if (type === 'contest') {
+        base.host = ''
+        base.editions = []
+      }
+      return base
+    }
   }
 }
 
-function fromItem(template, item) {
-  const base = emptyForm(template)
+function fromItem(template, item, type) {
+  const base = emptyForm(template, type)
   switch (template) {
     case 'achievement':
       return {
@@ -347,6 +417,9 @@ function fromItem(template, item) {
         body: item.body || null,
         gallery: Array.isArray(item.gallery) ? item.gallery : [],
         held_at: dateOf(item.held_at),
+        start_date: dateOf(item.start_date),
+        end_date: dateOf(item.end_date),
+        is_featured: Boolean(item.is_featured),
         published: Boolean(item.published),
       }
     case 'portfolio':
@@ -358,8 +431,8 @@ function fromItem(template, item) {
         link: item.link || '',
         sort: item.sort ?? 0,
       }
-    default:
-      return {
+    default: {
+      const next = {
         ...base,
         title_ko: item.title_ko || '',
         title_en: item.title_en || '',
@@ -376,11 +449,20 @@ function fromItem(template, item) {
         attachments: Array.isArray(item.attachments) ? item.attachments : [],
         published: Boolean(item.published),
         pinned: Boolean(item.pinned),
+        has_bg: Boolean(item.has_bg),
       }
+      // M1-3: 공모전 body 프리필 — host는 문자열/배열 모두 허용(레거시 시드 방어)
+      if (type === 'contest') {
+        const hostRaw = item.body?.host
+        next.host = Array.isArray(hostRaw) ? hostRaw.join('\n') : hostRaw || ''
+        next.editions = Array.isArray(item.body?.editions) ? item.body.editions : []
+      }
+      return next
+    }
   }
 }
 
-function toPayload(template, config, form) {
+function toPayload(template, config, form, type) {
   switch (template) {
     case 'achievement': {
       const year = form.year === '' ? null : Number(form.year)
@@ -403,6 +485,9 @@ function toPayload(template, config, form) {
         body: form.body,
         gallery: form.gallery,
         held_at: nul(form.held_at),
+        start_date: nul(form.start_date),
+        end_date: nul(form.end_date),
+        is_featured: form.is_featured,
         published: form.published,
       }
     case 'portfolio':
@@ -423,12 +508,17 @@ function toPayload(template, config, form) {
         gallery: form.gallery,
         published: form.published,
         pinned: form.pinned,
+        has_bg: form.has_bg, // M1-1: 동아리 로고 배경 프레임 (기타 유형은 기본 false)
       }
       if (template === 't2') {
         payload.poster_url = nul(form.poster_url)
         payload.external_url = nul(form.external_url)
         payload.event_start = nul(form.event_start)
         payload.event_end = nul(form.event_end)
+      }
+      // M1-3: 공모전 body = { host, editions } (Tiptap doc 대신 구조화 저장)
+      if (type === 'contest') {
+        payload.body = { host: form.host, editions: form.editions }
       }
       if (config.attachments) payload.attachments = form.attachments
       return payload
@@ -449,7 +539,7 @@ function PostForm() {
   const { data, loading, error, refetch } = useApi(
     config && !isNew ? `/admin/content/${type}/${id}` : null
   )
-  const [form, setForm] = useState(() => emptyForm(template))
+  const [form, setForm] = useState(() => emptyForm(template, type))
   const [hydrated, setHydrated] = useState(isNew)
   const [busy, setBusy] = useState(false)
   const [saveError, setSaveError] = useState(null)
@@ -457,9 +547,9 @@ function PostForm() {
   // 편집 모드 — 단건 도착 시 1회 주입
   useEffect(() => {
     if (hydrated || !data?.item) return
-    setForm(fromItem(template, data.item))
+    setForm(fromItem(template, data.item, type))
     setHydrated(true)
-  }, [hydrated, data, template])
+  }, [hydrated, data, template, type])
 
   if (!config) return <EmptyNote>알 수 없는 콘텐츠 유형입니다</EmptyNote>
 
@@ -472,7 +562,7 @@ function PostForm() {
     setBusy(true)
     setSaveError(null)
     try {
-      const payload = toPayload(template, config, form)
+      const payload = toPayload(template, config, form, type)
       if (isNew) await api.post(`/admin/content/${type}`, payload)
       else await api.put(`/admin/content/${type}/${id}`, payload)
       navigate(backTo)
@@ -552,6 +642,22 @@ function PostForm() {
             </>
           )}
 
+          {/* M1-3: 공모전 전용 — 주최(여러 줄) + 회차 리피터. body={host,editions}로 저장 */}
+          {type === 'contest' && (
+            <>
+              <div className="md:col-span-2">
+                <Field label="주최" hint="여러 줄 입력 가능">
+                  <TextArea rows={3} value={form.host} onChange={setInput('host')} />
+                </Field>
+              </div>
+              <div className="md:col-span-2">
+                <Field label="회차" hint="회차별 학기 라벨·포스터·기간·링크">
+                  <EditionsField value={form.editions} onChange={set('editions')} />
+                </Field>
+              </div>
+            </>
+          )}
+
           {template === 'achievement' && (
             <>
               <Field label="수상자">
@@ -586,15 +692,28 @@ function PostForm() {
               <Field label="학기 라벨" hint="예: 2026-2">
                 <Input value={form.semester_label} onChange={setInput('semester_label')} />
               </Field>
-              <Field label="개최일">
+              <Field label="개최일" hint="레거시. 기간은 시작·종료일 사용">
                 <Input type="date" value={form.held_at} onChange={setInput('held_at')} />
               </Field>
               <Field label="전시 사이트 URL">
                 <Input type="url" value={form.site_url} onChange={setInput('site_url')} />
               </Field>
+              {/* M1-2: 전시 기간 */}
+              <Field label="시작일">
+                <Input type="date" value={form.start_date} onChange={setInput('start_date')} />
+              </Field>
+              <Field label="종료일">
+                <Input type="date" value={form.end_date} onChange={setInput('end_date')} />
+              </Field>
               <div className="md:col-span-2">
                 <Field label="소개">
                   <TextArea rows={3} value={form.intro} onChange={setInput('intro')} />
+                </Field>
+              </div>
+              {/* M1-2: 리치 인트로 — exhibitions.body(Tiptap doc) */}
+              <div className="md:col-span-2">
+                <Field label="소개(리치)" hint="전시 상세 리치 본문">
+                  <RichEditor value={form.body} onChange={set('body')} />
                 </Field>
               </div>
               <div className="md:col-span-2">
@@ -652,8 +771,9 @@ function PostForm() {
           )}
         </div>
 
-        {/* 본문 — T1·T2·전시회. 성과는 전용 필드만(게시판 렌더 금지), 포트폴리오는 링크형 */}
-        {(template === 't1' || template === 't2' || template === 'exhibition') && (
+        {/* 본문 — T1·T2. 전시회는 소개(리치)로 블록 내 렌더, 공모전은 body={host,editions}. */}
+        {/* 성과는 전용 필드만(게시판 렌더 금지), 포트폴리오는 링크형 */}
+        {(template === 't1' || (template === 't2' && type !== 'contest')) && (
           <Field label="본문">
             <RichEditor value={form.body} onChange={set('body')} />
           </Field>
@@ -668,6 +788,18 @@ function PostForm() {
           {isPosts && template !== 'achievement' && (
             <Field label="상단 고정">
               <Toggle checked={form.pinned} onChange={set('pinned')} label="상단 고정" />
+            </Field>
+          )}
+          {/* M1-2: 전시회 상단 고정 */}
+          {template === 'exhibition' && (
+            <Field label="상단 고정">
+              <Toggle checked={form.is_featured} onChange={set('is_featured')} label="상단 고정" />
+            </Field>
+          )}
+          {/* M1-1: 동아리 로고 배경 프레임 */}
+          {type === 'club' && (
+            <Field label="배경">
+              <Toggle checked={form.has_bg} onChange={set('has_bg')} label="배경 표시" />
             </Field>
           )}
         </div>
