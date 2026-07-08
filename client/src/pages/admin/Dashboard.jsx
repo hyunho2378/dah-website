@@ -1,5 +1,5 @@
 // Dashboard.jsx — /admin 홈 (13_CMS_SPEC 6절)
-// 콘텐츠 유형별 카운트 + pending 쇼케이스 큐 + 접수 현황(기간 중) + 스냅샷 내보내기(owner).
+// 콘텐츠 유형별 카운트 + pending 쇼케이스 큐 + 접수 현황(기간 중) + DB 백업(owner).
 
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
