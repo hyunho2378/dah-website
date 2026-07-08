@@ -147,13 +147,15 @@ function Header() {
                 {hasChildren && (
                   // 세로 드롭다운 — 메뉴 좌측 정렬, 위→아래 확장(grid-rows 0fr↔1fr).
                   // reduced-motion은 전역 미디어쿼리가 tailwind transition을 무효화 → 즉시 전환.
+                  // absolute 요소라 부모 폭(83px)에 shrink-to-fit되므로, w-max로 콘텐츠 폭 고정 —
+                  // grid 래퍼·내부 클립 래퍼 모두 w-max로 분리해야 부모 링크 폭에 안 갇힌다.
                   <div
-                    className={`absolute left-0 top-full z-20 grid transition-[grid-template-rows] duration-base ease-out ${
+                    className={`absolute left-0 top-full z-20 grid w-max transition-[grid-template-rows] duration-base ease-out ${
                       isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
                     }`}
                   >
                     <div
-                      className={`overflow-hidden transition-opacity duration-fast ease-out ${
+                      className={`w-max overflow-hidden transition-opacity duration-fast ease-out ${
                         isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
                       }`}
                     >
