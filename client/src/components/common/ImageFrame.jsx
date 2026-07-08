@@ -10,11 +10,15 @@ function ImageFrame({
   alt = '',
   ratio = '2/3',
   bg = false,
+  contain = false,
   loading = 'lazy',
   className = '',
   imgClassName = '',
   placeholder = null,
 }) {
+  // 로고류는 잘림 없이 전체 노출(object-contain). bg=true도 배경 프레임 위 로고라 contain.
+  // 사진·포스터는 contain·bg 모두 false → object-cover로 프레임을 꽉 채운다.
+  const isContain = contain || bg
   return (
     <div
       className={`relative w-full overflow-hidden rounded-md ${
@@ -28,7 +32,7 @@ function ImageFrame({
           alt={alt}
           loading={loading}
           className={`absolute inset-0 h-full w-full ${
-            bg ? 'object-contain p-12' : 'object-cover'
+            isContain ? 'object-contain p-12' : 'object-cover'
           } ${imgClassName}`.trim()}
         />
       ) : (

@@ -27,17 +27,18 @@ const FALLBACK_CLUBS = (staticClubs ?? []).map((c) => ({
 function ClubCard({ item, sorting }) {
   const title = item.title_ko ?? item.title
 
-  // J8: 로고 중앙 상단(정사각) + 이름·설명 중앙 정렬. 투명 PNG는 bg(has_bg)로 중성 배경 부여.
+  // Q3: 로고 크게 중앙 상단. contain으로 원본 비율 유지(잘림 없음). 투명 PNG는 has_bg 배경 프레임.
   const content = (
     <>
-      <div className="w-full max-w-[140px]">
+      <div className="w-full">
         <ImageFrame
           src={item.poster_url || undefined}
           alt={`${title} 로고`}
-          ratio="1/1"
-          bg={item.has_bg}
+          ratio="4/3"
+          contain
+          bg={Boolean(item.has_bg)}
           placeholder={
-            <span aria-hidden="true" className="font-mono text-h2-m text-text-meta">
+            <span aria-hidden="true" className="font-mono text-h1-m text-text-meta">
               {(title || '').trim().charAt(0)}
             </span>
           }

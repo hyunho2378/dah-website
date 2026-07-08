@@ -7,7 +7,7 @@ import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import GlassCard from '../components/common/GlassCard'
 import { EditPencil } from '../components/content/EditControls'
-import { useApi, itemOf } from '../hooks/useApi'
+import { useApi, firstItem } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
 import { nanodegree } from '../data/nanodegree'
@@ -19,7 +19,7 @@ function Nanodegree() {
 
   // DB 문서가 있으면 body 우선(K1 데이터 계약), 미기동·미등록이면 정적 원문
   const { data } = useApi('/content/nanodegree')
-  const doc = itemOf(data)
+  const doc = firstItem(data)
   const body = doc?.body
   const source =
     body && Array.isArray(body.programs) && body.programs.length > 0 ? body : nanodegree

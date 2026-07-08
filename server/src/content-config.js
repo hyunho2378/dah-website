@@ -121,7 +121,8 @@ export const CONTENT_TYPES = {
     minRole: 'manager', // 13_CMS: 전시회 manager+
     // N1-2 ordinal(회차, full_title은 exhibitionFullTitle로 파생 — DB 저장 안 함).
     // N1-3 held_at 제거(레거시 컬럼은 DB에 남기되 미사용). 개최일 = start_date.
-    columns: ['semester_label', 'title', 'ordinal', 'poster_url', 'site_url', 'intro', 'body', 'gallery', 'start_date', 'end_date', 'is_featured', 'published'],
+    // Q2: 상단 고정 CTA 버튼(표시 여부·텍스트·링크)
+    columns: ['semester_label', 'title', 'ordinal', 'poster_url', 'site_url', 'intro', 'body', 'gallery', 'start_date', 'end_date', 'is_featured', 'cta_show', 'cta_label', 'cta_url', 'published'],
     jsonb: ['body', 'gallery'],
     required: ['title'],
     // N1-3: start_date(=개최일) 역순 정렬. 레거시 held_at은 migrate-phase11이 start_date로 백필.

@@ -94,6 +94,20 @@ export function itemOf(data) {
 }
 
 /**
+ * firstItem — 싱글턴 공개 조회 언랩 (Q1). GET /content/:type(codesharing·nanodegree·ci)는
+ * 목록 라우트라 { items:[row] }로 반환한다. itemOf는 { items }를 null 처리하므로 싱글턴 공개
+ * 페이지가 DB 문서를 못 읽고 시드 폴백에 갇힌다 → 여기서 items[0]를 꺼낸다.
+ * @param {any} data
+ * @returns {any|null}
+ */
+export function firstItem(data) {
+  if (!data) return null
+  if (Array.isArray(data.items)) return data.items[0] ?? null
+  if (data.item !== undefined) return data.item
+  return data
+}
+
+/**
  * useApi — 조회 전용 훅.
  * @param {string|null} path - '/content/notice' 형태. null이면 조회하지 않음
  * @param {{ params?: Object }} [options] - 쿼리 파라미터

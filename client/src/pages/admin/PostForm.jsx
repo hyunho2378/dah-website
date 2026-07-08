@@ -361,6 +361,9 @@ function emptyForm(template, type) {
         start_date: '', // N1-3: 개최일 = 시작일 (held_at 제거)
         end_date: '',
         is_featured: false,
+        cta_show: true, // Q2: 상단 고정 시 CTA 버튼 노출·텍스트·링크
+        cta_label: '',
+        cta_url: '',
         published: true,
       }
     case 'portfolio':
@@ -421,6 +424,9 @@ function fromItem(template, item, type) {
         start_date: dateOf(item.start_date),
         end_date: dateOf(item.end_date),
         is_featured: Boolean(item.is_featured),
+        cta_show: item.cta_show !== false,
+        cta_label: item.cta_label || '',
+        cta_url: item.cta_url || '',
         published: Boolean(item.published),
       }
     case 'portfolio':
@@ -489,6 +495,10 @@ function toPayload(template, config, form, type) {
         start_date: nul(form.start_date),
         end_date: nul(form.end_date),
         is_featured: form.is_featured,
+        // Q2: 상단 고정일 때만 CTA 저장(끄면 값 비움)
+        cta_show: form.is_featured ? form.cta_show : false,
+        cta_label: form.is_featured ? nul(form.cta_label) : null,
+        cta_url: form.is_featured ? nul(form.cta_url) : null,
         published: form.published,
       }
     case 'portfolio':
@@ -517,6 +527,8 @@ function toPayload(template, config, form, type) {
         payload.event_start = nul(form.event_start)
         payload.event_end = nul(form.event_end)
       }
+      // Q3: 동아리 로고(poster_url) 저장
+      if (type === 'club') payload.poster_url = nul(form.poster_url)
       // M1-3: 공모전 body = { host, editions } (Tiptap doc 대신 구조화 저장)
       if (type === 'contest') {
         payload.body = { host: form.host, editions: form.editions }
@@ -617,6 +629,15 @@ function PostForm() {
             <div className="md:col-span-2">
               <Field label="태그" hint="클릭해 선택, 다시 클릭해 해제합니다">
                 <TagField value={form.tag} onChange={set('tag')} />
+              </Field>
+            </div>
+          )}
+
+          {/* Q3: 동아리 로고 업로드 — poster_url. 투명 PNG는 아래 "배경" 토글과 함께 사용 */}
+          {type === 'club' && (
+            <div className="md:col-span-2">
+              <Field label="로고" hint="투명 PNG면 아래 배경 토글을 켜세요">
+                <ImageUpload value={form.poster_url} onChange={set('poster_url')} usage="poster" />
               </Field>
             </div>
           )}
@@ -739,6 +760,30 @@ function PostForm() {
                   <GalleryField value={form.gallery} onChange={set('gallery')} />
                 </Field>
               </div>
+              {/* Q2: 상단 고정을 켜면 CTA 버튼 입력 노출(표시 여부·텍스트·링크). 끄면 숨김 */}
+              {form.is_featured && (
+                <div className="flex flex-col gap-16 rounded-md border border-border-subtle p-16 md:col-span-2">
+                  <div className="flex flex-wrap items-center gap-24">
+                    <Field label="버튼 표시">
+                      <Toggle
+                        checked={form.cta_show}
+                        onChange={set('cta_show')}
+                        label="CTA 버튼 표시"
+                      />
+                    </Field>
+                  </div>
+                  {form.cta_show && (
+                    <div className="grid grid-cols-1 gap-16 md:grid-cols-2">
+                      <Field label="버튼 텍스트" hint="비우면 전체 전시명이 라벨로 쓰입니다">
+                        <Input value={form.cta_label} onChange={setInput('cta_label')} />
+                      </Field>
+                      <Field label="버튼 링크" hint="비우면 전시 사이트 또는 상세로 이동">
+                        <Input type="url" value={form.cta_url} onChange={setInput('cta_url')} />
+                      </Field>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 

@@ -2,6 +2,7 @@
 // 기수 탭(최신 기본) → 로고·기수명·소개·구성원 그리드. 기수가 늘어도 동일 템플릿 보존.
 import { useState } from 'react'
 import PageBanner from '../../components/layout/PageBanner'
+import ImageFrame from '../../components/common/ImageFrame'
 import Container from '../../components/layout/Container'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
@@ -111,14 +112,26 @@ function Council() {
                 타이틀은 "{연도} {기수라벨 포함 이름}" 한 줄 합성. 로고 없으면 미표시(빈 박스 금지). */}
             <div className="flex min-w-0 flex-col gap-24">
               <div className="flex min-w-0 flex-wrap items-center gap-24 md:gap-32">
-                {active.logo_url && (
-                  <img
-                    src={active.logo_url}
-                    alt={`${active.name} 로고`}
-                    loading="lazy"
-                    className="h-96 w-auto shrink-0 object-contain md:h-144"
-                  />
-                )}
+                {active.logo_url &&
+                  (active.has_bg ? (
+                    // Q4: 배경 토글 on — 투명 PNG를 중성 배경 프레임 위에 표시(검은 배경에서 안 보이던 문제 해결)
+                    <div className="w-[144px] shrink-0 md:w-[200px]">
+                      <ImageFrame
+                        src={active.logo_url}
+                        alt={`${active.name} 로고`}
+                        ratio="3/2"
+                        contain
+                        bg
+                      />
+                    </div>
+                  ) : (
+                    <img
+                      src={active.logo_url}
+                      alt={`${active.name} 로고`}
+                      loading="lazy"
+                      className="h-96 w-auto shrink-0 object-contain md:h-144"
+                    />
+                  ))}
                 <div className="flex min-w-0 flex-wrap items-center gap-12">
                   <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
                     {[active.year_label, active.name].filter(Boolean).join(' ')}

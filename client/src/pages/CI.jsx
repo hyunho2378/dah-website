@@ -10,7 +10,7 @@ import Reveal from '../components/common/Reveal'
 import GlassCard from '../components/common/GlassCard'
 import ImageFrame from '../components/common/ImageFrame'
 import { EditPencil } from '../components/content/EditControls'
-import { useApi, itemOf } from '../hooks/useApi'
+import { useApi, firstItem } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
 import { ci } from '../data/ci'
@@ -24,7 +24,7 @@ function CI() {
 
   // DB 단일 문서 body 우선, 미기동·미등록이면 정적 폴백 — 필드 단위 병합으로 undefined 안전
   const { data } = useApi('/content/ci')
-  const body = itemOf(data)?.body
+  const body = firstItem(data)?.body
   const source = body && typeof body === 'object' ? { ...ci, ...body } : ci
   const intro = source.intro
   const elements = Array.isArray(source.elements) ? source.elements : []

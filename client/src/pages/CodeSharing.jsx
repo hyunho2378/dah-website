@@ -5,28 +5,50 @@ import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import Tag from '../components/common/Tag'
 import { EditPencil } from '../components/content/EditControls'
+import { useApi, firstItem } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { codeSharing } from '../data/tracks'
 import { motion } from '../styles/tokens'
 
 // 코드쉐어링 v2 (10_IA_V2 2절 /curriculum/codesharing) — 구 Tracks.jsx 하단 섹션의 분리 페이지.
-// HWP 신청서: public/files/codesharing-form.hwp 정적 슬롯(실물 파일은 사용자 배치 — 데이터 갭).
+// Q1: 어드민 저장분(DB codesharing.body/depts/hwp_url) 우선 렌더 + 시드 폴백(그동안 시드만 읽어
+//     저장이 화면에 반영되지 않던 버그). KR 편집 콘텐츠는 DB, EN은 감수 시드 대역 우선.
 
 const HWP_HREF = '/files/codesharing-form.hwp'
 
 function CodeSharing() {
   const { lang, t } = useLang()
-  // J5: EN 대역 우선(없으면 국문 폴백)
-  const definition =
-    lang === 'en' ? codeSharing.definitionEn ?? codeSharing.definition : codeSharing.definition
-  const note = lang === 'en' ? codeSharing.noteEn ?? codeSharing.note : codeSharing.note
-  const steps =
-    lang === 'en' && Array.isArray(codeSharing.stepsEn) ? codeSharing.stepsEn : codeSharing.steps
   useTitle(t('titles.codesharing'))
 
+  // DB 단일 문서(있으면) → 시드 폴백. GET /content/codesharing 은 목록형이라 firstItem으로 언랩.
+  const { data } = useApi('/content/codesharing')
+  const remote = firstItem(data)
+  const rb = remote?.body && typeof remote.body === 'object' ? remote.body : null
+
+  // J5 유지: KR은 DB 우선(없으면 시드), EN은 감수된 시드 대역 우선(DB는 KR 편집분)
+  const definition =
+    lang === 'en'
+      ? codeSharing.definitionEn ?? rb?.definition ?? codeSharing.definition
+      : rb?.definition ?? codeSharing.definition
+  const note =
+    lang === 'en'
+      ? codeSharing.noteEn ?? rb?.note ?? codeSharing.note
+      : rb?.note ?? codeSharing.note
+  const steps =
+    lang === 'en' && Array.isArray(codeSharing.stepsEn)
+      ? codeSharing.stepsEn
+      : Array.isArray(rb?.steps) && rb.steps.length
+        ? rb.steps
+        : codeSharing.steps
+  const types =
+    Array.isArray(rb?.types) && rb.types.length ? rb.types : codeSharing.types
+  const departments =
+    Array.isArray(remote?.depts) && remote.depts.length ? remote.depts : codeSharing.departments
+  const hwpHref = remote?.hwp_url || HWP_HREF
+
   // 인정 학과 목록에 붙는 학점 상한 안내 — 원문 '학점인정형 코드쉐어링' 항목(types 3번째)
-  const limitNote = codeSharing.types?.[2]?.detail ?? ''
+  const limitNote = types?.[2]?.detail ?? ''
 
   return (
     <>
@@ -61,7 +83,7 @@ function CodeSharing() {
             </p>
             {/* 글래스 다운로드 버튼 — 파일 슬롯 예약(파일명 고정: codesharing-form.hwp) */}
             <a
-              href={HWP_HREF}
+              href={hwpHref}
               download
               className="mt-32 inline-flex h-11 cursor-pointer items-center gap-8 rounded-glass border border-glass-line bg-glass-bg px-24 text-body-m font-semibold text-text-pri backdrop-blur-glass-mobile transition-colors duration-fast ease-out hover:bg-glass-strong md:h-48 md:backdrop-blur-glass md:text-body-d"
             >
@@ -96,12 +118,12 @@ function CodeSharing() {
         )}
 
         {/* 03 인정 학과 (원문 19개 + 학점 상한 안내) */}
-        {codeSharing.departments.length > 0 && (
+        {departments.length > 0 && (
           <Container as="section" className="pt-section-m md:pt-section-d">
             <Reveal>
               <SectionLabel index="03" text="DEPARTMENTS" />
               <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
-                {t('sections.departments')} {codeSharing.departments.length}
+                {t('sections.departments')} {departments.length}
               </h2>
               {limitNote && (
                 <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
@@ -110,7 +132,7 @@ function CodeSharing() {
               )}
             </Reveal>
             <div className="mt-32 flex flex-wrap gap-8 md:mt-48 md:gap-12">
-              {codeSharing.departments.map((dept) => (
+              {departments.map((dept) => (
                 <Tag key={dept}>{dept}</Tag>
               ))}
             </div>

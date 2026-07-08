@@ -252,6 +252,17 @@
 - [!] 콘텐츠 입력 후속(버그 아님): 전시회 start/end·리치인트로·ordinal은 어드민 입력 전 빈 값(2026-1만 ordinal 18·featured 시드). CI 이미지·색상·다운로드는 슬롯만(어드민 업로드 대기)
 - [!] 실사이트 육안(사용자): 헤더 세로 드롭다운 전 메뉴 / 전시 피처드 축소·박스 없음·full_title / 자료실 상세 진입·리치본문 / CI 페이지 / 취업 경량 카드
 
+## PHASE 12 — 단독 배치 (24_PHASE12_FIXES Q1~Q7)
+- [x] Q1 [최우선] 단일 문서 저장 반영: 근본원인 — 공개 CodeSharing.jsx가 시드(data/tracks.js)만 읽고 DB를 안 봄. 나노디그리·CI는 fetch하나 itemOf(data)가 목록형 {items}를 null 처리해 시드 폴백에 갇힘. 수정: useApi.js firstItem(data)=items[0] 헬퍼 신설, 3개 싱글턴 공개 페이지(codesharing 신규 fetch+병합, nanodegree·CI itemOf→firstItem) DB 우선 렌더. 검증: 배포 Neon codesharing.def="과목과 전공에 한해서…"(시드 "과목에 한해서…"와 다름)=저장은 됐고 읽기만 깨졌음 확인. 서버 싱글턴 POST upsert(ON CONFLICT DO UPDATE)는 정상
+- [x] Q2 전시 피처드 제목·버튼: (1)full_title displayL·extrabold로 위계 상향 (2)exhibitions cta_show·cta_label·cta_url 컬럼(schema+migrate-phase12+content-config). PostForm exhibition은 상단 고정(is_featured) on일 때만 버튼 표시 토글+텍스트+링크 노출, 끄면 숨김·값 비움. 공개는 cta_show일 때만 CTA(라벨 cta_label>full_title, 링크 cta_url>site_url>상세)
+- [x] Q3 [버그] 동아리 로고: 근본원인 — club(t1 폼)에 로고 업로드 필드 자체가 없어 poster_url 미저장. PostForm에 type==='club' 로고 ImageUpload + toPayload poster_url 저장. ClubCard ImageFrame contain(원본 비율·잘림 없음)·크게(w-full 4/3)
+- [x] Q4 [버그] 배경 토글: ImageFrame에 contain prop 분리(bg=true도 contain 유지=하위호환). ClubCard·Council 로고 bg={has_bg} 연동 — 켜면 투명 PNG 뒤 bg-bg-frame(#202227, elev보다 밝음, 순백 아님, radius 4). Q3 로고필드 부재로 그동안 배경 효과가 안 보였던 것 동반 해소. has_bg 저장은 기존 정상
+- [x] Q5 교수진 4열: 그리드 minmax 300→220px(데스크탑 4열), 카드 패딩 p-24/32→p-16/20 축소. 사진 306/427 유지
+- [x] Q6 헤더 균등 간격: nav gap-32 고정 + 링크 px 제거(글자폭 아닌 gap 기준 균등). 6항목 일정 간격
+- [x] Q7 라벨 단일화: FixedWidthLabel(숨김 other span→DOM 트리 "AboutAbout" 병기) 제거, navLabel(활성 언어)만 렌더. 최상위·로그인 단일화(드롭다운·모바일은 이전 커밋서 단일). 시프트 우려는 Q6 gap 고정으로 흡수
+- [x] 검증: npm run build 성공, 서버 node --check 통과, migrate-phase12 배포 Neon 실행(cta 3컬럼, Neon control-plane 일시 오류로 재시도 후 성공)
+- [!] 실사이트 육안(사용자): 코드쉐어링 문장 수정 반영 / 전시 제목 크게·버튼 편집 / 동아리 로고 표시·배경 토글 / 교수 4열 / 헤더 균등·단일 라벨
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

@@ -63,8 +63,8 @@ function ProfessorCard({ professor, lang }) {
     lang === 'en' ? professor.affiliationEn || professor.affiliation : professor.affiliation
 
   return (
-    <GlassCard hover className="h-full p-24 md:p-32">
-      <div className="flex flex-col gap-16">
+    <GlassCard hover className="h-full p-16 md:p-20">
+      <div className="flex flex-col gap-12">
         {/* M3-1: 사진(306x427 세로)은 object-cover로 꽉 채움, 미보유 시 이니셜 플레이스홀더 */}
         <ImageFrame
           src={professor.photo_url || undefined}
@@ -184,7 +184,8 @@ function People() {
               {t('common.empty')}
             </p>
           ) : (
-            <div className="mt-48 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
+            // Q5: 데스크탑 4열 — 카드·사진 축소로 섹션 높이 감소. minmax 하한 축소(약 220px)
+            <div className="mt-48 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))] md:gap-24">
               {professorList.map((professor, index) => (
                 <Reveal key={professor.id} delay={staggerDelay(index)}>
                   <ProfessorCard professor={professor} lang={lang} />

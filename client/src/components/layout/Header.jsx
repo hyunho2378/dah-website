@@ -20,24 +20,12 @@ import logoUrl from '../../assets/logo.svg'
 // 성능 규칙(11_DESIGN_V2 2절): blur 상한 3 중 헤더 1계층.
 const SHRINK_Y = 80
 
-// G15: 언어 전환 폭 고정 — 두 라벨을 같은 grid 칸에 겹치고 비활성 쪽은 invisible
-function FixedWidthLabel({ current, other, className = '' }) {
-  return (
-    <span className={`grid ${className}`}>
-      <span className="col-start-1 row-start-1">{current}</span>
-      <span aria-hidden="true" className="invisible col-start-1 row-start-1">
-        {other}
-      </span>
-    </span>
-  )
-}
-
 function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [openIndex, setOpenIndex] = useState(null) // 메가메뉴 활성 1차 메뉴 index
   const { lang, t } = useLang()
+  // Q7: 활성 언어 라벨만 렌더 — 국문/영문 병기·숨김 span 없음(DOM 트리에도 단일)
   const navLabel = (item) => (lang === 'en' ? item.labelEn : item.label)
-  const navOther = (item) => (lang === 'en' ? item.label : item.labelEn)
   const { user } = useAuth()
   const { openLogin } = useLoginModal()
   const { pathname } = useLocation()
@@ -121,7 +109,8 @@ function Header() {
           />
         </Link>
 
-        <nav aria-label={t('aria.mainMenu')} className="hidden h-full items-center lg:flex">
+        {/* Q6: 항목 사이 고정 gap(32px)으로 균등 간격 — 글자폭이 아니라 gap 기준. 링크 px 통일 */}
+        <nav aria-label={t('aria.mainMenu')} className="hidden h-full items-center gap-32 lg:flex">
           {nav.map((item, i) => {
             const hasChildren = item.children.length > 0
             const isOpen = hasChildren && openIndex === i
@@ -137,12 +126,12 @@ function Header() {
                   end={item.to === '/'}
                   aria-expanded={hasChildren ? isOpen : undefined}
                   className={({ isActive }) =>
-                    `flex h-full items-center px-12 text-body-d transition-colors duration-fast ease-out hover:text-text-pri ${
+                    `flex h-full items-center whitespace-nowrap text-body-d transition-colors duration-fast ease-out hover:text-text-pri ${
                       isActive ? 'text-text-pri' : 'text-text-sec'
                     }`
                   }
                 >
-                  <FixedWidthLabel current={navLabel(item)} other={navOther(item)} className="text-center" />
+                  {navLabel(item)}
                 </NavLink>
                 {hasChildren && (
                   // 세로 드롭다운 — 메뉴 좌측 정렬, 위→아래 확장(grid-rows 0fr↔1fr).
@@ -213,13 +202,9 @@ function Header() {
             <button
               type="button"
               onClick={openLogin}
-              className="cursor-pointer text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d"
+              className="cursor-pointer whitespace-nowrap text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d"
             >
-              <FixedWidthLabel
-                current={t('actions.login')}
-                other={lang === 'en' ? '로그인' : 'Login'}
-                className="text-center"
-              />
+              {t('actions.login')}
             </button>
           )}
         </div>

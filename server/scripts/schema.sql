@@ -55,6 +55,11 @@ ALTER TABLE posts ADD COLUMN IF NOT EXISTS sort INTEGER;
 -- J10(20_PHASE8): 교과목 학점 표기 "학점-강의-실습" (예: 3-2-2)
 ALTER TABLE curriculum ADD COLUMN IF NOT EXISTS credit TEXT;
 
+-- Q2(24_PHASE12): 상단 고정 전시회 CTA 버튼(표시 여부·텍스트·링크)
+ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS cta_show BOOLEAN DEFAULT TRUE;
+ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS cta_label TEXT;
+ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS cta_url TEXT;
+
 -- 교수진
 CREATE TABLE IF NOT EXISTS professors (
   id        SERIAL PRIMARY KEY,

@@ -45,7 +45,8 @@ function FeaturedExhibition({ item }) {
       </div>
       <div className="flex min-w-0 flex-col justify-center gap-16">
         <div className="flex min-w-0 flex-col gap-8">
-          <h2 className="min-w-0 text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
+          {/* Q2.1: 풀네임 제목 위계 상향 — displayL급, 더 볼드 */}
+          <h2 className="min-w-0 text-display-l-m font-extrabold leading-tight tracking-display text-text-pri md:text-display-l-d">
             {fullTitle}
           </h2>
           {showTitle && (
@@ -62,17 +63,18 @@ function FeaturedExhibition({ item }) {
             {item.intro}
           </p>
         ) : null}
-        <div className="mt-4">
-          {item.site_url ? (
-            <Button variant="primary" href={item.site_url} external>
-              {fullTitle}
+        {/* Q2.2: 상단 고정(피처드)일 때만 CTA. 라벨=cta_label 우선(없으면 full_title), 링크=cta_url>site_url>상세 */}
+        {item.cta_show !== false && (
+          <div className="mt-4">
+            <Button
+              variant="primary"
+              href={item.cta_url || item.site_url || `/programs/exhibitions/${item.id}`}
+              external={Boolean(item.cta_url || item.site_url)}
+            >
+              {item.cta_label || fullTitle}
             </Button>
-          ) : (
-            <Button variant="primary" href={`/programs/exhibitions/${item.id}`}>
-              {fullTitle}
-            </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )
