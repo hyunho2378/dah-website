@@ -9,7 +9,7 @@ import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-import { useLang } from '../../i18n/LangContext'
+import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 
 function MetaRow({ label, children }) {
   return (
@@ -21,11 +21,15 @@ function MetaRow({ label, children }) {
 }
 
 function LectureDetail() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   const { id } = useParams()
   const { data, loading } = useApi(`/content/lecture/${id}`)
   const item = itemOf(data)
-  const title = item?.title_ko ?? item?.title
+  // R1(27_I18N): EN 모드는 영문 제목·본문 우선(특강 영문 필수 — 없으면 국문 폴백 뱃지)
+  const isEn = lang === 'en'
+  const title = (isEn && item?.title_en) || item?.title_ko || item?.title
+  const body = isEn && item?.body_en ? item.body_en : item?.body
+  const koFallback = isEn && item && (!item.title_en || !item.body_en)
   useTitle(title ?? t('titles.lectures'))
 
   const start = (item?.event_start ?? '').slice(0, 10)
@@ -78,7 +82,10 @@ function LectureDetail() {
               <div className="flex min-w-0 flex-col gap-24 lg:col-span-2">
                 <div className="flex flex-wrap items-start justify-between gap-16">
                   <div className="flex min-w-0 flex-col gap-12">
-                    {item.tag && <Tag>{item.tag}</Tag>}
+                    <div className="flex flex-wrap items-center gap-8">
+                      {item.tag && <Tag>{item.tag}</Tag>}
+                      {koFallback && <KoreanOnlyBadge />}
+                    </div>
                     <h1 className="min-w-0 text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
                       {title}
                     </h1>
@@ -102,7 +109,7 @@ function LectureDetail() {
                 </div>
               </div>
             </div>
-            {item.body && <RichBody body={item.body} />}
+            {body && <RichBody body={body} />}
             {gallery.length > 0 && (
               <section className="flex flex-col gap-16">
                 <h2 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">

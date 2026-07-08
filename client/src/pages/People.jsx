@@ -61,6 +61,8 @@ function ProfessorCard({ professor, lang }) {
   const role = lang === 'en' ? professor.roleEn || professor.role : professor.role
   const affiliation =
     lang === 'en' ? professor.affiliationEn || professor.affiliation : professor.affiliation
+  // R3-3: EN 모드는 영문 이름을 크게 노출하고 국문 이름은 숨긴다. KR 모드는 기존 유지.
+  const displayName = lang === 'en' ? nameEn || nameKr : nameKr
 
   return (
     <GlassCard hover className="h-full p-16 md:p-20">
@@ -80,9 +82,9 @@ function ProfessorCard({ professor, lang }) {
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-8">
             <h3 className="text-h3-m font-extrabold leading-snug text-text-pri md:text-h3-d">
-              {nameKr}
+              {displayName}
             </h3>
-            {nameEn && (
+            {lang !== 'en' && nameEn && (
               <span className="font-mono text-caption-m text-text-meta md:text-caption-d">
                 {nameEn}
               </span>
@@ -121,8 +123,12 @@ function ProfessorCard({ professor, lang }) {
   )
 }
 
-function MentorCard({ mentor }) {
-  const { name, company, role, companyUrl } = mentor
+function MentorCard({ mentor, lang }) {
+  const { companyUrl } = mentor
+  // R3-3: EN 모드는 멘토 영문 필드(nameEn/companyEn/roleEn) 우선, 없으면 국문 폴백
+  const name = lang === 'en' ? mentor.nameEn || mentor.name : mentor.name
+  const company = lang === 'en' ? mentor.companyEn || mentor.company : mentor.company
+  const role = lang === 'en' ? mentor.roleEn || mentor.role : mentor.role
 
   return (
     <GlassCard hover className="h-full p-24 md:p-32">
@@ -213,7 +219,7 @@ function People() {
             <div className="mt-48 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
               {mentors.map((mentor, index) => (
                 <Reveal key={mentor.id} delay={staggerDelay(index)}>
-                  <MentorCard mentor={mentor} />
+                  <MentorCard mentor={mentor} lang={lang} />
                 </Reveal>
               ))}
             </div>

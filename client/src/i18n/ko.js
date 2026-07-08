@@ -47,7 +47,7 @@ export const ko = {
   },
   sections: {
     programs: '프로그램',
-    tracks: '3개 트랙',
+    tracks: '전공 트랙',
     achievements: '학생 수상 실적',
     news: '공지사항',
     overview: '개요',

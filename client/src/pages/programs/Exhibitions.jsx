@@ -12,10 +12,26 @@ import InlineEditBar from '../../components/content/InlineEditBar'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-import { useLang } from '../../i18n/LangContext'
+import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 
 // P9: 스태거 지연은 최대 6개까지만
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
+
+// EN 서수 접미사 (11~13은 th 예외)
+function ordinalSuffix(n) {
+  const tens = n % 100
+  if (tens >= 11 && tens <= 13) return 'th'
+  const ones = n % 10
+  return ones === 1 ? 'st' : ones === 2 ? 'nd' : ones === 3 ? 'rd' : 'th'
+}
+
+// EN 전시회 풀네임 — exhibitionTitle.js는 국문 전용이므로 EN 대역은 여기서 인라인 조합
+function exhibitionFullTitleEn(ordinal) {
+  const n = Number(ordinal)
+  return Number.isFinite(n) && n > 0
+    ? `The ${n}${ordinalSuffix(n)} Digital Arts & Humanities Project Exhibition`
+    : null
+}
 
 // 전시 기간: start_date~end_date(DATE 문자열), 없으면 held_at 폴백
 function periodText(start, end, fallback) {
@@ -29,9 +45,16 @@ function periodText(start, end, fallback) {
 // H(N2-2): 감싸는 카드(GlassCard) 제거 + 포스터 축소로 세로 높이 약 절반. 포스터는 페이지
 // 좌측 마진에 붙는 좁은 컬럼(ImageFrame bg 없이 포스터만). 제목은 풀네임(ordinal 파생).
 function FeaturedExhibition({ item }) {
-  const fullTitle = exhibitionFullTitle(item.ordinal) || item.title
+  const { lang } = useLang()
+  const fullTitle =
+    (lang === 'en'
+      ? exhibitionFullTitleEn(item.ordinal)
+      : exhibitionFullTitle(item.ordinal)) || item.title
   const period = periodText(item.start_date, item.end_date, item.held_at)
   const showTitle = item.title && item.title !== fullTitle
+  // J5: EN 모드 소개문 — intro_en 우선, 없으면 국문 intro + Korean only 뱃지
+  const introText = lang === 'en' ? item.intro_en || item.intro : item.intro
+  const introKoFallback = lang === 'en' && !item.intro_en && Boolean(item.intro)
   return (
     <div className="grid gap-24 md:grid-cols-[220px_1fr] md:gap-40 lg:grid-cols-[260px_1fr] lg:gap-48">
       <div className="w-full max-w-[220px] md:max-w-none">
@@ -58,10 +81,13 @@ function FeaturedExhibition({ item }) {
         </div>
         {item.body ? (
           <RichBody body={item.body} />
-        ) : item.intro ? (
-          <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
-            {item.intro}
-          </p>
+        ) : introText ? (
+          <div className="flex min-w-0 flex-col items-start gap-8">
+            <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
+              {introText}
+            </p>
+            {introKoFallback && <KoreanOnlyBadge />}
+          </div>
         ) : null}
         {/* Q2.2: 상단 고정(피처드)일 때만 CTA. 라벨=cta_label 우선(없으면 full_title), 링크=cta_url>site_url>상세 */}
         {item.cta_show !== false && (

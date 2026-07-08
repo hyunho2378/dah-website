@@ -3,10 +3,11 @@
 // minRole: 작성·수정 최소 롤. 삭제는 admin+ (manager는 posts 계열 자기 글만 — routes/admin.js).
 
 const POST_COLUMNS = [
-  'title_ko', 'title_en', 'body', 'tag', 'poster_url', 'gallery',
+  'title_ko', 'title_en', 'body', 'body_en', 'tag', 'poster_url', 'gallery',
   'external_url', 'event_start', 'event_end', 'published', 'pinned', 'has_bg',
 ]
-const POST_JSONB = ['body', 'gallery']
+// R1(27_I18N): body_en = 영문 리치 본문(수동 입력). body와 동일 jsonb.
+const POST_JSONB = ['body', 'body_en', 'gallery']
 const POST_ORDER = 'pinned DESC, created_at DESC, id DESC'
 
 function postType(type, minRole, opts = {}) {
@@ -122,8 +123,9 @@ export const CONTENT_TYPES = {
     // N1-2 ordinal(회차, full_title은 exhibitionFullTitle로 파생 — DB 저장 안 함).
     // N1-3 held_at 제거(레거시 컬럼은 DB에 남기되 미사용). 개최일 = start_date.
     // Q2: 상단 고정 CTA 버튼(표시 여부·텍스트·링크)
-    columns: ['semester_label', 'title', 'ordinal', 'poster_url', 'site_url', 'intro', 'body', 'gallery', 'start_date', 'end_date', 'is_featured', 'cta_show', 'cta_label', 'cta_url', 'published'],
-    jsonb: ['body', 'gallery'],
+    // R1(27_I18N): title_en·intro_en·body_en = 영문 수동 입력(발행 게이트). 전시회는 title_ko 없이 title 단일이라 title_en 신설
+    columns: ['semester_label', 'title', 'title_en', 'ordinal', 'poster_url', 'site_url', 'intro', 'intro_en', 'body', 'body_en', 'gallery', 'start_date', 'end_date', 'is_featured', 'cta_show', 'cta_label', 'cta_url', 'published'],
+    jsonb: ['body', 'body_en', 'gallery'],
     required: ['title'],
     // N1-3: start_date(=개최일) 역순 정렬. 레거시 held_at은 migrate-phase11이 start_date로 백필.
     // 여전히 null이면 semester_label('YYYY-S' 문자열 역순=학기 역순)로 폴백.

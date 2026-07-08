@@ -11,7 +11,7 @@ import InlineEditBar from '../../components/content/InlineEditBar'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-import { useLang } from '../../i18n/LangContext'
+import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 
 // gallery jsonb 정규화: 배열 → 단일 갤러리, 객체 → 현장·작품 구분 섹션
 const GALLERY_LABELS = {
@@ -84,11 +84,17 @@ function GallerySection({ label, images, title }) {
 }
 
 function ExhibitionDetail() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   const { id } = useParams()
   const { data, loading } = useApi(`/content/exhibitions/${id}`)
   const item = itemOf(data)
-  useTitle(item?.title ?? t('titles.exhibitions'))
+  // R1(27_I18N): EN 모드는 영문 제목·소개·본문 우선(전시회 영문 필수 — 없으면 국문 폴백 뱃지)
+  const isEn = lang === 'en'
+  const title = (isEn && item?.title_en) || item?.title
+  const body = isEn && item?.body_en ? item.body_en : item?.body
+  const intro = isEn && item?.intro_en ? item.intro_en : item?.intro
+  const koFallback = isEn && item && (!item.title_en || (item.body ? !item.body_en : item.intro && !item.intro_en))
+  useTitle(title ?? t('titles.exhibitions'))
 
   const galleries = normalizeGalleries(item?.gallery)
 
@@ -133,9 +139,12 @@ function ExhibitionDetail() {
               </figure>
               <div className="flex min-w-0 flex-col gap-24 lg:col-span-2">
                 <div className="flex flex-wrap items-start justify-between gap-16">
-                  <h1 className="min-w-0 text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
-                    {item.title}
-                  </h1>
+                  <div className="flex min-w-0 flex-col gap-8">
+                    {koFallback && <KoreanOnlyBadge />}
+                    <h1 className="min-w-0 text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
+                      {title}
+                    </h1>
+                  </div>
                   <EditPencil
                     type="exhibitions"
                     to={`/admin/posts/exhibitions/${id}/edit`}
@@ -161,11 +170,11 @@ function ExhibitionDetail() {
                 </div>
               </div>
             </div>
-            {item.body ? (
-              <RichBody body={item.body} />
-            ) : item.intro ? (
+            {body ? (
+              <RichBody body={body} />
+            ) : intro ? (
               <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
-                {item.intro}
+                {intro}
               </p>
             ) : null}
             {galleries.map((g) => (

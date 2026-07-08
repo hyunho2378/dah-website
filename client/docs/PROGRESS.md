@@ -303,6 +303,26 @@
 - [x] 검증: npm run build 성공(2015 모듈). 헤더 About 하위 CI는 25번서 이미 반영
 - [!] 실사이트 육안(사용자): /about/ci 6섹션 순서·레이아웃 / 다운로드 준비 중 비활성 / 이미지 준비 중 플레이스홀더 / 어드민(/admin/ci) 전 섹션 편집
 
+## PHASE 15 · I18N — 수동 영문 정책 + 정적 영문 확정 (27_I18N_MANUAL, 병렬 R1·R2·R3 + 통합 R4)
+### R1 에디터 영문 정책·발행 게이트 (PostForm.jsx, postTypes.js)
+- [x] 자동번역 API 미사용(수동 입력 정책). postTypes에 enRequired 플래그: lecture·contest·exhibitions·achievement·resource·club=true, notice·portfolios=false
+- [x] 발행 게이트: enRequired 유형은 form.published=true + 영문 제목(title_en) 미입력 시 저장 차단('영문 제목을 입력해야 발행할 수 있습니다. 임시저장은 영문 없이도 가능') + 발행 버튼 disabled. 게시 토글 끄면 임시저장(draft) 허용
+- [x] KO/EN 본문 분리: t1/t2(비-contest)·exhibition에 영문 리치 에디터(body_en) 추가. exhibition은 title_en·intro_en 필드 신설. emptyForm/fromItem/toPayload 배선
+### R2 정적 영문 데이터 확정 (data/*.js, 원문 verbatim + EN 형제 필드만 추가)
+- [x] history.js textEn 12건(연혁 확정 영문). mentors.js nameEn·companyEn·roleEn 14명(성 뒤 로마자). careers.js nameEn·majorsEn·companyEn·roleEn 26건(전공 매핑 사전 일관, 회사 공식영문/음역). clubs.js fieldEn 4종 + clubFieldEn 맵. 학과명 Digital Arts & Humanities 풀네임
+### R3 공개 i18n·인터랙션 (i18n, People·About·Council·Clubs·HeroSection·Exhibitions + council.js)
+- [x] tracks 라벨 '3개 트랙'→'전공 트랙'(Three Tracks→Tracks). 히어로 CTA EN. 전시 피처드 EN 풀네임('The 18th Digital Arts & Humanities Project Exhibition')·intro_en·CTA
+- [x] council.js titleEn 10기수 + 멤버 nameEn 56명(로마자). Council EN 렌더(titleEn·멤버명·소속 Digital Arts & Humanities 풀네임). '2026 제1대 운영위원회 LUCID'→'2026 1st Student Council LUCID'
+- [x] People EN: 교수 영문명만 크게·한글 숨김(Prof., Digital Arts & Humanities). MentorCard nameEn/companyEn/roleEn. Clubs EN: title_en 렌더(더 인스튜디오 영문명 노출 수정) + fieldEn/clubFieldEn 매핑
+- [!] 동아리 로고(CON:NECT·DS4H): 코드 버그 아님 — 해당 레코드 poster_url 미저장(로고 미업로드)이라 플레이스홀더 표시. CMS에서 로고 업로드 필요(업로드 race는 이전 phase서 해소)
+- [x] 언어 전환 시프트 0: 기존 App PageFade(pathname 키 재마운트 opacity 크로스페이드, translate 금지)가 /↔/en 전환에도 적용 — 신규 래퍼 불필요. R3가 컴포넌트 단위 레이아웃 시프트 0 확인
+### R4 통합 (스키마·상세 렌더·나노디그리·마이그레이션)
+- [x] 스키마: posts.body_en(jsonb) + exhibitions.title_en·intro_en(text)·body_en(jsonb). content-config 화이트리스트 반영. migrate-phase15 배포 Neon 실행·컬럼 검증 완료
+- [x] 상세 EN 렌더: NewsDetail·ResourceDetail·LectureDetail(title_en·body_en) + ContestDetail(title_en, 본문 구조화라 EN 대역 없음) + ExhibitionDetail(title_en·intro_en·body_en). EN이고 영문 없으면 국문 폴백 + Korean only 뱃지
+- [x] Careers EN: DB careers가 시드와 id 일치 → EN 모드는 정적 EN(nameEn 등)을 id 매칭 렌더(별도 en 컬럼 없이). 나노디그리 auto-rows-fr로 4과정 박스 동일 높이
+- [x] 검증: npm run build 성공(2015 모듈), 서버 node --check 통과. 22파일(수정 21 + migrate-phase15)
+- [!] 실사이트 육안(사용자): /en 미러 — 연혁·멘토·취업·운영위·교수·동아리 영문 / 발행 게이트(영문 없이 발행 불가, 공지 예외) / 나노디그리 균일 / 언어 전환 시프트 0
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

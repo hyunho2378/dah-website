@@ -13,7 +13,7 @@ import { EditPencil } from '../../components/content/EditControls'
 import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
-import { clubs as staticClubs } from '../../data/clubs'
+import { clubs as staticClubs, clubFieldEn } from '../../data/clubs'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
 // F 폴백: 서버 오프라인·빈 응답 시 data/clubs.js 원문(동아리 4종)을 카드로 렌더
@@ -21,11 +21,18 @@ const FALLBACK_CLUBS = (staticClubs ?? []).map((c) => ({
   id: c.id,
   title: c.name,
   tag: c.field,
+  fieldEn: c.fieldEn,
   intro: c.intro,
 }))
 
 function ClubCard({ item, sorting }) {
-  const title = item.title_ko ?? item.title
+  const { lang } = useLang()
+  // R3: EN 모드는 영문 동아리명(title_en) 우선 — '더 인스튜디오' 등 EN 미표시 버그 해결
+  const title =
+    lang === 'en' ? item.title_en || item.title_ko || item.title : item.title_ko ?? item.title
+  // R3: EN 분야 라벨 — 정적 폴백은 fieldEn, API 항목은 clubFieldEn 맵(국문→영문), 매핑 없으면 국문
+  const field =
+    lang === 'en' ? item.fieldEn || clubFieldEn?.[item.tag] || item.tag : item.tag
 
   // Q3: 로고 크게 중앙 상단. contain으로 원본 비율 유지(잘림 없음). 투명 PNG는 has_bg 배경 프레임.
   const content = (
@@ -47,7 +54,7 @@ function ClubCard({ item, sorting }) {
       <h3 className="text-h3-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-h3-d">
         {title}
       </h3>
-      {item.tag && <Tag>{item.tag}</Tag>}
+      {field && <Tag>{field}</Tag>}
       {item.intro && (
         <p className="text-small-m leading-relaxed text-text-sec md:text-small-d">
           {item.intro}

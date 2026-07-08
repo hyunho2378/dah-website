@@ -40,12 +40,12 @@ export const en = {
     terms: 'Terms of Service',
   },
   hero: {
-    ctaAbout: 'About',
-    ctaExhibition: 'Visit Exhibition',
+    ctaAbout: 'About the Major',
+    ctaExhibition: 'Visit the Exhibition',
   },
   sections: {
     programs: 'Programs',
-    tracks: 'Three Tracks',
+    tracks: 'Tracks',
     achievements: 'Student Achievements',
     news: 'Notices',
     overview: 'Overview',

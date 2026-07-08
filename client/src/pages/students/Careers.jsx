@@ -18,15 +18,22 @@ const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 const joinMajors = (majors) =>
   Array.isArray(majors) ? majors.join(' / ') : majors
 
+// R2(27_I18N): DB careers는 id가 정적 시드(career-01..)와 일치 → EN 모드는 정적 EN 필드(nameEn 등)를
+// id로 매칭해 렌더(취업은 수동 영문 정책상 별도 en 컬럼 없이 시드 확정 영문 사용). 미매칭 항목은 국문 폴백.
+const careerEnById = Object.fromEntries(staticCareers.map((c) => [c.id, c]))
+
 // DB careers(grad_name, company_url, position) ↔ 정적(name, companyUrl, role) 통합
-const normalizeCareer = (c) => ({
-  id: c.id,
-  name: c.grad_name ?? c.name,
-  majors: c.majors,
-  company: c.company,
-  companyUrl: c.company_url ?? c.companyUrl ?? null,
-  role: c.position ?? c.role ?? null,
-})
+const normalizeCareer = (c, isEn) => {
+  const en = isEn ? careerEnById[c.id] : null
+  return {
+    id: c.id,
+    name: en?.nameEn ?? c.grad_name ?? c.name,
+    majors: en?.majorsEn ?? c.majors,
+    company: en?.companyEn ?? c.company,
+    companyUrl: c.company_url ?? c.companyUrl ?? null,
+    role: en?.roleEn ?? c.position ?? c.role ?? null,
+  }
+}
 
 const normalizePortfolio = (p) => ({
   id: p.id,
@@ -120,8 +127,9 @@ function PortfolioItem({ portfolio }) {
 }
 
 function Careers() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   useTitle(t('titles.careers'))
+  const isEn = lang === 'en'
   // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피 — 취업 26건 등)
   const careersRes = useApi('/content/careers', { params: { pageSize: 100 } })
   const portfoliosRes = useApi('/content/portfolios', { params: { pageSize: 100 } })
@@ -129,7 +137,7 @@ function Careers() {
   const careerFallback = careersRes.offline || (careersRes.error && !careersRes.data)
   const careerItems = (
     careerFallback ? staticCareers : careersRes.data?.items ?? []
-  ).map(normalizeCareer)
+  ).map((c) => normalizeCareer(c, isEn))
 
   const pfFallback =
     portfoliosRes.offline || (portfoliosRes.error && !portfoliosRes.data)

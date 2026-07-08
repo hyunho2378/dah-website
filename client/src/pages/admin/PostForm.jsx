@@ -31,6 +31,9 @@ const ICON_BTN =
 const nul = (v) => (v === '' || v === undefined ? null : v)
 const dateOf = (v) => (v ? String(v).slice(0, 10) : '')
 
+// R1: 발행 게이트 안내 — enRequired 유형은 영문 제목 없이 발행 불가(임시저장은 허용)
+const EN_GATE_MSG = '영문 제목을 입력해야 발행할 수 있습니다. 임시저장은 영문 없이도 가능합니다.'
+
 /** 태그 선택·관리 — 공용 태그 저장소 (GET /tags, K1-1). 칩 클릭 선택 + 인라인 생성·삭제 */
 function TagField({ value, onChange }) {
   const { data, refetch } = useApi('/tags')
@@ -356,12 +359,15 @@ function emptyForm(template, type) {
     case 'exhibition':
       return {
         title: '',
+        title_en: '', // R1: 전시명 영문
         ordinal: '', // N1-2: 회차. full_title은 exhibitionFullTitle(ordinal)로 파생
         semester_label: '',
         poster_url: '',
         site_url: '',
         intro: '',
+        intro_en: '', // R1: 소개 영문
         body: null,
+        body_en: null, // R1: 전시 상세 영문 리치 본문
         gallery: [],
         start_date: '', // N1-3: 개최일 = 시작일 (held_at 제거)
         end_date: '',
@@ -380,6 +386,7 @@ function emptyForm(template, type) {
         title_en: '',
         tag: '',
         body: null,
+        body_en: null, // R1: 영문 본문(국문과 분리). contest는 미사용
         poster_url: '',
         external_url: '',
         event_start: '',
@@ -419,12 +426,15 @@ function fromItem(template, item, type) {
       return {
         ...base,
         title: item.title || '',
+        title_en: item.title_en || '', // R1
         ordinal: item.ordinal ?? '',
         semester_label: item.semester_label || '',
         poster_url: item.poster_url || '',
         site_url: item.site_url || '',
         intro: item.intro || '',
+        intro_en: item.intro_en || '', // R1
         body: item.body || null,
+        body_en: item.body_en || null, // R1
         gallery: Array.isArray(item.gallery) ? item.gallery : [],
         start_date: dateOf(item.start_date),
         end_date: dateOf(item.end_date),
@@ -450,6 +460,7 @@ function fromItem(template, item, type) {
         title_en: item.title_en || '',
         tag: item.tag || '',
         body: item.body || null,
+        body_en: item.body_en || null, // R1: 영문 본문
         poster_url: item.poster_url || '',
         external_url: item.external_url || '',
         event_start: dateOf(item.event_start),
@@ -490,12 +501,15 @@ function toPayload(template, config, form, type) {
     case 'exhibition':
       return {
         title: form.title,
+        title_en: nul(form.title_en), // R1: 전시명 영문
         ordinal: form.ordinal === '' ? null : Number(form.ordinal),
         semester_label: nul(form.semester_label),
         poster_url: nul(form.poster_url),
         site_url: nul(form.site_url),
         intro: nul(form.intro),
+        intro_en: nul(form.intro_en), // R1: 소개 영문
         body: form.body,
+        body_en: form.body_en, // R1: 전시 상세 영문 리치 본문
         gallery: form.gallery,
         start_date: nul(form.start_date),
         end_date: nul(form.end_date),
@@ -526,6 +540,8 @@ function toPayload(template, config, form, type) {
         pinned: form.pinned,
         has_bg: form.has_bg, // M1-1: 동아리 로고 배경 프레임 (기타 유형은 기본 false)
       }
+      // R1: EN 본문 — contest는 구조화 body(host/editions)라 EN 본문 없음
+      if (type !== 'contest') payload.body_en = form.body_en
       if (template === 't2') {
         payload.poster_url = nul(form.poster_url)
         payload.external_url = nul(form.external_url)
@@ -578,9 +594,18 @@ function PostForm() {
   const setInput = (key) => (e) => set(key)(e.target.value)
   const backTo = `/admin/posts/${type}`
 
+  // R1: 발행 게이트 — enRequired 유형은 영문 제목 없이 게시 불가(게시 끄면 임시저장 가능)
+  const enTitle = form.title_en || ''
+  const enGateBlocked = Boolean(config.enRequired && form.published && !enTitle.trim())
+
   const save = async (e) => {
     e.preventDefault()
     if (uploading > 0) return // 업로드 완료 전 저장 차단 — 빈 URL 저장 방지
+    // R1: 발행 게이트 — 영문 제목 없이 게시 시도 시 차단(게시 끄면 임시저장 가능)
+    if (enGateBlocked) {
+      setSaveError(EN_GATE_MSG)
+      return
+    }
     setBusy(true)
     setSaveError(null)
     try {
@@ -734,6 +759,9 @@ function PostForm() {
               <Field label="전시명">
                 <Input value={form.title} onChange={setInput('title')} required />
               </Field>
+              <Field label="전시명 (영문)" hint="비우면 영문 페이지에 Korean only 뱃지">
+                <Input value={form.title_en} onChange={setInput('title_en')} />
+              </Field>
               {/* N1-2: 회차(정수). 전체 전시명은 exhibitionFullTitle로 자동 파생(DB 미저장) */}
               <Field
                 label="회차"
@@ -767,10 +795,21 @@ function PostForm() {
                   <TextArea rows={3} value={form.intro} onChange={setInput('intro')} />
                 </Field>
               </div>
+              <div className="md:col-span-2">
+                <Field label="소개 (영문)">
+                  <TextArea rows={3} value={form.intro_en} onChange={setInput('intro_en')} />
+                </Field>
+              </div>
               {/* M1-2: 리치 인트로 — exhibitions.body(Tiptap doc) */}
               <div className="md:col-span-2">
                 <Field label="소개(리치)" hint="전시 상세 리치 본문">
                   <RichEditor value={form.body} onChange={set('body')} />
+                </Field>
+              </div>
+              {/* R1: 전시 상세 영문 리치 본문 — exhibitions.body_en(Tiptap doc) */}
+              <div className="md:col-span-2">
+                <Field label="본문 (영문)" hint="비우면 영문 페이지에 국문 본문 렌더">
+                  <RichEditor value={form.body_en} onChange={set('body_en')} />
                 </Field>
               </div>
               <div className="md:col-span-2">
@@ -878,9 +917,19 @@ function PostForm() {
           </Field>
         )}
 
+        {/* R1: EN 본문 — 국문과 분리. 비우면 영문 페이지에서 국문 폴백 */}
+        {(template === 't1' || (template === 't2' && type !== 'contest')) && (
+          <Field label="본문 (영문)" hint="비우면 영문 페이지에 국문 본문 렌더">
+            <RichEditor value={form.body_en} onChange={set('body_en')} />
+          </Field>
+        )}
+
         <div className="flex flex-wrap items-center gap-24 border-t border-border-subtle pt-24">
           {template !== 'portfolio' && (
-            <Field label="게시">
+            <Field
+              label="게시"
+              hint={config.enRequired ? '발행하려면 영문 제목이 필요합니다' : undefined}
+            >
               <Toggle checked={form.published} onChange={set('published')} label="게시 여부" />
             </Field>
           )}
@@ -903,9 +952,12 @@ function PostForm() {
           )}
         </div>
 
-        <ErrorText>{saveError}</ErrorText>
+        <ErrorText>{saveError || (enGateBlocked ? EN_GATE_MSG : null)}</ErrorText>
         <div className="flex items-center gap-8">
-          <PrimaryButton type="submit" disabled={busy || uploading > 0 || (!isNew && !hydrated)}>
+          <PrimaryButton
+            type="submit"
+            disabled={busy || uploading > 0 || (!isNew && !hydrated) || enGateBlocked}
+          >
             {busy ? '저장 중' : uploading > 0 ? '업로드 완료 대기' : '저장'}
           </PrimaryButton>
           <GhostButton onClick={() => navigate(backTo)}>취소</GhostButton>

@@ -5,18 +5,19 @@
  * @typedef {Object} HistoryItem
  * @property {string} date - 날짜 (원문 표기 그대로, 'YYYY.MM.DD.')
  * @property {string} text - 내용 (원문 그대로)
+ * @property {string} textEn - 내용 (영문)
  */
 export const history = [
-  { date: '2017.03.01.', text: '한림대학교 디지털인문예술전공 설립' },
-  { date: '2017.03.01.', text: '전공주임교수 김용수 교수 취임' },
-  { date: '2017.03.01.', text: '한수미 교수 부임' },
-  { date: '2018.03.01.', text: '글로벌융합대학 소속 전공' },
-  { date: '2018.09.01.', text: '이승은 교수 부임' },
-  { date: '2018.09.01.', text: '미래융합스쿨 소속 전공' },
-  { date: '2019.07.01.', text: '전공주임교수 한수미 교수 취임' },
-  { date: '2020.09.01.', text: '전공주임교수 이승은 교수 취임' },
-  { date: '2022.03.01.', text: '김성우 교수 부임' },
-  { date: '2022.07.01.', text: '전공주임교수 김성우 교수 취임' },
-  { date: '2023.03.01.', text: '유인선 교수 부임' },
-  { date: '2024.09.01.', text: '전공주임교수 김용수 교수 취임' },
+  { date: '2017.03.01.', text: '한림대학교 디지털인문예술전공 설립', textEn: 'Digital Arts & Humanities established at Hallym University' },
+  { date: '2017.03.01.', text: '전공주임교수 김용수 교수 취임', textEn: 'Prof. Yong Soo Kim appointed as founding Head of Department' },
+  { date: '2017.03.01.', text: '한수미 교수 부임', textEn: 'Prof. Su Mi Han joined the faculty' },
+  { date: '2018.03.01.', text: '글로벌융합대학 소속 전공', textEn: 'Affiliated with the College of Global Convergence' },
+  { date: '2018.09.01.', text: '이승은 교수 부임', textEn: 'Prof. Seung Eun Lee joined the faculty' },
+  { date: '2018.09.01.', text: '미래융합스쿨 소속 전공', textEn: 'Affiliated with the School of Future Convergence' },
+  { date: '2019.07.01.', text: '전공주임교수 한수미 교수 취임', textEn: 'Prof. Su Mi Han appointed as Head of Department' },
+  { date: '2020.09.01.', text: '전공주임교수 이승은 교수 취임', textEn: 'Prof. Seung Eun Lee appointed as Head of Department' },
+  { date: '2022.03.01.', text: '김성우 교수 부임', textEn: 'Prof. Seong Woo Kim joined the faculty' },
+  { date: '2022.07.01.', text: '전공주임교수 김성우 교수 취임', textEn: 'Prof. Seong Woo Kim appointed as Head of Department' },
+  { date: '2023.03.01.', text: '유인선 교수 부임', textEn: 'Prof. In Sun Yoo joined the faculty' },
+  { date: '2024.09.01.', text: '전공주임교수 김용수 교수 취임', textEn: 'Prof. Yong Soo Kim appointed as Head of Department' },
 ];

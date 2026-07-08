@@ -6,7 +6,7 @@
  * export 계약 (카드 렌더 · 페이지 에이전트 소비용, 필드명 고정):
  *   clubsIntro = string                // 425행 동아리 소개 원문
  *   clubs = [{
- *     id, name, field,                 // 이름·괄호 안 분야 원문
+ *     id, name, field, fieldEn,        // 이름·괄호 안 분야 원문 (+ 분야 영문)
  *     intro,                           // 소개 문장 원문
  *     activities: [string],            // '활동 내용' 목록 원문
  *     targets: [string],               // '추천 대상' 목록 원문
@@ -21,6 +21,7 @@ export const clubs = [
     id: 'club-the-instudio',
     name: '더 인스튜디오',
     field: 'UX·UI',
+    fieldEn: 'UX/UI',
     intro: '더 인스튜디오는 경험디자인(UX·UI) 직무를 희망하는 학우들의 전공 역량 강화를 위한 다양한 활동을 합니다.',
     activities: [
       '정기 킥오프를 통해 UX 스터디 & 아티클 공유',
@@ -38,6 +39,7 @@ export const clubs = [
     id: 'club-i-so',
     name: 'I-SO',
     field: '시각디자인',
+    fieldEn: 'Visual Design',
     intro: 'I-SO는 Isometric Design을 모티브로, 시각적 관점을 확장해 다양한 방면에서 시각디자인 활동을 진행합니다.',
     activities: [
       '다양한 디자인 툴 학습 및 기초 역량 강화',
@@ -55,6 +57,7 @@ export const clubs = [
     id: 'club-connect',
     name: 'CON:NECT',
     field: '콘텐츠',
+    fieldEn: 'Content',
     intro: 'CON:NECT는 콘텐츠 매체를 통해 사람과 문화, 문화와 예술을 이어주는 연결점이 되는 활동을 합니다.',
     activities: [
       '창의적인 팀 프로젝트 기획 & 실행',
@@ -72,6 +75,7 @@ export const clubs = [
     id: 'club-ds4h',
     name: 'DS4H',
     field: '데이터',
+    fieldEn: 'Data',
     intro: 'DS4H는 인문적 관점에서 비전공자도 쉽게 데이터 분석에 접근할 수 있는 데이터 프로젝트 활동을 진행합니다.',
     activities: [
       '데이터 분석 및 시각화 워크샵',
@@ -86,3 +90,6 @@ export const clubs = [
     ],
   },
 ];
+
+// DB 기반 동아리 카드 태그 번역용 매핑 (field 원문 → 영문). 'UX·UI'/'UX/UI' 양쪽 표기 모두 수용.
+export const clubFieldEn = { 'UX·UI': 'UX/UI', 'UX/UI': 'UX/UI', '시각디자인': 'Visual Design', '콘텐츠': 'Content', '데이터': 'Data' };

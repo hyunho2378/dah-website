@@ -11,7 +11,7 @@ import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-import { useLang } from '../../i18n/LangContext'
+import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 
 function MetaRow({ label, children }) {
   return (
@@ -30,11 +30,14 @@ function hostText(host) {
 }
 
 function ContestDetail() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   const { id } = useParams()
   const { data, loading } = useApi(`/content/contest/${id}`)
   const item = itemOf(data)
-  const title = item?.title_ko ?? item?.title
+  // R1(27_I18N): EN 모드는 영문 제목 우선(공모전 영문 필수 — 없으면 국문 폴백 뱃지). 본문은 구조화(주최·회차)라 EN 대역 없음
+  const isEn = lang === 'en'
+  const title = (isEn && item?.title_en) || item?.title_ko || item?.title
+  const koFallback = isEn && item && !item.title_en
   useTitle(title ?? t('titles.contests'))
 
   const start = (item?.event_start ?? '').slice(0, 10)
@@ -83,7 +86,10 @@ function ContestDetail() {
               <div className="flex min-w-0 flex-col gap-24 lg:col-span-2">
                 <div className="flex flex-wrap items-start justify-between gap-16">
                   <div className="flex min-w-0 flex-col gap-12">
-                    {item.tag && <Tag>{item.tag}</Tag>}
+                    <div className="flex flex-wrap items-center gap-8">
+                      {item.tag && <Tag>{item.tag}</Tag>}
+                      {koFallback && <KoreanOnlyBadge />}
+                    </div>
                     <h1 className="min-w-0 text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
                       {title}
                     </h1>

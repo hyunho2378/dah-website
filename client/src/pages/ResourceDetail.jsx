@@ -46,12 +46,16 @@ function AttachmentRow({ file, t }) {
 
 function ResourceDetail() {
   const { id } = useParams()
-  const { t } = useLang()
+  const { lang, t } = useLang()
   const { data, loading } = useApi(`/content/resource/${id}`)
 
   const post = itemOf(data)
 
-  const title = post?.title_ko ?? post?.title ?? ''
+  // R1(27_I18N): EN 모드는 영문 본문·제목 우선(자료실은 영문 필수 — 없으면 국문 폴백 뱃지)
+  const isEn = lang === 'en'
+  const title = (isEn && post?.title_en) || post?.title_ko || post?.title || ''
+  const body = isEn && post?.body_en ? post.body_en : post?.body
+  const koFallback = isEn && (!post?.title_en || !post?.body_en)
   const tag = post?.tag ?? null
   const date = post?.date ?? (post?.created_at ?? '').slice(0, 10)
   const attachments = (post?.attachments ?? post?.files ?? []).filter((f) => f && f.url)
@@ -84,7 +88,7 @@ function ResourceDetail() {
         ) : (
           <article className="mx-auto flex min-w-0 max-w-container flex-col gap-24">
             <div className="flex flex-wrap items-center gap-12">
-              {!post.title_en && <KoreanOnlyBadge />}
+              {koFallback && <KoreanOnlyBadge />}
               <EditPencil type="resource" to={`/admin/posts/resource/${id}/edit`} />
             </div>
 
@@ -115,9 +119,9 @@ function ResourceDetail() {
             </header>
 
             {/* 본문 — 배경 그대로 + 타이틀 블록과의 사이 헤어라인, text-pri·행간 1.8 */}
-            {post.body ? (
+            {body ? (
               <div className="border-t border-border-subtle pt-32">
-                <RichBody body={post.body} className="rich-bright" />
+                <RichBody body={body} className="rich-bright" />
               </div>
             ) : (
               <p className="border-t border-border-subtle pt-32 text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">

@@ -13,6 +13,13 @@ import { councils } from '../../data/council'
 const toMember = (member) =>
   typeof member === 'string' ? { name: member } : member
 
+// J5: EN 모드 소속 전공 라벨 — '디지털인문예술[전공]' 접두만 풀네임으로 치환(뒤 숫자 보존).
+// 타 학과(사회학과 등)는 EN 대역 원문이 없어 국문 그대로 둔다.
+function majorsEn(majors) {
+  if (!majors) return majors
+  return majors.replace(/^디지털인문예술( ?전공)?/, 'Digital Arts & Humanities')
+}
+
 // J6: 연속한 같은 부서(role)를 한 행으로 묶는다 — 원문 순서 보존
 function groupByRole(members) {
   const rows = []
@@ -28,6 +35,7 @@ function groupByRole(members) {
 const FALLBACK_ITEMS = councils.map((c) => ({
   id: `council-${c.year}`,
   name: c.title,
+  titleEn: c.titleEn,
   year_label: String(c.year),
   intro: c.intro,
   members: c.members,
@@ -56,6 +64,12 @@ function Council() {
   const staticMatch = councils.find((c) => String(c.year) === String(active?.year_label))
   const introText =
     lang === 'en' ? staticMatch?.introEn ?? active?.intro : active?.intro
+  // J5: EN 모드 기수 타이틀 — titleEn(연도 포함) 우선, 없으면 국문 합성으로 폴백
+  const composedTitle = [active?.year_label, active?.name].filter(Boolean).join(' ')
+  const titleText =
+    lang === 'en'
+      ? staticMatch?.titleEn ?? active?.titleEn ?? composedTitle
+      : composedTitle
 
   return (
     <>
@@ -134,7 +148,7 @@ function Council() {
                   ))}
                 <div className="flex min-w-0 flex-wrap items-center gap-12">
                   <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
-                    {[active.year_label, active.name].filter(Boolean).join(' ')}
+                    {titleText}
                   </h2>
                   <EditPencil type="council" to="/admin/council" />
                 </div>
@@ -176,10 +190,10 @@ function Council() {
                             key={`${member.name}-${member.majors ?? ''}`}
                             className="text-body-m text-text-pri md:text-body-d"
                           >
-                            {member.name}
+                            {lang === 'en' ? member.nameEn ?? member.name : member.name}
                             {member.majors && (
                               <span className="ml-8 text-small-m text-text-meta md:text-small-d">
-                                ({member.majors})
+                                ({lang === 'en' ? majorsEn(member.majors) : member.majors})
                               </span>
                             )}
                           </span>
