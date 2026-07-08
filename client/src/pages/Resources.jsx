@@ -11,13 +11,7 @@ import { useLang } from '../i18n/LangContext'
 
 const PAGE_SIZE = 10
 
-function toAttachment(file) {
-  if (typeof file === 'string') return { name: '첨부파일', url: file }
-  return { name: file.name ?? file.filename ?? '첨부파일', url: file.url }
-}
-
 function toRow(post, no) {
-  const files = post.attachments ?? post.files ?? []
   return {
     id: post.id,
     no,
@@ -26,8 +20,8 @@ function toRow(post, no) {
     author: post.author ?? null,
     date: post.date ?? (post.created_at ?? '').slice(0, 10) ?? null,
     pinned: Boolean(post.pinned),
-    // J7: 외부(구글 사이트) 아웃바운드 폐지 — 자료실 행은 비링크 + 첨부 다운로드만
-    attachments: files.map(toAttachment),
+    // N1-1: 자료실 행 → 내부 상세 진입(/resources/:id). 첨부·미리보기·다운로드는 상세에서만.
+    to: `/resources/${post.id}`,
   }
 }
 

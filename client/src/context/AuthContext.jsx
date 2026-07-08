@@ -30,6 +30,7 @@ const EDIT_MIN_ROLE = {
   curriculum: 'admin',
   codesharing: 'admin',
   nanodegree: 'admin',
+  ci: 'admin',
   council: 'admin',
   career: 'admin',
   careers: 'admin',

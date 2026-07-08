@@ -36,6 +36,7 @@ export const nav = [
       { label: '나노디그리', labelEn: 'Nanodegree', to: '/curriculum/nanodegree' },
       { label: '교수진', labelEn: 'Faculty', to: '/about/people' },
       { label: '멘토', labelEn: 'Mentors', to: '/about/people#mentors' },
+      { label: 'CI', labelEn: 'CI', to: '/about/ci' },
     ],
   },
   {

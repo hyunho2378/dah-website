@@ -26,6 +26,7 @@ import MentorsAdmin from './MentorsAdmin'
 import CurriculumAdmin from './CurriculumAdmin'
 import CodeSharingAdmin from './CodeSharingAdmin'
 import NanodegreeAdmin from './NanodegreeAdmin'
+import CIAdmin from './CIAdmin'
 import CouncilAdmin from './CouncilAdmin'
 import CareersAdmin from './CareersAdmin'
 import ExhibitionAdmin from './ExhibitionAdmin'
@@ -47,6 +48,7 @@ export const ADMIN_ROUTES = [
   { path: 'curriculum', Component: CurriculumAdmin, role: 'admin' },
   { path: 'codesharing', Component: CodeSharingAdmin, role: 'admin' },
   { path: 'nanodegree', Component: NanodegreeAdmin, role: 'admin' },
+  { path: 'ci', Component: CIAdmin, role: 'admin' },
   { path: 'council', Component: CouncilAdmin, role: 'admin' },
   { path: 'careers', Component: CareersAdmin, role: 'admin' },
   { path: 'exhibition', Component: ExhibitionAdmin, role: 'admin' },

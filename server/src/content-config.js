@@ -94,6 +94,18 @@ export const CONTENT_TYPES = {
     orderBy: 'id ASC',
     searchCols: [],
   },
+  // N1-5: CI(브랜드 아이덴티티) 단일 문서 (codesharing·nanodegree 동일 싱글턴 패턴)
+  // body jsonb: { intro, elements:[{title,text,image}], logoGuide:[{title,image}], colors:[{name,hex}], downloads:[{label,url}] }
+  ci: {
+    table: 'ci',
+    minRole: 'admin',
+    singleton: true,
+    columns: ['body'],
+    jsonb: ['body'],
+    required: [],
+    orderBy: 'id ASC',
+    searchCols: [],
+  },
   council: {
     table: 'council',
     minRole: 'admin',
@@ -107,11 +119,14 @@ export const CONTENT_TYPES = {
   exhibitions: {
     table: 'exhibitions',
     minRole: 'manager', // 13_CMS: 전시회 manager+
-    columns: ['semester_label', 'title', 'poster_url', 'site_url', 'intro', 'body', 'gallery', 'held_at', 'start_date', 'end_date', 'is_featured', 'published'],
+    // N1-2 ordinal(회차, full_title은 exhibitionFullTitle로 파생 — DB 저장 안 함).
+    // N1-3 held_at 제거(레거시 컬럼은 DB에 남기되 미사용). 개최일 = start_date.
+    columns: ['semester_label', 'title', 'ordinal', 'poster_url', 'site_url', 'intro', 'body', 'gallery', 'start_date', 'end_date', 'is_featured', 'published'],
     jsonb: ['body', 'gallery'],
     required: ['title'],
-    // held_at은 아카이브 대부분 null → semester_label('YYYY-S' 문자열 역순=학기 역순)로 정렬
-    orderBy: 'held_at DESC NULLS LAST, semester_label DESC NULLS LAST, id DESC',
+    // N1-3: start_date(=개최일) 역순 정렬. 레거시 held_at은 migrate-phase11이 start_date로 백필.
+    // 여전히 null이면 semester_label('YYYY-S' 문자열 역순=학기 역순)로 폴백.
+    orderBy: 'start_date DESC NULLS LAST, semester_label DESC NULLS LAST, id DESC',
     publicWhere: 'published = TRUE',
     searchCols: ['title', 'semester_label'],
   },

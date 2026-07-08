@@ -9,6 +9,7 @@ import Button from '../../components/common/Button'
 import RichBody from '../../components/content/RichBody'
 import Reveal from '../../components/common/Reveal'
 import InlineEditBar from '../../components/content/InlineEditBar'
+import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
@@ -24,26 +25,30 @@ function periodText(start, end, fallback) {
   return s || e || (fallback ?? null)
 }
 
-// 피처드 전시(is_featured) — 목록 최상단 큰 히어로 블록
+// 피처드 전시(is_featured) — 목록 최상단 히어로 블록
+// H(N2-2): 감싸는 카드(GlassCard) 제거 + 포스터 축소로 세로 높이 약 절반. 포스터는 페이지
+// 좌측 마진에 붙는 좁은 컬럼(ImageFrame bg 없이 포스터만). 제목은 풀네임(ordinal 파생).
 function FeaturedExhibition({ item }) {
-  const heading = item.semester_label || item.title
+  const fullTitle = exhibitionFullTitle(item.ordinal) || item.title
   const period = periodText(item.start_date, item.end_date, item.held_at)
-  const ctaLabel = item.semester_label || item.title
+  const showTitle = item.title && item.title !== fullTitle
   return (
-    <GlassCard className="grid gap-24 p-16 md:p-24 lg:grid-cols-2 lg:gap-48">
-      <ImageFrame
-        src={item.poster_url}
-        alt={`${item.title} 포스터`}
-        ratio="2/3"
-        loading="eager"
-        placeholder={heading}
-      />
-      <div className="flex min-w-0 flex-col gap-16 lg:justify-center">
+    <div className="grid gap-24 md:grid-cols-[220px_1fr] md:gap-40 lg:grid-cols-[260px_1fr] lg:gap-48">
+      <div className="w-full max-w-[220px] md:max-w-none">
+        <ImageFrame
+          src={item.poster_url}
+          alt={`${item.title} 포스터`}
+          ratio="2/3"
+          loading="eager"
+          placeholder={fullTitle}
+        />
+      </div>
+      <div className="flex min-w-0 flex-col justify-center gap-16">
         <div className="flex min-w-0 flex-col gap-8">
           <h2 className="min-w-0 text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
-            {heading}
+            {fullTitle}
           </h2>
-          {item.semester_label && item.title && item.title !== item.semester_label && (
+          {showTitle && (
             <p className="min-w-0 text-body-l-m text-text-sec md:text-body-l-d">{item.title}</p>
           )}
           {period && (
@@ -60,16 +65,16 @@ function FeaturedExhibition({ item }) {
         <div className="mt-4">
           {item.site_url ? (
             <Button variant="primary" href={item.site_url} external>
-              {ctaLabel}
+              {fullTitle}
             </Button>
           ) : (
             <Button variant="primary" href={`/programs/exhibitions/${item.id}`}>
-              {ctaLabel}
+              {fullTitle}
             </Button>
           )}
         </div>
       </div>
-    </GlassCard>
+    </div>
   )
 }
 

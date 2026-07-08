@@ -27,6 +27,7 @@ export const ko = {
     curriculum: '교육과정',
     codesharing: '코드쉐어링',
     nanodegree: '나노디그리',
+    ci: 'CI',
     exhibitions: '전시회',
     contests: '공모전',
     lectures: '특강',
@@ -147,6 +148,13 @@ export const ko = {
   council: {
     compositionTitle: '운영위원회 구성',
   },
+  ci: {
+    title: 'CI 소개',
+    elements: '구성 요소',
+    logoGuide: '로고 가이드',
+    colors: '전용 색상',
+    downloads: '다운로드',
+  },
   curriculum: {
     // K2-11: 표 라벨 "학년" → "수준" (로드맵 축 라벨 gradeSuffix는 유지)
     grade: '수준',
@@ -167,6 +175,7 @@ export const ko = {
     searchPlaceholder: '공지 검색',
     resourceSearchPlaceholder: '자료 검색',
     noBody: '본문이 등록되지 않은 공지입니다.',
+    resourceNoBody: '본문이 등록되지 않은 자료입니다.',
     registered: '등록일',
     preview: '미리보기',
     download: '다운로드',

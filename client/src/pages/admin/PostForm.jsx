@@ -22,6 +22,7 @@ import {
   Toggle,
 } from '../../components/admin/FormControls'
 import { POST_TYPES } from './postTypes'
+import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 
 const ICON_BTN =
   'flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
@@ -350,14 +351,14 @@ function emptyForm(template, type) {
     case 'exhibition':
       return {
         title: '',
+        ordinal: '', // N1-2: 회차. full_title은 exhibitionFullTitle(ordinal)로 파생
         semester_label: '',
         poster_url: '',
         site_url: '',
         intro: '',
         body: null,
         gallery: [],
-        held_at: '',
-        start_date: '',
+        start_date: '', // N1-3: 개최일 = 시작일 (held_at 제거)
         end_date: '',
         is_featured: false,
         published: true,
@@ -410,13 +411,13 @@ function fromItem(template, item, type) {
       return {
         ...base,
         title: item.title || '',
+        ordinal: item.ordinal ?? '',
         semester_label: item.semester_label || '',
         poster_url: item.poster_url || '',
         site_url: item.site_url || '',
         intro: item.intro || '',
         body: item.body || null,
         gallery: Array.isArray(item.gallery) ? item.gallery : [],
-        held_at: dateOf(item.held_at),
         start_date: dateOf(item.start_date),
         end_date: dateOf(item.end_date),
         is_featured: Boolean(item.is_featured),
@@ -478,13 +479,13 @@ function toPayload(template, config, form, type) {
     case 'exhibition':
       return {
         title: form.title,
+        ordinal: form.ordinal === '' ? null : Number(form.ordinal),
         semester_label: nul(form.semester_label),
         poster_url: nul(form.poster_url),
         site_url: nul(form.site_url),
         intro: nul(form.intro),
         body: form.body,
         gallery: form.gallery,
-        held_at: nul(form.held_at),
         start_date: nul(form.start_date),
         end_date: nul(form.end_date),
         is_featured: form.is_featured,
@@ -689,17 +690,29 @@ function PostForm() {
               <Field label="전시명">
                 <Input value={form.title} onChange={setInput('title')} required />
               </Field>
+              {/* N1-2: 회차(정수). 전체 전시명은 exhibitionFullTitle로 자동 파생(DB 미저장) */}
+              <Field
+                label="회차"
+                hint={
+                  exhibitionFullTitle(form.ordinal) ||
+                  '숫자만 입력 (예: 8). 전체 전시명이 자동 생성됩니다'
+                }
+              >
+                <Input
+                  type="number"
+                  min="1"
+                  value={form.ordinal}
+                  onChange={(e) => set('ordinal')(e.target.value === '' ? '' : Number(e.target.value))}
+                />
+              </Field>
               <Field label="학기 라벨" hint="예: 2026-2">
                 <Input value={form.semester_label} onChange={setInput('semester_label')} />
-              </Field>
-              <Field label="개최일" hint="레거시. 기간은 시작·종료일 사용">
-                <Input type="date" value={form.held_at} onChange={setInput('held_at')} />
               </Field>
               <Field label="전시 사이트 URL">
                 <Input type="url" value={form.site_url} onChange={setInput('site_url')} />
               </Field>
-              {/* M1-2: 전시 기간 */}
-              <Field label="시작일">
+              {/* M1-2: 전시 기간. N1-3: 시작일 = 개최일 */}
+              <Field label="시작일" hint="개최일">
                 <Input type="date" value={form.start_date} onChange={setInput('start_date')} />
               </Field>
               <Field label="종료일">

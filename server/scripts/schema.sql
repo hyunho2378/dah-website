@@ -221,6 +221,17 @@ ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS start_date  DATE;
 ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS end_date    DATE;
 ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE;
 
+-- ─── Phase 11 (23_PHASE11) ─────────────────────────────────────
+-- N1-2: 전시회 회차. full_title은 exhibitionFullTitle(ordinal)로 파생 — DB에는 회차만 저장.
+ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS ordinal INTEGER;
+
+-- N1-5: CI(브랜드 아이덴티티) 단일 행 문서 (codesharing·nanodegree 동일 싱글턴 패턴. id=1 고정)
+-- body jsonb: { intro, elements:[{title,text,image}], logoGuide:[{title,image}], colors:[{name,hex}], downloads:[{label,url}] }
+CREATE TABLE IF NOT EXISTS ci (
+  id   INTEGER PRIMARY KEY CHECK (id = 1),
+  body JSONB
+);
+
 -- ─── 초기 데이터 ───────────────────────────────────────────────
 
 -- 전시회 접수 2026-2 일정 초기값 (12_BACKEND.md 5절. 11-24 00:00부터 신규·수정 전면 차단)
@@ -243,5 +254,10 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 나노디그리 단일 행 자리 (내용은 migrate-phase9.mjs가 data/nanodegree.js 원문으로 채움)
 INSERT INTO nanodegree (id, body)
+VALUES (1, NULL)
+ON CONFLICT (id) DO NOTHING;
+
+-- CI 단일 행 자리 (내용은 migrate-phase11.mjs가 data/ci.js 원문으로 채움 — body NULL일 때만)
+INSERT INTO ci (id, body)
 VALUES (1, NULL)
 ON CONFLICT (id) DO NOTHING;

@@ -89,31 +89,9 @@ function Header() {
   }
 
   const glassed = scrolled || openIndex !== null
-  const active = openIndex !== null ? nav[openIndex] : null
-  const menuOpen = Boolean(active && active.children.length > 0)
-
-  // 메가메뉴 열림 시 본문 스크롤 잠금 — 닫힘·라우트 이동 시 클린업으로 복구
-  useEffect(() => {
-    if (!menuOpen) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [menuOpen])
 
   return (
     <>
-      {/* 열림 시 본문 딤 오버레이 — 헤더(z-50) 아래, 클릭 시 닫힘. lg 전용 */}
-      {menuOpen && (
-        <button
-          type="button"
-          aria-label={t('aria.closeMenu')}
-          tabIndex={-1}
-          onClick={close}
-          className="fixed inset-0 z-40 hidden bg-black/40 lg:block"
-        />
-      )}
       <header
         ref={headerRef}
         onMouseLeave={close}
@@ -144,23 +122,65 @@ function Header() {
         </Link>
 
         <nav aria-label={t('aria.mainMenu')} className="hidden h-full items-center lg:flex">
-          {nav.map((item, i) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              aria-expanded={item.children.length > 0 ? openIndex === i : undefined}
-              onMouseEnter={() => setOpenIndex(i)}
-              onFocus={() => setOpenIndex(i)}
-              className={({ isActive }) =>
-                `flex h-full items-center px-12 text-body-d transition-colors duration-fast ease-out hover:text-text-pri ${
-                  isActive ? 'text-text-pri' : 'text-text-sec'
-                }`
-              }
-            >
-              <FixedWidthLabel current={navLabel(item)} other={navOther(item)} className="text-center" />
-            </NavLink>
-          ))}
+          {nav.map((item, i) => {
+            const hasChildren = item.children.length > 0
+            const isOpen = hasChildren && openIndex === i
+            return (
+              <div
+                key={item.to}
+                onMouseEnter={() => setOpenIndex(i)}
+                onFocus={() => setOpenIndex(i)}
+                className="relative flex h-full items-center"
+              >
+                <NavLink
+                  to={item.to}
+                  end={item.to === '/'}
+                  aria-expanded={hasChildren ? isOpen : undefined}
+                  className={({ isActive }) =>
+                    `flex h-full items-center px-12 text-body-d transition-colors duration-fast ease-out hover:text-text-pri ${
+                      isActive ? 'text-text-pri' : 'text-text-sec'
+                    }`
+                  }
+                >
+                  <FixedWidthLabel current={navLabel(item)} other={navOther(item)} className="text-center" />
+                </NavLink>
+                {hasChildren && (
+                  // 세로 드롭다운 — 메뉴 좌측 정렬, 위→아래 확장(grid-rows 0fr↔1fr).
+                  // reduced-motion은 전역 미디어쿼리가 tailwind transition을 무효화 → 즉시 전환.
+                  <div
+                    className={`absolute left-0 top-full z-20 grid transition-[grid-template-rows] duration-base ease-out ${
+                      isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                    }`}
+                  >
+                    <div
+                      className={`overflow-hidden transition-opacity duration-fast ease-out ${
+                        isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+                      }`}
+                    >
+                      <ul className="min-w-[220px] rounded-b-md border border-glass-line bg-cosmos-depth1 py-8">
+                        {item.children.map((child) => (
+                          <li key={child.to}>
+                            <Link
+                              to={child.to}
+                              onClick={close}
+                              className="flex flex-col gap-4 px-16 py-12 transition-colors duration-fast ease-out hover:bg-glass-strong"
+                            >
+                              <span className="text-body-d font-semibold text-text-pri">
+                                {navLabel(child)}
+                              </span>
+                              <span className="font-display text-caption-d uppercase tracking-label text-text-meta">
+                                {child.labelEn}
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </nav>
 
         <div onMouseEnter={close} className="flex shrink-0 items-center gap-16">
@@ -206,33 +226,6 @@ function Header() {
         </div>
       </Container>
 
-      {/* 풀폭 메가메뉴 — G9: fixed 헤더 기준 absolute top-full → 스크롤 무관, 항상 헤더 바로 아래.
-          배경 완전 불투명(bg-cosmos-depth1)으로 아래 콘텐츠 비침 차단 + 하단 그림자. */}
-      {menuOpen && (
-        <div className="absolute inset-x-0 top-full z-20 hidden border-b border-glass-line bg-cosmos-depth1 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.7)] lg:block">
-          <Container
-            as="nav"
-            aria-label={`${navLabel(active)} ${t('aria.submenu')}`}
-            className="grid grid-cols-4 gap-16 py-32"
-          >
-            {active.children.map((child) => (
-              <Link
-                key={child.to}
-                to={child.to}
-                onClick={close}
-                className="rounded-md border border-transparent p-16 transition-colors duration-fast ease-out hover:border-glass-line hover:bg-glass-strong"
-              >
-                <span className="block text-body-d font-semibold text-text-pri">
-                  {navLabel(child)}
-                </span>
-                <span className="mt-4 block font-display text-caption-d uppercase tracking-label text-text-meta">
-                  {child.labelEn}
-                </span>
-              </Link>
-            ))}
-          </Container>
-        </div>
-      )}
       </header>
       {/* G9: fixed 헤더가 차지하던 자리를 본문에서 확보하는 스페이서 */}
       <div aria-hidden="true" className="h-header-s lg:h-header" />

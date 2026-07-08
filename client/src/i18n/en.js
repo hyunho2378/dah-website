@@ -25,6 +25,7 @@ export const en = {
     curriculum: 'Curriculum',
     codesharing: 'Code Sharing',
     nanodegree: 'Nanodegree',
+    ci: 'CI',
     exhibitions: 'Exhibitions',
     contests: 'Contests',
     lectures: 'Lectures',
@@ -143,6 +144,13 @@ export const en = {
   council: {
     compositionTitle: 'Committee Members',
   },
+  ci: {
+    title: 'About the CI',
+    elements: 'Elements',
+    logoGuide: 'Logo Guide',
+    colors: 'Colors',
+    downloads: 'Downloads',
+  },
   curriculum: {
     // K2-11: table label "학년" → "수준"
     grade: 'Level',
@@ -163,6 +171,7 @@ export const en = {
     searchPlaceholder: 'Search notices',
     resourceSearchPlaceholder: 'Search resources',
     noBody: 'This notice has no body content.',
+    resourceNoBody: 'This resource has no body content.',
     registered: 'Posted',
     preview: 'Preview',
     download: 'Download',

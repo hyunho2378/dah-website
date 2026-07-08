@@ -35,6 +35,8 @@ import Consult from './pages/Consult'
 import News from './pages/News'
 import NewsDetail from './pages/NewsDetail'
 import Resources from './pages/Resources'
+import ResourceDetail from './pages/ResourceDetail'
+import CI from './pages/CI'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import NotFound from './pages/NotFound'
@@ -59,6 +61,7 @@ const PUBLIC_ROUTES = [
   { path: '/', element: <Home /> },
   { path: '/about', element: <About /> },
   { path: '/about/people', element: <People /> },
+  { path: '/about/ci', element: <CI /> },
   { path: '/curriculum', element: <Curriculum /> },
   { path: '/curriculum/codesharing', element: <CodeSharing /> },
   { path: '/curriculum/nanodegree', element: <Nanodegree /> },
@@ -77,6 +80,7 @@ const PUBLIC_ROUTES = [
   { path: '/news', element: <News /> },
   { path: '/news/:id', element: <NewsDetail /> },
   { path: '/resources', element: <Resources /> },
+  { path: '/resources/:id', element: <ResourceDetail /> },
   { path: '/privacy', element: <Privacy /> },
   { path: '/terms', element: <Terms /> },
 ]

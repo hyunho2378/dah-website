@@ -3,7 +3,6 @@
 import { ArrowUpRight } from 'lucide-react'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
-import GlassCard from '../../components/common/GlassCard'
 import SectionLabel from '../../components/common/SectionLabel'
 import Reveal from '../../components/common/Reveal'
 import Divider from '../../components/common/Divider'
@@ -37,36 +36,35 @@ const normalizePortfolio = (p) => ({
   url: p.link ?? p.url ?? null,
 })
 
+// N2-3: 과한 박스(GlassCard) 제거 → 헤어라인 상단 구분 경량 셀(정보 유지)
 function CareerCard({ career }) {
   const { name, majors, company, companyUrl, role } = career
 
   return (
-    <GlassCard hover className="h-full p-20 md:p-28">
-      <div className="flex min-w-0 flex-col items-start gap-8">
-        <div className="flex flex-wrap items-baseline gap-x-8 gap-y-4">
-          <h3 className="text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
-            {name}
-          </h3>
-          {majors && (
-            <span className="font-mono text-caption-m text-text-meta">
-              {joinMajors(majors)}
-            </span>
-          )}
-        </div>
-        {companyUrl ? (
-          <ArrowLink href={companyUrl} external>
-            {company}
-          </ArrowLink>
-        ) : (
-          company && (
-            <p className="text-body-m text-text-pri md:text-body-d">{company}</p>
-          )
-        )}
-        {role && (
-          <p className="text-small-m text-text-sec md:text-small-d">{role}</p>
+    <div className="flex min-w-0 flex-col items-start gap-8 border-t border-border-subtle py-16">
+      <div className="flex flex-wrap items-baseline gap-x-8 gap-y-4">
+        <h3 className="text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
+          {name}
+        </h3>
+        {majors && (
+          <span className="font-mono text-caption-m text-text-meta">
+            {joinMajors(majors)}
+          </span>
         )}
       </div>
-    </GlassCard>
+      {companyUrl ? (
+        <ArrowLink href={companyUrl} external>
+          {company}
+        </ArrowLink>
+      ) : (
+        company && (
+          <p className="text-body-m text-text-pri md:text-body-d">{company}</p>
+        )
+      )}
+      {role && (
+        <p className="text-small-m text-text-sec md:text-small-d">{role}</p>
+      )}
+    </div>
   )
 }
 

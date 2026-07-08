@@ -42,6 +42,7 @@ const NAV_GROUPS = [
       { to: '/admin/curriculum', label: '교과목' },
       { to: '/admin/codesharing', label: '코드쉐어링' },
       { to: '/admin/nanodegree', label: '나노디그리' },
+      { to: '/admin/ci', label: 'CI' },
       { to: '/admin/council', label: '운영위원회' },
       { to: '/admin/careers', label: '취업 현황' },
     ],

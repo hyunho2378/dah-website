@@ -46,7 +46,7 @@ export function titleOf(item) {
 
 /** 리스트 행 메타(mono) */
 export function metaOf(item) {
-  const date = item.event_start || item.held_at || item.created_at || item.year
+  const date = item.event_start || item.start_date || item.held_at || item.created_at || item.year
   if (!date) return ''
   return String(date).slice(0, 10)
 }

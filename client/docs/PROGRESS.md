@@ -229,6 +229,29 @@
 - [!] 콘텐츠 입력 후속(버그 아님): 전시회 start/end·리치인트로는 어드민 입력 전까지 빈 값(기간 미표시), 공모전 editions는 어드민에서 회차 추가 전까지 단일 폴백, 쇼케이스 has_bg는 전용 어드민 폼 부재(제출·큐만)로 미노출, contest edition.link는 상세로만 링크
 - [!] 실사이트 육안(사용자): 교수 사진 렌더 / 전시 피처드 히어로 / 공모전 회차 블록·주최 / 동아리 4열·로고 배경옵션 / 쇼케이스 확대 / 인라인 편집 바(로그인)
 
+## PHASE 11 — 병렬 2에이전트 (23_PHASE11_FIXES, N1 서버·어드민·CI데이터 / N2 헤더·공개레이아웃)
+### 공용 선결 (통합자 생성)
+- [x] data/exhibitionTitle.js: exhibitionFullTitle(ordinal)="제{n}회 디지털인문예술전공 프로젝트 전시회"(고정 접미). data/ci.js: CI body 형태 계약+기본값(intro/elements/logoGuide/colors/downloads)
+### N1 서버·어드민·CI (완료)
+- [x] N1-1 자료실 상세: Resources 행 /resources/:id 링크, 목록 첨부 숨김. ResourceDetail.jsx(다크 카드+RichBody+첨부 줄+갤러리). resource(t1)는 이미 RichEditor 본문·attachments 보유 확인
+- [x] N1-2 전시회 타이틀: exhibitions.ordinal 컬럼. full_title은 exhibitionFullTitle(ordinal) 파생(저장 안 함). PostForm 회차(ordinal)+전시명 입력
+- [x] N1-3 날짜 단일화: held_at content-config 제거(컬럼 존치·미사용), 폼 시작·종료일만. orderBy start_date DESC. migrate가 held_at→start_date 백필
+- [x] N1-4 공모전 풀네임: body={host,editions} 기구축 확인(변경 없음, 주최 원문 불변)
+- [x] N1-5 CI: ci 싱글턴 테이블+content-config+CIAdmin(섹션별 편집)+ADMIN_ROUTES 'ci'+STRUCTURE 'CI'. migrate가 data/ci 시드(body NULL일 때만)
+- [x] N1-6 취업 데이터 확인(변경 없음)
+### N2 헤더·공개 (완료)
+- [x] N2-1 헤더 세로 드롭다운: 가로 메가메뉴→메뉴별 세로 드롭다운(진흥원식). grid-rows 0fr↔1fr+opacity 전환(전역 CSS 없이 tailwind), 불투명 depth1, 헤더 바로 아래 좌측 정렬. ESC·포커스·마우스 이탈 닫기. lg 미만 GlassDock 미변경
+- [x] N2-2 전시회 피처드 축소·박스 제거: GlassCard 래퍼 제거, 포스터 좁은 컬럼 좌측 밀착(ImageFrame 2:3), 높이 절반. 제목·CTA=full_title(exhibitionFullTitle), 학기코드 버튼 금지
+- [x] N2-3 취업 박스 제거: CareerCard GlassCard→상단 헤어라인 경량 셀(멘토·교수급)
+- [x] N2-4 CI 공개 /about/ci: 의미→구성요소→로고가이드→전용색상→다운로드, 이미지 전부 ImageFrame 플레이스홀더, useApi('/content/ci') 우선·data/ci 폴백, 토큰만
+- [x] N2-5 nav.js 전공소개 children: 전공소개·교육과정·교수진·멘토·코드쉐어링·나노디그리·CI
+### N3-1 통합 (완료)
+- [x] App 라우트 /resources/:id·/about/ci 등록. AuthContext EDIT_MIN_ROLE ci:'admin'. i18n titles.ci·ci.{title,elements,logoGuide,colors,downloads}·news.resourceNoBody ko/en 추가+CI.jsx/ResourceDetail 리터럴 t() 스왑
+- [x] migrate-phase11 배포 Neon 실행: exhibitions.ordinal·ci 테이블·ci 시드·start_date 백필(0건, held_at 원래 null). 2026-1 ordinal=18 설정(full_title "제18회..." 렌더)
+- [x] npm run build 성공, 서버 node --check 통과, t() 110키 ko/en 누락 0
+- [!] 콘텐츠 입력 후속(버그 아님): 전시회 start/end·리치인트로·ordinal은 어드민 입력 전 빈 값(2026-1만 ordinal 18·featured 시드). CI 이미지·색상·다운로드는 슬롯만(어드민 업로드 대기)
+- [!] 실사이트 육안(사용자): 헤더 세로 드롭다운 전 메뉴 / 전시 피처드 축소·박스 없음·full_title / 자료실 상세 진입·리치본문 / CI 페이지 / 취업 경량 카드
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표
