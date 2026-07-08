@@ -149,11 +149,16 @@ export const ko = {
     compositionTitle: '운영위원회 구성',
   },
   ci: {
-    title: 'CI 소개',
-    elements: '구성 요소',
-    logoGuide: '로고 가이드',
-    colors: '전용 색상',
+    title: 'CI의 의미',
+    elements: '구성요소별 의미',
+    logoGuide: '로고가이드',
+    signatures: '시그니처',
+    colors: '전용색상',
+    motif: '그래픽모티브',
     downloads: '다운로드',
+    comingSoon: '준비 중',
+    imagePending: '이미지 준비 중',
+    pending: '미정',
   },
   curriculum: {
     // K2-11: 표 라벨 "학년" → "수준" (로드맵 축 라벨 gradeSuffix는 유지)

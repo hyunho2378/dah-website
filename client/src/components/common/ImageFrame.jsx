@@ -4,7 +4,9 @@
 // - ratio: CSS aspect-ratio 문자열('306/427' 세로형, '2/3', '1/1', '16/9')로 프레임 비율 고정
 // - bg=false(기본): 사진·포스터 → object-cover로 프레임을 여백 없이 꽉 채움
 // - bg=true: 투명 PNG 로고 → object-contain + bg-bg-frame(중성 배경) 위에 로고 전체 노출
-// - src 없으면 placeholder(노드) 또는 기본 캡션. 색·간격은 토큰 클래스만 사용.
+// - src 없으면(또는 로드 실패 시) placeholder(노드) 또는 기본 캡션. 색·간격은 토큰 클래스만.
+import { useState } from 'react'
+
 function ImageFrame({
   src,
   alt = '',
@@ -19,6 +21,10 @@ function ImageFrame({
   // 로고류는 잘림 없이 전체 노출(object-contain). bg=true도 배경 프레임 위 로고라 contain.
   // 사진·포스터는 contain·bg 모두 false → object-cover로 프레임을 꽉 채운다.
   const isContain = contain || bg
+  // 26_CI: 정적 슬롯(/ci/*.png 등) 파일 부재 시 깨진 이미지 대신 placeholder 노출.
+  // src별로 실패를 추적해 어드민이 새 src를 넣으면 다시 시도한다.
+  const [erroredSrc, setErroredSrc] = useState(null)
+  const showImg = src && erroredSrc !== src
   return (
     <div
       className={`relative w-full overflow-hidden rounded-md ${
@@ -26,11 +32,12 @@ function ImageFrame({
       } ${className}`.trim()}
       style={{ aspectRatio: ratio }}
     >
-      {src ? (
+      {showImg ? (
         <img
           src={src}
           alt={alt}
           loading={loading}
+          onError={() => setErroredSrc(src)}
           className={`absolute inset-0 h-full w-full ${
             isContain ? 'object-contain p-12' : 'object-cover'
           } ${imgClassName}`.trim()}

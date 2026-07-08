@@ -291,6 +291,18 @@
 - [x] migrate-phase13 배포 Neon 실행 완료 + DB 검증: nanodegree body 4과정(AI 디자인/UX 디자인/디지털 디자인/AI와 길 정보 구축(HUSS)) courses 배열·유관기관(파이미디어/H9/루아흐 스튜디오/파이미디어) 정정, codesharing depts 18개(언론방송융합미디어전공·MICE기획경영전공 포함, 스타트업비즈니스전공 제외)
 - [!] 실사이트 육안(사용자): 헤더 6그룹·그룹 클릭 첫 하위 점프·호버 세로 드롭다운 미잘림 / 프로젝트 전시회 개명 / 코드쉐어링·나노디그리 표 렌더
 
+## PHASE 14 · CI — CI 페이지 진흥원 구조 이식 (26_CI_PAGE)
+- [x] 섹션 순서 진흥원(gidp_ci) 이식: 01 CI의 의미(대표 심벌 + 설명 + 다운로드 3버튼) · 02 구성요소별 의미(곡선·컬러·워드마크) · 03 로고가이드(한글·영문 가로형) · 04 시그니처(상하·좌우조합형) · 05 전용색상(Main·Secondary) · 06 그래픽모티브. 우리 토큰(다크·글래스·radius 4)만, 진흥원 red/charcoal 색상 이식 안 함(빈 편집 슬롯)
+- [x] 다운로드 3버튼 정적 경로: /ci/dah-ci-manual.pdf · /ci/dah-ci.jpg · /ci/dah-ci.ai. HEAD 존재확인(text/html SPA폴백 제외) 후 파일 부재 시 "준비 중" 비활성
+- [x] 이미지 슬롯 정적 경로(/ci/symbol·logo-kr·logo-en·signature-vertical·signature-horizontal·motif.png): ImageFrame 사용. 파일 부재 시 "이미지 준비 중" 플레이스홀더. ImageFrame에 onError→placeholder 폴백 추가(src별 추적, 하위호환). client/public/ci/ 폴더 생성(README에 예상 파일명 안내)
+- [x] 단일 문서 어드민 편집(코드쉐어링·나노디그리 패턴): CIAdmin에 symbol·signatures·motif 필드 추가 + intro·downloads·elements·logoGuide·colors 유지. 다운로드·이미지는 어드민 업로드 또는 정적 파일 교체 둘 다 지원
+- [x] ci body 스키마 확장: {intro, symbol, downloads[], elements[], logoGuide[], signatures[], colors[], motif}. content-config ci는 body jsonb라 서버 변경 불필요
+- [x] migrate-phase14 배포 Neon 실행·검증: Phase11 구 시드가 {...ci,...body} 병합서 새 구조를 덮어쓰던 문제 해소 — ci body를 새 구조로 재설정(intro·색상 편집분 보존). DB 8키 확인(symbol/motif 정적경로·downloads 3·elements 곡선/컬러/워드마크·logoGuide 한글/영문·signatures 상하/좌우·colors Main/Secondary 빈값)
+- [x] i18n ci.* ko+en: title(CI의 의미)·elements·logoGuide·signatures·colors·motif·downloads·comingSoon(준비 중)·imagePending(이미지 준비 중)·pending(미정)
+- [x] 텍스트는 빈값 유지(어드민 편집) — 가짜 CI 의미·색상값 생성 금지(DESIGN.md). 구조 슬롯·제목만 시드
+- [x] 검증: npm run build 성공(2015 모듈). 헤더 About 하위 CI는 25번서 이미 반영
+- [!] 실사이트 육안(사용자): /about/ci 6섹션 순서·레이아웃 / 다운로드 준비 중 비활성 / 이미지 준비 중 플레이스홀더 / 어드민(/admin/ci) 전 섹션 편집
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

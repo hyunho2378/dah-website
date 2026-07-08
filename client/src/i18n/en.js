@@ -145,11 +145,16 @@ export const en = {
     compositionTitle: 'Committee Members',
   },
   ci: {
-    title: 'About the CI',
+    title: 'The Meaning of Our CI',
     elements: 'Elements',
     logoGuide: 'Logo Guide',
+    signatures: 'Signature',
     colors: 'Colors',
+    motif: 'Graphic Motif',
     downloads: 'Downloads',
+    comingSoon: 'Coming soon',
+    imagePending: 'Image coming soon',
+    pending: 'TBD',
   },
   curriculum: {
     // K2-11: table label "학년" → "수준"

@@ -1,29 +1,41 @@
-// ci.js — CI(브랜드 아이덴티티) 기본 콘텐츠 + 데이터 형태 계약 (N1-5, 23_PHASE11)
+// ci.js — CI(브랜드 아이덴티티) 기본 콘텐츠 + 데이터 형태 계약 (26_CI_PAGE, 진흥원 구조 이식)
 // ci 단일 문서(DB body, 코드쉐어링·나노디그리와 동일 singleton 패턴) 미설정 시 폴백 겸 시드.
-// 이미지 슬롯(image/url)은 지금 비움(플레이스홀더 프레임). 텍스트·색상은 어드민에서 편집 가능.
+// 이미지·다운로드 슬롯은 /ci/ 정적 경로 기본값 — 파일 부재 시 페이지가 플레이스홀더·비활성 처리.
+// 텍스트(intro·elements.text)는 비움(어드민 편집). 색상값은 진흥원 값 이식 금지 — 빈 편집 슬롯.
 //
 // body 형태 계약 (어드민 CIAdmin 저장 · 공개 /about/ci 렌더 공용):
-//   intro      : string  — CI의 의미
-//   elements   : [{ title, text, image }]  — 구성요소별 의미(곡선·컬러·워드마크 등). image=url|null
-//   logoGuide  : [{ title, image }]        — 로고가이드(국문/영문/시그니처). image=url|null
-//   colors     : [{ name, hex }]           — 전용색상(스와치+값 표기)
-//   downloads  : [{ label, url }]          — 다운로드(매뉴얼·JPG·AI). url=null 예약
+//   intro      : string                       — CI의 의미 설명
+//   symbol     : url|null                      — 대표 심벌 이미지 (의미 섹션)
+//   downloads  : [{ label, url }]              — 매뉴얼(PDF)·JPG·AI. url=/ci/ 정적 경로|null
+//   elements   : [{ title, text, image }]      — 구성요소별 의미(곡선·컬러·워드마크). image=url|null
+//   logoGuide  : [{ title, image }]            — 로고가이드(한글 타입·영문 타입 가로형)
+//   signatures : [{ title, image }]            — 시그니처(상하조합형·좌우조합형)
+//   colors     : [{ name, hex }]               — 전용색상(Main·Secondary, hex 빈 편집 슬롯)
+//   motif      : url|null                      — 그래픽모티브 이미지
 export const ci = {
   intro: '',
+  symbol: '/ci/symbol.png',
+  downloads: [
+    { label: '매뉴얼 다운로드', url: '/ci/dah-ci-manual.pdf' },
+    { label: 'JPG 다운로드', url: '/ci/dah-ci.jpg' },
+    { label: 'AI 다운로드', url: '/ci/dah-ci.ai' },
+  ],
   elements: [
-    { title: '심벌', text: '', image: null },
+    { title: '곡선', text: '', image: null },
+    { title: '컬러', text: '', image: null },
     { title: '워드마크', text: '', image: null },
-    { title: '시그니처', text: '', image: null },
   ],
   logoGuide: [
-    { title: '국문 로고', image: null },
-    { title: '영문 로고', image: null },
-    { title: '시그니처', image: null },
+    { title: '한글 타입', image: '/ci/logo-kr.png' },
+    { title: '영문 타입', image: '/ci/logo-en.png' },
   ],
-  colors: [],
-  downloads: [
-    { label: 'CI 매뉴얼', url: null },
-    { label: 'JPG', url: null },
-    { label: 'AI', url: null },
+  signatures: [
+    { title: '상하조합형', image: '/ci/signature-vertical.png' },
+    { title: '좌우조합형', image: '/ci/signature-horizontal.png' },
   ],
+  colors: [
+    { name: 'Main Color', hex: '' },
+    { name: 'Secondary Color', hex: '' },
+  ],
+  motif: '/ci/motif.png',
 }

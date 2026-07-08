@@ -21,7 +21,16 @@ import {
 const ICON_BTN =
   'flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
 
-const EMPTY = { intro: '', elements: [], logoGuide: [], colors: [], downloads: [] }
+const EMPTY = {
+  intro: '',
+  symbol: '',
+  downloads: [],
+  elements: [],
+  logoGuide: [],
+  signatures: [],
+  colors: [],
+  motif: '',
+}
 
 const asArray = (v) => (Array.isArray(v) ? v : [])
 
@@ -41,6 +50,8 @@ function CIAdmin() {
     const b = item.body
     setForm({
       intro: b.intro || '',
+      symbol: b.symbol || '',
+      downloads: asArray(b.downloads).map((d) => ({ label: d.label || '', url: d.url || '' })),
       elements: asArray(b.elements).map((e) => ({
         title: e.title || '',
         text: e.text || '',
@@ -50,8 +61,12 @@ function CIAdmin() {
         title: g.title || '',
         image: g.image || '',
       })),
+      signatures: asArray(b.signatures).map((s) => ({
+        title: s.title || '',
+        image: s.image || '',
+      })),
       colors: asArray(b.colors).map((c) => ({ name: c.name || '', hex: c.hex || '' })),
-      downloads: asArray(b.downloads).map((d) => ({ label: d.label || '', url: d.url || '' })),
+      motif: b.motif || '',
     })
     setHydrated(true)
   }, [hydrated, data])
@@ -74,16 +89,21 @@ function CIAdmin() {
       await api.post('/admin/content/ci', {
         body: {
           intro: form.intro,
+          symbol: form.symbol || null,
+          downloads: form.downloads
+            .filter((d) => (d.label || '').trim() !== '')
+            .map((d) => ({ label: d.label, url: d.url || null })),
           elements: form.elements
             .filter((e) => (e.title || '').trim() !== '')
             .map((e) => ({ title: e.title, text: e.text, image: e.image || null })),
           logoGuide: form.logoGuide
             .filter((g) => (g.title || '').trim() !== '')
             .map((g) => ({ title: g.title, image: g.image || null })),
+          signatures: form.signatures
+            .filter((s) => (s.title || '').trim() !== '')
+            .map((s) => ({ title: s.title, image: s.image || null })),
           colors: form.colors.filter((c) => (c.name || '').trim() !== '' || (c.hex || '').trim() !== ''),
-          downloads: form.downloads
-            .filter((d) => (d.label || '').trim() !== '')
-            .map((d) => ({ label: d.label, url: d.url || null })),
+          motif: form.motif || null,
         },
       })
       setSaved(true)
@@ -100,7 +120,7 @@ function CIAdmin() {
     <section className="flex flex-col gap-24">
       <PageHead
         title="CI"
-        desc="단일 문서입니다. 소개·구성요소·로고가이드·전용색상·다운로드를 관리합니다."
+        desc="단일 문서입니다. 소개·심벌·다운로드·구성요소·로고가이드·시그니처·전용색상·그래픽모티브를 관리합니다."
         offline={offline}
       />
 
@@ -130,7 +150,12 @@ function CIAdmin() {
             <TextArea rows={4} value={form.intro} onChange={(e) => set('intro')(e.target.value)} />
           </Field>
 
-          {/* 구성요소 — 심벌·워드마크·시그니처 등. 제목 + 설명 + 이미지 */}
+          {/* 대표 심벌 — CI 의미 섹션 대표 이미지 */}
+          <Field label="대표 심벌" hint="CI 의미 섹션 대표 이미지">
+            <ImageUpload value={form.symbol} onChange={set('symbol')} usage="general" />
+          </Field>
+
+          {/* 구성요소 — 곡선·컬러·워드마크. 제목 + 설명 + 이미지 */}
           <Field label={`구성요소 (${form.elements.length})`}>
             <div className="flex flex-col gap-16">
               {form.elements.map((row, i) => (
@@ -212,6 +237,46 @@ function CIAdmin() {
                 <GhostButton onClick={() => addRow('logoGuide', { title: '', image: '' })}>
                   <Plus size={16} aria-hidden="true" />
                   로고가이드 추가
+                </GhostButton>
+              </div>
+            </div>
+          </Field>
+
+          {/* 시그니처 — 상하조합형 / 좌우조합형. 제목 + 이미지 */}
+          <Field label={`시그니처 (${form.signatures.length})`}>
+            <div className="flex flex-col gap-16">
+              {form.signatures.map((row, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-8 rounded-md border border-border-subtle p-16"
+                >
+                  <div className="flex min-w-0 flex-1 flex-col gap-8">
+                    <Input
+                      value={row.title}
+                      onChange={(e) => setRow('signatures', i, { title: e.target.value })}
+                      placeholder="제목 (예: 상하조합형)"
+                      aria-label={`시그니처 ${i + 1} 제목`}
+                    />
+                    <ImageUpload
+                      value={row.image}
+                      onChange={(v) => setRow('signatures', i, { image: v })}
+                      usage="general"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeRow('signatures', i)}
+                    aria-label={`시그니처 ${i + 1} 제거`}
+                    className={ICON_BTN}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              <div>
+                <GhostButton onClick={() => addRow('signatures', { title: '', image: '' })}>
+                  <Plus size={16} aria-hidden="true" />
+                  시그니처 추가
                 </GhostButton>
               </div>
             </div>
@@ -300,6 +365,11 @@ function CIAdmin() {
                 </GhostButton>
               </div>
             </div>
+          </Field>
+
+          {/* 그래픽모티브 — 단일 이미지 */}
+          <Field label="그래픽모티브" hint="그래픽모티브 이미지">
+            <ImageUpload value={form.motif} onChange={set('motif')} usage="general" />
           </Field>
 
           <ErrorText>{saveError}</ErrorText>
