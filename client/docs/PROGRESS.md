@@ -288,7 +288,7 @@
 - [x] "전시회"→"프로젝트 전시회" 개명: nav.js 하위 라벨 + i18n titles.exhibitions·hero.ctaExhibition·programs.exhibitions.label·notFoundPage.exhibitions + Exhibitions·ExhibitionDetail PageBanner + 어드민 콘텐츠 라벨(AdminLayout·Dashboard·postTypes). "전시회 접수/설정/출품" 및 council·clubs 사용자 원문은 별개 개념이라 미변경
 - [x] i18n 신규 키(ko+en): codesharing.{substituteType,recognizedType,creditType,none,graduationTitle,thSemester,thCode,thCourse,thCredit,thMajor} · nanodegree.{criteria,completion,thCode,thCourse,thCredit}
 - [x] 검증: npm run build 성공(2015 모듈). 20파일(수정 18 + 신규 Table.jsx·migrate-phase13.mjs). 토큰 경유·JSX·하드코딩 없음
-- [!] 마이그레이션 대기(사용자 승인 후 실행): server/scripts/migrate-phase13.mjs를 배포 Neon에 실행해야 (1)DB nanodegree body를 새 구조로 정정, (2)codesharing depts 19→18 반영. 미실행이어도 나노디그리는 가드로 새 시드 렌더(무크래시)되나, 코드쉐어링 학점인정형은 DB depts(구 19개)를 그대로 노출
+- [x] migrate-phase13 배포 Neon 실행 완료 + DB 검증: nanodegree body 4과정(AI 디자인/UX 디자인/디지털 디자인/AI와 길 정보 구축(HUSS)) courses 배열·유관기관(파이미디어/H9/루아흐 스튜디오/파이미디어) 정정, codesharing depts 18개(언론방송융합미디어전공·MICE기획경영전공 포함, 스타트업비즈니스전공 제외)
 - [!] 실사이트 육안(사용자): 헤더 6그룹·그룹 클릭 첫 하위 점프·호버 세로 드롭다운 미잘림 / 프로젝트 전시회 개명 / 코드쉐어링·나노디그리 표 렌더
 
 ## 배포
