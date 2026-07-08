@@ -20,13 +20,13 @@ function majorsEn(majors) {
   return majors.replace(/^디지털인문예술( ?전공)?/, 'Digital Arts & Humanities')
 }
 
-// J6: 연속한 같은 부서(role)를 한 행으로 묶는다 — 원문 순서 보존
+// J6: 연속한 같은 부서(role)를 한 행으로 묶는다 — 원문 순서 보존. T1: 부서 EN(roleEn)도 함께
 function groupByRole(members) {
   const rows = []
   for (const m of members) {
     const last = rows[rows.length - 1]
     if (last && last.role === (m.role ?? '')) last.members.push(m)
-    else rows.push({ role: m.role ?? '', members: [m] })
+    else rows.push({ role: m.role ?? '', roleEn: m.roleEn ?? '', members: [m] })
   }
   return rows
 }
@@ -182,7 +182,7 @@ function Council() {
                       className="flex flex-col gap-8 border-b border-border-subtle py-16 md:flex-row md:items-baseline md:gap-24 md:py-20"
                     >
                       <dt className="w-128 shrink-0 font-mono text-small-m text-text-meta md:text-small-d">
-                        {row.role}
+                        {lang === 'en' ? row.roleEn || row.role : row.role}
                       </dt>
                       <dd className="flex min-w-0 flex-wrap gap-x-24 gap-y-8">
                         {row.members.map((member) => (
@@ -193,7 +193,7 @@ function Council() {
                             {lang === 'en' ? member.nameEn ?? member.name : member.name}
                             {member.majors && (
                               <span className="ml-8 text-small-m text-text-meta md:text-small-d">
-                                ({lang === 'en' ? majorsEn(member.majors) : member.majors})
+                                ({lang === 'en' ? member.majorsEn ?? majorsEn(member.majors) : member.majors})
                               </span>
                             )}
                           </span>

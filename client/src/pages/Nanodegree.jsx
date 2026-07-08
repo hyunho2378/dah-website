@@ -96,7 +96,7 @@ function Nanodegree() {
                 GlassCard h-full이 늘어난 높이를 채운다 */}
             <div className="mt-32 grid auto-rows-fr grid-cols-1 gap-16 md:mt-48 md:grid-cols-2 md:gap-24">
               {programs.map((program, i) => (
-                <Reveal key={program.name} delay={i < 6 ? i * motion.stagger : 0} className="h-full">
+                <Reveal key={i} delay={i < 6 ? i * motion.stagger : 0} className="h-full">
                   <GlassCard className="flex h-full flex-col gap-16 p-24 md:p-32">
                     <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
                       {String(i + 1).padStart(2, '0')}

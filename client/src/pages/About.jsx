@@ -200,7 +200,8 @@ function About() {
               {copy.vision.map((item, i) => {
                 const Icon = VISION_ICONS[i]
                 return (
-                <Reveal key={item.title} delay={i < 6 ? i * motion.stagger : 0}>
+                // T2: key는 언어 무관 index — 언어 전환 시 리마운트·재애니메이션 방지
+                <Reveal key={i} delay={i < 6 ? i * motion.stagger : 0}>
                   <div className="border-t border-border-subtle pt-24">
                     {/* K2-8: 비전 항목 카드 상단 아이콘 */}
                     {Icon && (

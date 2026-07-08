@@ -44,12 +44,16 @@ import NotFound from './pages/NotFound'
 // 어드민(Tiptap 포함)은 코드 분할 — 공개 방문자는 다운로드하지 않는다
 const AdminRoutes = lazy(() => import('./pages/AdminRoutes'))
 
-// K2-9: 페이지 전환 크로스페이드 — pathname 키로 재마운트 → .page-fade(opacity 0→1,
-// motion 토큰 duration-fast, translate 금지). reduced-motion은 index.css 전역 미디어쿼리가 무효화.
+// K2-9: 페이지 전환 크로스페이드 — 정규화 경로(/en 프리픽스 제외) 키로 재마운트 →
+// .page-fade(opacity 0→1, translate 금지). reduced-motion은 index.css 전역 미디어쿼리가 무효화.
+// T2(29_PHASE15): 언어 토글(/about↔/en/about)은 정규화 경로가 같아 key 불변 → 재마운트·재애니메이션
+//   없음. 같은 컴포넌트 인스턴스가 유지되고 useLang 텍스트만 갱신된다(등장 애니메이션 재실행 금지).
+const normalizePath = (p) => (p === '/en' ? '/' : p.startsWith('/en/') ? p.slice(3) : p)
+
 function PageFade({ children }) {
   const { pathname } = useLocation()
   return (
-    <div key={pathname} className="page-fade">
+    <div key={normalizePath(pathname)} className="page-fade">
       {children}
     </div>
   )

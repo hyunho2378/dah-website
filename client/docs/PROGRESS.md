@@ -345,6 +345,19 @@
 - [x] 검증: npm run build 성공(2015 모듈), 서버 node --check 통과. migrate-phase16·seed-achievements 배포 Neon 실행+문자대조, hero labelEn DB 반영. 19파일(수정 14 + 신규 achievementsEn·migrate-phase16·seed·소스 문서)
 - [!] 실사이트 육안(사용자): /students/achievements 원문 30건(국·영) / 연혁 EN / 히어로 버튼 EN / Curriculum EN / 상담 필드 / 쇼케이스 카드 / 사용자 3열 / 로그아웃 모달
 
+## PHASE 15 · COUNCIL+LANG — 운영위 원문 복구 + 언어전환 인터랙션 제거 (29_PHASE15_FIXES, 단독)
+### T1 운영위원회 원문 그대로 재시드[절대 원문]
+- [x] seed-council-phase15가 council_SOURCE.md를 직접 파싱(토씨 불변) → 기존 council 전량 DELETE 후 10기수 재생성(2026→2017). name=연도 제외 기수명·intro·members[{role,name,majors}] 원문 그대로, year_label·sort. 업로드된 logo_url·has_bg는 year_label 기준으로 보존
+- [x] 영문: titleEn·introEn·멤버 nameEn은 검수 완료 data/council.js 재사용, 부서 EN(roleEn 매핑: 위원장=Chair 등), 소속 EN(majorsEn: Digital Arts & Humanities 유지·사회학과=Sociology·광고홍보=Advertising & PR·경영학과=Business Administration·디지털미디어콘텐츠=Digital Media Contents, 학번 보존). DB members jsonb에 roleEn·nameEn·majorsEn 저장. 정적 폴백 data/council.js 동일 파싱으로 자동 재생성
+- [x] Council.jsx: 부서 라벨 EN(row.roleEn)·소속 EN(member.majorsEn) 렌더 배선. 멤버 nameEn·titleEn·introEn는 기존 경로 유지
+- [x] 검증: 파싱 10기수·56명, nameEn 미매칭 0. 문자 대조 2026·2023·2019 intro·members 전부 일치 ✓. DB 순서 2026(10)→2017(2), 2026 위원장 주현호/Digital Arts & Humanities 22(원문)·Hyun Ho Ju/Chair, 2022 사회학과→Sociology 19, 로고 보존 확인
+### T2 언어 전환 인터랙션 완전 제거[실측 원인 확정]
+- [x] 근본원인: App PageFade가 key={pathname}라 언어 토글(/about↔/en/about)에 key가 바뀌어 전 트리 재마운트 → page-fade·Reveal(useReveal) 등장 애니메이션 재실행("띠용"). 수정: key={정규화 경로(/en 제외)} → 언어 토글은 정규화 경로 동일 → 재마운트·재애니메이션 없음, useLang 텍스트만 갱신
+- [x] 내부 Reveal이 번역 텍스트로 key되던 4곳(About 비전 item.title, CodeSharing step·graduation, Nanodegree program.name)을 언어 무관 index key로 교체 → 언어 전환 시 해당 항목 리마운트·재페이드 방지. ScrollToTop은 이미 정규화 경로로 언어 토글 스크롤 미발동, GlassCard/PageBanner 등은 hover·비Reveal이라 무관
+- [x] 허용 변화는 텍스트 즉시 교체(슬라이드·재등장 0, 레이아웃 시프트 0). 실페이지 나머지 map은 id/index key라 무영향 확인
+- [x] 검증: npm run build 성공(2015 모듈). 9파일(수정 6 + 신규 seed·소스 문서·스펙)
+- [!] 실사이트 육안(사용자): 운영위 2026 선두·전원 멤버·전원 로마자(EN)·소속 영문 / 전 페이지 언어 토글 시 어떤 섹션도 재슬라이드·재페이드 0
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

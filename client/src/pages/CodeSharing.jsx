@@ -121,7 +121,7 @@ function CodeSharing() {
             </Reveal>
             <ol className="mt-32 grid gap-24 border-t border-border-subtle pt-24 md:mt-48 md:grid-cols-4 md:gap-32">
               {steps.map((step, i) => (
-                <Reveal key={step} delay={i < 6 ? i * motion.stagger : 0} as="li">
+                <Reveal key={i} delay={i < 6 ? i * motion.stagger : 0} as="li">
                   <p className="font-mono text-small-m text-text-pri md:text-small-d">
                     {String(i + 1).padStart(2, '0')}
                   </p>
@@ -209,7 +209,7 @@ function CodeSharing() {
             </Reveal>
             <ol className="mt-32 flex flex-col gap-16 border-t border-border-subtle pt-24 md:mt-48">
               {graduation.map((g, i) => (
-                <Reveal key={g} delay={i < 6 ? i * motion.stagger : 0} as="li" className="flex gap-12">
+                <Reveal key={i} delay={i < 6 ? i * motion.stagger : 0} as="li" className="flex gap-12">
                   <span className="font-mono text-small-m text-text-meta md:text-small-d">
                     {String(i + 1).padStart(2, '0')}
                   </span>
