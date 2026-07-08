@@ -1,7 +1,7 @@
 // PostForm.jsx — /admin/posts/:type/new·:id/edit 공용 작성 폼 (13_CMS_SPEC 1절 편집 매트릭스)
 // 템플릿: t1 게시글형(제목 ko/en+태그+본문) / t2 포스터형(+포스터·일정·외부 URL) /
 // exhibition T2 확장(전시회 테이블) / achievement 성좌 전용 필드 / portfolio 진로 그리드.
-// 성과(achievement)는 posts로 저장: body={awardee,host,desc,year}, tag=연도 (B1 계약).
+// 성과(achievement)는 posts로 저장: body={desc,descEn,year,awardees,awardeesEn}, tag=연도 (B1 계약).
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -349,9 +349,10 @@ function emptyForm(template, type) {
       return {
         title_ko: '',
         title_en: '',
-        awardee: '',
-        host: '',
         desc: '',
+        descEn: '',
+        awardees: '',
+        awardeesEn: '',
         year: '',
         external_url: '',
         published: true,
@@ -415,9 +416,10 @@ function fromItem(template, item, type) {
         ...base,
         title_ko: item.title_ko || '',
         title_en: item.title_en || '',
-        awardee: item.body?.awardee || '',
-        host: item.body?.host || '',
         desc: item.body?.desc || '',
+        descEn: item.body?.descEn || '',
+        awardees: item.body?.awardees || '',
+        awardeesEn: item.body?.awardeesEn || '',
         year: item.body?.year ?? item.tag ?? '',
         external_url: item.external_url || '',
         published: Boolean(item.published),
@@ -493,7 +495,13 @@ function toPayload(template, config, form, type) {
         title_ko: form.title_ko,
         title_en: nul(form.title_en),
         tag: year === null ? null : String(year),
-        body: { awardee: form.awardee, host: form.host, desc: form.desc, year },
+        body: {
+          desc: form.desc,
+          descEn: form.descEn,
+          year,
+          awardees: form.awardees,
+          awardeesEn: form.awardeesEn,
+        },
         external_url: nul(form.external_url),
         published: form.published,
       }
@@ -594,16 +602,38 @@ function PostForm() {
   const setInput = (key) => (e) => set(key)(e.target.value)
   const backTo = `/admin/posts/${type}`
 
-  // R1: 발행 게이트 — enRequired 유형은 영문 제목 없이 게시 불가(게시 끄면 임시저장 가능)
-  const enTitle = form.title_en || ''
-  const enGateBlocked = Boolean(config.enRequired && form.published && !enTitle.trim())
+  // R1/U2-2: 발행 게이트 — enRequired 유형은 영문 제목 필수. achievement는 발행 시
+  // 국·영문 본문과 수상자(국·영)까지 모두 필수(게시 끄면 임시저장 허용). 누락 필드는 안내에 나열.
+  const isEmptyVal = (v) => !String(v ?? '').trim()
+  let missingFields = []
+  if (form.published) {
+    if (template === 'achievement') {
+      missingFields = [
+        ['수상명', form.title_ko],
+        ['영문 수상명', form.title_en],
+        ['국문 본문', form.desc],
+        ['영문 본문', form.descEn],
+        ['수상자 (국문)', form.awardees],
+        ['수상자 (영문)', form.awardeesEn],
+      ]
+        .filter(([, v]) => isEmptyVal(v))
+        .map(([label]) => label)
+    } else if (config.enRequired && isEmptyVal(form.title_en)) {
+      missingFields = ['영문 제목']
+    }
+  }
+  const enGateBlocked = missingFields.length > 0
+  const gateMsg =
+    template === 'achievement'
+      ? `발행하려면 다음을 입력하세요: ${missingFields.join(', ')}`
+      : EN_GATE_MSG
 
   const save = async (e) => {
     e.preventDefault()
     if (uploading > 0) return // 업로드 완료 전 저장 차단 — 빈 URL 저장 방지
-    // R1: 발행 게이트 — 영문 제목 없이 게시 시도 시 차단(게시 끄면 임시저장 가능)
+    // R1/U2-2: 발행 게이트 — 필수 필드 미입력 시 게시 차단(게시 끄면 임시저장 가능)
     if (enGateBlocked) {
-      setSaveError(EN_GATE_MSG)
+      setSaveError(gateMsg)
       return
     }
     setBusy(true)
@@ -730,11 +760,21 @@ function PostForm() {
 
           {template === 'achievement' && (
             <>
-              <Field label="수상자">
-                <Input value={form.awardee} onChange={setInput('awardee')} />
+              <div className="md:col-span-2">
+                <Field label="국문 본문">
+                  <TextArea rows={5} value={form.desc} onChange={setInput('desc')} />
+                </Field>
+              </div>
+              <div className="md:col-span-2">
+                <Field label="영문 본문" hint="비우면 영문 페이지에 국문 본문 렌더">
+                  <TextArea rows={5} value={form.descEn} onChange={setInput('descEn')} />
+                </Field>
+              </div>
+              <Field label="수상자 (국문)" hint="쉼표로 구분">
+                <Input value={form.awardees} onChange={setInput('awardees')} />
               </Field>
-              <Field label="주최">
-                <Input value={form.host} onChange={setInput('host')} />
+              <Field label="수상자 (영문)" hint="쉼표로 구분">
+                <Input value={form.awardeesEn} onChange={setInput('awardeesEn')} />
               </Field>
               <Field label="연도" hint="성좌 태그로 사용됩니다">
                 <Input
@@ -746,11 +786,6 @@ function PostForm() {
               <Field label="대회 URL">
                 <Input type="url" value={form.external_url} onChange={setInput('external_url')} />
               </Field>
-              <div className="md:col-span-2">
-                <Field label="설명">
-                  <TextArea rows={4} value={form.desc} onChange={setInput('desc')} />
-                </Field>
-              </div>
             </>
           )}
 
@@ -928,7 +963,13 @@ function PostForm() {
           {template !== 'portfolio' && (
             <Field
               label="게시"
-              hint={config.enRequired ? '발행하려면 영문 제목이 필요합니다' : undefined}
+              hint={
+                template === 'achievement'
+                  ? '발행하려면 국·영문 본문과 수상자(국·영)를 모두 입력하세요'
+                  : config.enRequired
+                    ? '발행하려면 영문 제목이 필요합니다'
+                    : undefined
+              }
             >
               <Toggle checked={form.published} onChange={set('published')} label="게시 여부" />
             </Field>
@@ -952,7 +993,7 @@ function PostForm() {
           )}
         </div>
 
-        <ErrorText>{saveError || (enGateBlocked ? EN_GATE_MSG : null)}</ErrorText>
+        <ErrorText>{saveError || (enGateBlocked ? gateMsg : null)}</ErrorText>
         <div className="flex items-center gap-8">
           <PrimaryButton
             type="submit"

@@ -30,10 +30,45 @@ function normalize(post, isEn) {
     title: isEn ? titleEn || titleKo : titleKo,
     url: post.external_url ?? post.url ?? null,
     desc: isEn ? descEn || descKo : descKo,
+    awardees: body.awardees ?? post.awardees ?? null,
+    awardeesEn: body.awardeesEn ?? post.awardeesEn ?? null,
   }
 }
 
-function AwardItem({ item }) {
+// 수상자 이름 강조용 — 정규식 특수문자 이스케이프(부분·과매칭 방지)
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// 본문(desc/descEn) 안에서 수상자 이름과 정확히 일치하는 부분 문자열만 <strong>으로 감싼다.
+// 본문 원문은 변형하지 않고, 전체 이름 단위로만 매칭(긴 이름 우선 정렬로 '김'이 '김소연' 안에서
+// 잡히는 과매칭 방지). 이름 이외 문자(줄바꿈 등)는 split 후 그대로 남아 whitespace-pre-line 보존.
+function highlightNames(text, names) {
+  if (!text || !names.length) return text
+  const pattern = new RegExp(
+    `(${names
+      .slice()
+      .sort((a, b) => b.length - a.length)
+      .map(escapeRegExp)
+      .join('|')})`,
+    'g'
+  )
+  return text.split(pattern).map((part, i) =>
+    names.includes(part) ? (
+      <strong key={i} className="font-bold text-text-pri">
+        {part}
+      </strong>
+    ) : (
+      part
+    )
+  )
+}
+
+function AwardItem({ item, isEn }) {
+  const names = ((isEn ? item.awardeesEn : item.awardees) || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
   return (
     <li className="flex flex-col gap-8 py-24">
       <div className="flex items-start justify-between gap-12">
@@ -47,7 +82,7 @@ function AwardItem({ item }) {
       </div>
       {item.desc && (
         <p className="whitespace-pre-line break-keep text-body-m leading-relaxed text-text-sec md:text-body-d">
-          {item.desc}
+          {highlightNames(item.desc, names)}
         </p>
       )}
       {item.url && (
@@ -143,7 +178,7 @@ function Achievements() {
                     {items
                       .filter((a) => a.year === year)
                       .map((item) => (
-                        <AwardItem key={item.id} item={item} />
+                        <AwardItem key={item.id} item={item} isEn={isEn} />
                       ))}
                   </ul>
                 </section>

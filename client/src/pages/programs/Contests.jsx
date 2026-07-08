@@ -86,9 +86,9 @@ function ContestBlock({ item }) {
           </div>
         )}
       </div>
-      <ul className="flex flex-wrap gap-16">
+      <ul className="grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
         {editions.map((ed, i) => (
-          <li key={i} className="w-[calc(50%-8px)] min-w-0 sm:w-[180px]">
+          <li key={i} className="min-w-0">
             <EditionCard contestId={item.id} edition={ed} title={title} />
           </li>
         ))}

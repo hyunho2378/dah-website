@@ -5,6 +5,7 @@
 // J2: ErrorBoundary — 렌더 크래시 시 빈 화면 대신 오류 안내를 표시한다.
 
 import { Component, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, Outlet } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import PageBanner from '../layout/PageBanner'
@@ -120,8 +121,10 @@ function LogoutConfirm({ onCancel, onConfirm }) {
     }
   }, [onCancel])
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-gutter-m">
+  // U2-1: 포털로 document.body에 렌더 — AdminNav 내부 중첩 스택 컨텍스트 탈출.
+  // z-[100]으로 헤더(z-50)·콘텐츠 위에 확실히 올린다.
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-gutter-m">
       <button
         type="button"
         aria-label="닫기"
@@ -144,7 +147,8 @@ function LogoutConfirm({ onCancel, onConfirm }) {
           <PrimaryButton onClick={onConfirm}>확인</PrimaryButton>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

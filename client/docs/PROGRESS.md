@@ -358,6 +358,21 @@
 - [x] 검증: npm run build 성공(2015 모듈). 9파일(수정 6 + 신규 seed·소스 문서·스펙)
 - [!] 실사이트 육안(사용자): 운영위 2026 선두·전원 멤버·전원 로마자(EN)·소속 영문 / 전 페이지 언어 토글 시 어떤 섹션도 재슬라이드·재페이드 0
 
+## PHASE 17 · CRITIC — 로그아웃 모달·성과 필수/강조·공모전 그리드·히어로 영상 (30_PHASE16_FIXES, 병렬 U1·U2 + 통합 U3)
+### U1 공개 UI·히어로 영상
+- [x] U1-1 성과 수상자 강조: Achievements.jsx가 body.awardees(KR)/awardeesEn(EN)로 본문 속 이름만 화이트 볼드(font-bold text-text-pri). 본문 원문 불변, highlightNames가 전체 이름 단위 매칭(긴 이름 우선 정렬로 과매칭 방지)·줄바꿈 보존. 이름 없으면 원문 그대로
+- [x] U1-2 공모전·특강 그리드 통일: Lectures 카드가 raw img→ImageFrame(2:3), Contests editions가 고정폭 flex→전시회 auto-fill 그리드(minmax(220px,40vw))·GlassCard p-12로 전시회 rest 그리드와 동일 크기·비율·간격
+- [x] U1-3 히어로 영상 즉시 로드: video preload=auto + poster 유지 + onCanPlay 시 opacity 페이드인(깜빡임 0), index.html에 link rel=preload as=video. object-cover(모바일 크롭) 유지, OrbitCanvas 폴백 유지
+### U2 어드민·데이터·모달
+- [x] U2-1 로그아웃 모달 z-index·딤[근본원인]: LogoutConfirm이 AdminNav 내부 중첩 스태킹 컨텍스트라 z-[60]이 헤더(z-50) 아래 깔림 → createPortal(document.body) + z-[100]. 딤 bg-black/60·중앙·스크롤 잠금 유지. LoginModal도 z-[100]로 통일. ShareButton은 인라인 확장(오버레이 아님)이라 무관
+- [x] U2-2·U2-3 성과 필수 필드+모델 정합: PostForm achievement 템플릿을 구 {awardee,host,desc,year}→신 {desc,descEn,year,awardees,awardeesEn}로 전면 교체(국문 본문·영문 본문 TextArea, 수상자 국문·영문 Input, 연도, 대회 URL). 발행 게이트: 국문 제목·국문 본문·영문 제목·영문 본문·수상자 국문·영문 모두 채워야 발행(published)+빈 필드 안내, 임시저장은 허용. 기존 enGate 확장
+### U3 통합
+- [x] 성과 시드 확장·재실행: seed-achievements가 본문에서 수상자 KR 추출((a)시작부 이름 학생 (b)에 이름 학생이 선발/게재 (c)「」 블록 이름줄, 등급단어 제외) + 운영위·취업·멘토 로마자 맵으로 awardeesEn 생성. body.awardees·awardeesEn 시드 + 정적 폴백 재생성. 30건 재시드, 문자 대조 3건 일치, 수상자 24/30 추출(주현호→Hyun Ho Ju 등)
+- [!] 후속(비버그): EN 수상자는 운영위·취업·멘토에 있는 이름만 로마자 매핑됨(신규 학생 미매핑은 EN 강조 생략). KR 강조는 24/30. 6건은 본문서 이름 추출 불가(빈 awardees). 신규·수정은 어드민이 수상자 국·영문 입력(발행 필수)
+- [x] 검증: npm run build 성공(2015 모듈), 서버 node --check 통과. 11파일(수정 10 + 스펙 문서)
+- [!] 사용자 액션: 히어로 poster는 client/public/videos/hero-poster.jpg에 넣으면 반영
+- [!] 실사이트 육안(사용자): 로그아웃 모달 최상위·딤 / 성과 이름 볼드(국·영) / 공모전·특강 카드=전시회 크기 / 히어로 영상 즉시·부드럽게 / 성과 발행 게이트(수상자·영문 본문 필수)
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

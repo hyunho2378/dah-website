@@ -12,9 +12,36 @@ import pg from 'pg'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '../..')
+const DATA = path.join(ROOT, 'client/src/data')
 const SOURCE = path.join(ROOT, 'client/docs/achievements_SOURCE.md')
-const EN_FILE = path.join(ROOT, 'client/src/data/achievementsEn.js')
-const STATIC_OUT = path.join(ROOT, 'client/src/data/achievements.js')
+const EN_FILE = path.join(DATA, 'achievementsEn.js')
+const STATIC_OUT = path.join(DATA, 'achievements.js')
+
+// 수상자 이름 추출용 — 수상 등급 단어·비인명 어휘는 이름으로 오인 금지 (U2-3)
+const AWARD_WORDS = new Set([
+  '대상', '최우수상', '우수상', '동상', '장관상', '특별상', '입선', '창의은상', '혁신상', '공감상', '우수작품',
+])
+const NAME_BLOCK = new Set(['다수', '다수의'])
+
+// 본문에서 수상자(한국식 2~4자 이름)만 추출: (a)시작부 "이름 학생" (b)"에 이름 학생이 선발/게재"
+// (c)이름만 있는 줄(「」 블록 수상자). 등급 단어·비인명은 제외. 완벽 추출 아님(비면 강조 생략).
+function extractAwardees(body) {
+  const set = []
+  const push = (s) => {
+    const n = s.trim()
+    if (n && !AWARD_WORDS.has(n) && !NAME_BLOCK.has(n) && !set.includes(n)) set.push(n)
+  }
+  const lines = body.split('\n')
+  const a = /^([가-힣]{2,4}(?:,\s*[가-힣]{2,4})*)\s*학생/.exec(lines[0] || '')
+  if (a) a[1].split(',').forEach(push)
+  const b = /에\s+([가-힣]{2,4}(?:,\s*[가-힣]{2,4})*)\s*학생(?:이|들이)?\s*(?:선발|게재)/.exec(body)
+  if (b) b[1].split(',').forEach(push)
+  for (const line of lines) {
+    const t = line.trim()
+    if (/^[가-힣]{2,4}(?:,\s*[가-힣]{2,4})*$/.test(t)) t.split(',').forEach(push)
+  }
+  return set
+}
 
 if (!process.env.DATABASE_URL) {
   console.error('[seed-achievements] DATABASE_URL이 없습니다.')
@@ -64,7 +91,16 @@ async function main() {
   const text = fs.readFileSync(SOURCE, 'utf8')
   const items = parseSource(text)
 
-  // 영문 매칭 — 중복 제목(값이 배열)은 등장 순서로 배정
+  // 이름→영문 전역 맵 — 기존 운영위·취업·멘토 로마자 재사용(수상자 대부분 학생과 겹침)
+  const nameEnMap = {}
+  const { councils } = await import(pathToFileURL(path.join(DATA, 'council.js')).href)
+  for (const c of councils) for (const m of c.members || []) if (m.nameEn) nameEnMap[m.name] = m.nameEn
+  const { careers } = await import(pathToFileURL(path.join(DATA, 'careers.js')).href)
+  for (const c of careers) if (c.nameEn) nameEnMap[c.name] = c.nameEn
+  const { mentors } = await import(pathToFileURL(path.join(DATA, 'mentors.js')).href)
+  for (const m of mentors) if (m.nameEn) nameEnMap[m.name] = m.nameEn
+
+  // 영문 매칭 — 중복 제목(값이 배열)은 등장 순서로 배정. + 수상자(KR 추출·EN 맵)
   const enCounters = {}
   for (const it of items) {
     const en = achievementsEn[it.title]
@@ -78,10 +114,16 @@ async function main() {
     }
     it.titleEn = val?.titleEn || null
     it.descEn = val?.descEn || null
+    const awardees = extractAwardees(it.body)
+    it.awardees = awardees.join(', ')
+    it.awardeesEn = awardees.map((n) => nameEnMap[n]).filter(Boolean).join(', ')
   }
 
+  const withAwardees = items.filter((it) => it.awardees).length
   const missing = items.filter((it) => !it.titleEn)
-  console.log(`[seed-achievements] 파싱 ${items.length}건, 영문 미매칭 ${missing.length}건`)
+  console.log(
+    `[seed-achievements] 파싱 ${items.length}건, 영문 미매칭 ${missing.length}건, 수상자 추출 ${withAwardees}건`
+  )
   if (missing.length) missing.forEach((m) => console.log('  ✗ EN 없음:', JSON.stringify(m.title)))
 
   const client = await pool.connect()
@@ -97,7 +139,10 @@ async function main() {
         [
           it.title,
           it.titleEn,
-          JSON.stringify({ desc: it.body, descEn: it.descEn, year: it.year }),
+          JSON.stringify({
+            desc: it.body, descEn: it.descEn, year: it.year,
+            awardees: it.awardees, awardeesEn: it.awardeesEn,
+          }),
           String(it.year),
           i,
         ]
@@ -110,7 +155,7 @@ async function main() {
     const header = `/**
  * achievements.js — 학생 성과 (client/docs/achievements_SOURCE.md 원문 그대로, 자동 생성)
  * seed-achievements-phase14.mjs가 소스를 파싱해 재생성한다. 손으로 편집하지 말 것.
- * 필드: id · year · title(원문) · titleEn · desc(원문 본문 전체) · descEn
+ * 필드: id · year · title(원문) · titleEn · desc(원문 본문 전체) · descEn · awardees · awardeesEn
  */
 export const achievements = [
 `
@@ -124,6 +169,8 @@ export const achievements = [
           titleEn: it.titleEn,
           desc: it.body,
           descEn: it.descEn,
+          awardees: it.awardees,
+          awardeesEn: it.awardeesEn,
         }) +
         ',',
       )

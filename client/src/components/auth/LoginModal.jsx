@@ -113,7 +113,7 @@ function LoginModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-gutter-m">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-gutter-m">
       {/* 백드롭 — 클릭 시 닫힘 */}
       <button
         type="button"

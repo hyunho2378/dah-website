@@ -3,6 +3,7 @@ import Link from '../../components/common/LangLink'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
+import ImageFrame from '../../components/common/ImageFrame'
 import Reveal from '../../components/common/Reveal'
 import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
@@ -18,22 +19,12 @@ function LectureCard({ item }) {
     <Link to={`/programs/lectures/${item.id}`} className="group block h-full">
       {/* H2: 포스터 축소 원복 — p-12 소패딩만, 포스터 크게 유지 */}
       <GlassCard hover className="flex h-full flex-col gap-12 p-12">
-        <figure className="aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-elev">
-          {item.poster_url ? (
-            <img
-              src={item.poster_url}
-              alt={`${title} 포스터`}
-              loading="lazy"
-              width={600}
-              height={900}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center font-mono text-caption-m text-text-meta">
-              NO POSTER
-            </span>
-          )}
-        </figure>
+        <ImageFrame
+          src={item.poster_url || undefined}
+          alt={`${title} 포스터`}
+          ratio="2/3"
+          placeholder={title}
+        />
         <div className="flex min-w-0 flex-col gap-4">
           {date && <p className="font-mono text-caption-m text-text-meta">{date}</p>}
           <h3 className="min-w-0 text-body-l-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-body-l-d">

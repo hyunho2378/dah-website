@@ -11,6 +11,7 @@ import { hero, site } from '../../data/site'
 // 파일 부재(404) 또는 reduced-motion 시 OrbitCanvas 폴백.
 function HeroBackground() {
   const [videoFailed, setVideoFailed] = useState(false)
+  const [ready, setReady] = useState(false)
   const reduced =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -19,14 +20,19 @@ function HeroBackground() {
 
   return (
     <>
+      {/* poster·cosmos가 아래에서 즉시 표시되고, 재생 준비(onCanPlay) 시 영상이 페이드인 — 깜빡임 방지 */}
       <video
         autoPlay
         muted
         loop
         playsInline
+        preload="auto"
         poster="/videos/hero-poster.jpg"
+        onCanPlay={() => setReady(true)}
         onError={() => setVideoFailed(true)}
-        className="h-full w-full object-cover"
+        className={`h-full w-full object-cover transition-opacity duration-slow ease-out ${
+          ready ? 'opacity-100' : 'opacity-0'
+        }`}
       >
         <source src="/videos/hero.mp4" type="video/mp4" />
       </video>
