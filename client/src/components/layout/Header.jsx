@@ -160,17 +160,13 @@ function Header() {
                       <ul className="min-w-[220px] rounded-b-md border border-glass-line bg-cosmos-depth1 py-8">
                         {item.children.map((child) => (
                           <li key={child.to}>
+                            {/* 활성 언어 라벨만 한 줄로 — 국문/영문 병기 금지(언어 단일화) */}
                             <Link
                               to={child.to}
                               onClick={close}
-                              className="flex flex-col gap-4 px-16 py-12 transition-colors duration-fast ease-out hover:bg-glass-strong"
+                              className="flex px-16 py-12 text-body-d font-semibold text-text-pri transition-colors duration-fast ease-out hover:bg-glass-strong"
                             >
-                              <span className="text-body-d font-semibold text-text-pri">
-                                {navLabel(child)}
-                              </span>
-                              <span className="font-display text-caption-d uppercase tracking-label text-text-meta">
-                                {child.labelEn}
-                              </span>
+                              {navLabel(child)}
                             </Link>
                           </li>
                         ))}
