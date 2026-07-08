@@ -157,14 +157,15 @@ function Header() {
                         isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
                       }`}
                     >
-                      <ul className="min-w-[220px] rounded-b-md border border-glass-line bg-cosmos-depth1 py-8">
+                      {/* 폭은 가장 긴 항목 기준(w-max) + 각 항목 nowrap → 라벨 잘림 없음 */}
+                      <ul className="w-max min-w-[220px] rounded-b-md border border-glass-line bg-cosmos-depth1 py-8">
                         {item.children.map((child) => (
                           <li key={child.to}>
                             {/* 활성 언어 라벨만 한 줄로 — 국문/영문 병기 금지(언어 단일화) */}
                             <Link
                               to={child.to}
                               onClick={close}
-                              className="flex px-16 py-12 text-body-d font-semibold text-text-pri transition-colors duration-fast ease-out hover:bg-glass-strong"
+                              className="block whitespace-nowrap px-20 py-12 text-body-d font-semibold text-text-pri transition-colors duration-fast ease-out hover:bg-glass-strong"
                             >
                               {navLabel(child)}
                             </Link>

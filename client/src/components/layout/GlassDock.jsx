@@ -134,13 +134,11 @@ function GlassDock() {
                   key={item.to}
                   to={item.to}
                   onClick={close}
-                  className="flex items-baseline justify-between gap-12 rounded-md px-12 py-12 transition-colors duration-fast ease-out hover:bg-glass-strong"
+                  className="flex items-baseline rounded-md px-12 py-12 transition-colors duration-fast ease-out hover:bg-glass-strong"
                 >
+                  {/* 활성 언어 라벨만 — 국문/영문 병기 금지(언어 단일화) */}
                   <span className="text-body-m font-semibold text-text-pri">
                     {navLabel(item)}
-                  </span>
-                  <span className="font-display text-caption-m uppercase tracking-label text-text-meta">
-                    {item.labelEn}
                   </span>
                 </Link>
               ))}
