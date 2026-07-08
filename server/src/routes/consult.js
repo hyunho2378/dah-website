@@ -15,8 +15,10 @@ const router = Router()
 function summaryText(item) {
   return [
     '[디지털인문예술전공] 새 상담 신청',
-    `회사명: ${item.company || '-'}`,
     `이름: ${item.name}`,
+    `학년: ${item.grade || '-'}`,
+    `주전공: ${item.main_major || '-'}`,
+    `복수전공: ${item.double_major || '-'}`,
     `연락처: ${item.contact}`,
     `문의 내용: ${item.message || '-'}`,
     `일시: ${item.created_at}`,
@@ -60,15 +62,19 @@ router.post(
     const body = req.body || {}
     const name = String(body.name || '').trim()
     const contact = String(body.contact || '').trim()
-    const company = String(body.company || '').trim() || null
+    // S3-1: 회사명 제거, 학년·주전공·복수전공 추가
+    const grade = String(body.grade || '').trim() || null
+    const mainMajor = String(body.mainMajor || '').trim() || null
+    const doubleMajor = String(body.doubleMajor || '').trim() || null
     const message = String(body.message || '').trim() || null
     if (!name || !contact) return res.status(400).json({ error: 'name and contact are required' })
     if (body.agreed !== true) return res.status(400).json({ error: 'agreement is required' })
 
     const { rows } = await query(
-      `INSERT INTO consultations (company, name, contact, message, agreed)
-       VALUES ($1, $2, $3, $4, TRUE) RETURNING id, company, name, contact, message, agreed, is_read, created_at`,
-      [company, name, contact, message]
+      `INSERT INTO consultations (name, grade, main_major, double_major, contact, message, agreed)
+       VALUES ($1, $2, $3, $4, $5, $6, TRUE)
+       RETURNING id, name, grade, main_major, double_major, contact, message, agreed, is_read, created_at`,
+      [name, grade, mainMajor, doubleMajor, contact, message]
     )
     const item = rows[0]
 
@@ -89,7 +95,7 @@ router.get(
     const ps = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 50))
     const countRes = await query('SELECT COUNT(*)::int AS total FROM consultations', [])
     const { rows } = await query(
-      `SELECT id, company, name, contact, message, agreed, is_read, created_at
+      `SELECT id, name, grade, main_major, double_major, contact, message, agreed, is_read, created_at
        FROM consultations ORDER BY created_at DESC, id DESC LIMIT $1 OFFSET $2`,
       [ps, (p - 1) * ps]
     )
@@ -106,7 +112,7 @@ router.put(
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' })
     const { rows } = await query(
       `UPDATE consultations SET is_read = NOT is_read WHERE id = $1
-       RETURNING id, company, name, contact, message, agreed, is_read, created_at`,
+       RETURNING id, name, grade, main_major, double_major, contact, message, agreed, is_read, created_at`,
       [id]
     )
     if (!rows[0]) return res.status(404).json({ error: 'not found' })

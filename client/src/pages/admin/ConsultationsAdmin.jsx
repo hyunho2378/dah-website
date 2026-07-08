@@ -68,11 +68,14 @@ function ConsultationsAdmin() {
                   <span className="text-body-m font-semibold text-text-pri md:text-body-d">
                     {item.name}
                   </span>
-                  {item.company && (
-                    <span className="text-body-m text-text-sec md:text-body-d">
-                      {item.company}
-                    </span>
-                  )}
+                  {/* S3-1: 회사명 대신 학년·전공 표시 */}
+                  {[item.grade, item.main_major, item.double_major]
+                    .filter(Boolean)
+                    .map((v, i) => (
+                      <span key={i} className="text-body-m text-text-sec md:text-body-d">
+                        {v}
+                      </span>
+                    ))}
                 </div>
                 <span className="font-mono text-caption-m text-text-meta">
                   {String(item.created_at).slice(0, 16).replace('T', ' ')}

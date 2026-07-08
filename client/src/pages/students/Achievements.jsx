@@ -13,22 +13,23 @@ import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
 import { achievements } from '../../data/achievements'
 
-// API 게시글(13_CMS: 수상명/수상자/주최/연도/대회 URL) → 공통형. 정적 데이터도 동일 필드.
-function normalize(post) {
-  const year = Number(
-    post.year ??
-      (post.body && typeof post.body === 'object' ? post.body.year : undefined) ??
-      post.tag ??
-      (post.event_start ?? post.created_at ?? '').slice(0, 4)
-  )
-  // J11: 라이브 API는 상세 필드가 body jsonb에 담김 — 최상위 폴백과 함께 판독
+// 성과 원문(achievements_SOURCE) 시드: title_ko + body{desc,descEn,year} + title_en. 정적 폴백은
+// title/titleEn/desc/descEn 평면. EN 모드는 영문 대역 우선(없으면 국문 폴백). 원문 그대로 렌더.
+function normalize(post, isEn) {
   const body = post.body && typeof post.body === 'object' ? post.body : {}
+  const year = Number(
+    post.year ?? body.year ?? post.tag ?? (post.event_start ?? post.created_at ?? '').slice(0, 4)
+  )
+  const titleKo = post.title_ko ?? post.title ?? ''
+  const titleEn = post.title_en ?? post.titleEn ?? null
+  const descKo = post.desc ?? body.desc ?? null
+  const descEn = post.descEn ?? body.descEn ?? null
   return {
     id: String(post.id),
     year: Number.isFinite(year) && year > 0 ? year : null,
-    title: post.title ?? post.title_ko ?? '',
+    title: isEn ? titleEn || titleKo : titleKo,
     url: post.external_url ?? post.url ?? null,
-    desc: post.desc ?? body.desc ?? null,
+    desc: isEn ? descEn || descKo : descKo,
   }
 }
 
@@ -45,7 +46,7 @@ function AwardItem({ item }) {
         />
       </div>
       {item.desc && (
-        <p className="break-keep text-body-m leading-relaxed text-text-sec md:text-body-d">
+        <p className="whitespace-pre-line break-keep text-body-m leading-relaxed text-text-sec md:text-body-d">
           {item.desc}
         </p>
       )}
@@ -65,16 +66,17 @@ function AwardItem({ item }) {
 }
 
 function Achievements() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   useTitle(t('titles.achievements'))
-  // G1.3: 페이지네이션 없이 전량(41건) 노출 — 서버 기본 12건 상한 회피
+  const isEn = lang === 'en'
+  // G1.3: 페이지네이션 없이 전량 노출 — 서버 기본 12건 상한 회피
   const { data, error, offline } = useApi('/content/achievement', {
     params: { pageSize: 100 },
   })
 
   const useFallback = offline || (error && !data)
   const items = (useFallback ? achievements : data?.items ?? [])
-    .map(normalize)
+    .map((p) => normalize(p, isEn))
     .filter((a) => a.year !== null)
   const years = [...new Set(items.map((a) => a.year))].sort((a, b) => b - a)
 

@@ -168,6 +168,7 @@ export const ko = {
     credit: '학점-강의-실습',
     sem1: '1학기',
     sem2: '2학기',
+    roadmapAria: '공통기초를 최상단에 두고 학년과 학기 축으로 배치한 트랙별 교육과정 로드맵',
   },
   // P13: 코드쉐어링 유형·표 헤더 라벨
   codesharing: {

@@ -323,6 +323,28 @@
 - [x] 검증: npm run build 성공(2015 모듈), 서버 node --check 통과. 22파일(수정 21 + migrate-phase15)
 - [!] 실사이트 육안(사용자): /en 미러 — 연혁·멘토·취업·운영위·교수·동아리 영문 / 발행 게이트(영문 없이 발행 불가, 공지 예외) / 나노디그리 균일 / 언어 전환 시프트 0
 
+## PHASE 16 · CRITIC — 성과 원문 복구 + i18n 잔여 + UI 크리틱 (28_PHASE14_FIXES, 병렬 S1·S2·S3 + 통합 S4)
+### S1 성과·연혁·운영위 정적데이터
+- [x] S1-1 학생 성과 전면 재시드[절대 원문]: seed-achievements-phase14가 achievements_SOURCE.md를 직접 파싱(토씨 불변) → 기존 41건 DELETE 후 30건 재생성(title_ko·body{desc,descEn,year}·title_en, tag=연도, sort=등장순). 영문은 achievementsEn.js(S1, 30건 키=### 원문 그대로) 매칭. 소스 이상 2건 처리(중복 제목=EN 배열 순서 배정, 트레일링 스페이스 키 보존). 정적 폴백 data/achievements.js도 동일 파싱으로 자동 재생성. 문자 대조 3건(#0·#15·#29) 전부 일치 ✓
+- [x] S1-2 연혁[근본원인]: About.jsx는 data/history.js를 정상 참조(데이터 정확)했으나 HistoryTimeline이 item.text(국문)만 렌더+KoreanOnlyBadge라 EN 미반영이었음. 수정: lang 전달→EN은 textEn 렌더, 뱃지 제거. 12건 데이터 확인
+- [x] S1-4 미션 EN 중복: EN 모드에서 MISSION_EN(영문)+copy.missionKr(영문) 두 줄이 중복 → EN일 때 두 번째 줄 미렌더
+- [x] S1-3 운영위 전원 로마자: council.js 10기수 전 멤버 nameEn 이미 존재(0건 누락 확인), Council.jsx EN 렌더·소속 Digital Arts & Humanities 풀네임 확인
+### S2 i18n 잔여 버그
+- [x] S2-1 히어로 버튼[근본원인]: settings.hero.ctas(트랙 살펴보기·전시회 보러가기)에 영문 라벨이 없어 i18n 기본을 덮어써 EN 전환 시 국문으로 되돌아감('바뀌려다 만다'). 수정: HeroSection이 EN 모드에서 cta.labelEn→i18n 기본(index)→cta.label 순 폴백. 배포 DB hero.ctas에 labelEn(Explore Tracks·Visit the Exhibition) 반영 + SettingsAdmin 영문 라벨 입력칸 추가
+- [x] S2-1 Curriculum '학년별 교육 과정'은 t('sections.roadmap')로 정상 전환(오보). 대신 로드맵 SVG 과목 블록이 course.name(국문) 고정이던 갭 발견→courseName(course,lang) 적용, SVG aria-label i18n화
+- [x] S2-2 전시 피처드 EN: full title EN·intro_en·기간 정상 확인 + CTA 라벨이 국문 cta_label 누출되던 것 수정(EN은 cta_label_en→full title 폴백)
+- [x] S2-3 언어 전환: 기존 App PageFade(pathname 재마운트 opacity 크로스페이드)로 충족, 컴포넌트 레이아웃 시프트 0 확인
+### S3 공개·어드민 UI
+- [x] S3-1 상담: 전공 소개 하단 상담 링크 제거(About), Consult 폼 회사명 삭제 + 이름/학년/주전공/복수전공/연락처/문의내용 순, 수집항목 문구 갱신. 서버 /consult가 grade·mainMajor·doubleMajor 수신+저장(migrate-phase16: consultations.grade·main_major·double_major), ConsultationsAdmin 학년·전공 표시. 진입은 푸터만
+- [x] S3-2 쇼케이스 카드: 16:9 유지·제목 h3로 확대·텍스트 간격(gap-12)·패딩(p-24/32) 상향
+- [x] S3-3 사용자 3열: UsersAdmin 세로 나열→반응형 3열 그리드 컴팩트 카드, 역할 셀렉트 카드 내부로 폭 제한
+- [x] S3-4 로그아웃 확인 모달: AdminLayout 로그아웃 버튼→글래스 확인 모달(취소/확인, ESC·백드롭 닫기, window.confirm 미사용), 확인 시에만 로그아웃
+- [x] S3-5 동아리 로고[파일단위 진단·DB 확정]: CON:NECT(#27)·DS4H(#28)는 DB poster_url이 비어있음(로고 미업로드) → 코드 버그 아님, 플레이스홀더 정상. 더 인스튜디오는 title_en='The in Studio' 존재+ClubCard EN title_en·fieldEn 렌더 확인. 코드 수정 불필요
+- [!] 후속(콘텐츠 입력, 버그 아님): CON:NECT·DS4H 로고는 CMS에서 업로드 필요(파일 부재)
+### S4 통합
+- [x] 검증: npm run build 성공(2015 모듈), 서버 node --check 통과. migrate-phase16·seed-achievements 배포 Neon 실행+문자대조, hero labelEn DB 반영. 19파일(수정 14 + 신규 achievementsEn·migrate-phase16·seed·소스 문서)
+- [!] 실사이트 육안(사용자): /students/achievements 원문 30건(국·영) / 연혁 EN / 히어로 버튼 EN / Curriculum EN / 상담 필드 / 쇼케이스 카드 / 사용자 3열 / 로그아웃 모달
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

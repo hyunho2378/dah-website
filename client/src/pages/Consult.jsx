@@ -1,5 +1,5 @@
 // /consult — 상담 신청 (Phase 9 K1-9, 비로그인 공개)
-// POST /consult {company, name, contact, message, agreed}. 제출 성공 시 완료 안내로 교체.
+// POST /consult {name, grade, mainMajor, doubleMajor, contact, message, agreed}. 제출 성공 시 완료 안내로 교체.
 // 폼 문안은 사용자 제공 원문 그대로(변경 금지). 개인정보처리방침 전문 보기만 내부 /privacy 링크.
 // 라우트 등록(App.jsx)은 통합자 소관 — 이 파일은 페이지만 제공한다.
 
@@ -30,7 +30,14 @@ function Field({ label, required = false, children }) {
 
 function Consult() {
   useTitle('상담 신청')
-  const [form, setForm] = useState({ company: '', name: '', contact: '', message: '' })
+  const [form, setForm] = useState({
+    name: '',
+    grade: '',
+    mainMajor: '',
+    doubleMajor: '',
+    contact: '',
+    message: '',
+  })
   const [agreed, setAgreed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
@@ -52,8 +59,10 @@ function Consult() {
     setError(null)
     try {
       await api.post('/consult', {
-        company: form.company.trim() || null,
         name: form.name.trim(),
+        grade: form.grade.trim() || null,
+        mainMajor: form.mainMajor.trim() || null,
+        doubleMajor: form.doubleMajor.trim() || null,
         contact: form.contact.trim(),
         message: form.message.trim() || null,
         agreed: true,
@@ -93,15 +102,6 @@ function Consult() {
             onSubmit={handleSubmit}
             className="mx-auto flex min-w-0 max-w-container flex-col gap-32"
           >
-            <Field label="회사명">
-              <input
-                type="text"
-                value={form.company}
-                onChange={set('company')}
-                className={inputCls}
-                autoComplete="organization"
-              />
-            </Field>
             <Field label="이름" required>
               <input
                 type="text"
@@ -110,6 +110,30 @@ function Consult() {
                 onChange={set('name')}
                 className={inputCls}
                 autoComplete="name"
+              />
+            </Field>
+            <Field label="학년">
+              <input
+                type="text"
+                value={form.grade}
+                onChange={set('grade')}
+                className={inputCls}
+              />
+            </Field>
+            <Field label="주전공">
+              <input
+                type="text"
+                value={form.mainMajor}
+                onChange={set('mainMajor')}
+                className={inputCls}
+              />
+            </Field>
+            <Field label="복수전공">
+              <input
+                type="text"
+                value={form.doubleMajor}
+                onChange={set('doubleMajor')}
+                className={inputCls}
               />
             </Field>
             <Field label="연락처 (전화 또는 이메일)" required>
@@ -135,7 +159,7 @@ function Consult() {
                 개인정보 수집·이용 안내 (상담 신청)
               </p>
               <ul className="flex flex-col gap-8 text-small-m leading-relaxed text-text-sec md:text-small-d">
-                <li>수집 항목: 이름, 연락처(전화 또는 이메일), 문의 내용</li>
+                <li>수집 항목: 이름, 학년, 주전공, 복수전공, 연락처(전화 또는 이메일), 문의 내용</li>
                 <li>이용 목적: 복수전공·교육과정 상담 응대</li>
                 <li>
                   보유·이용 기간: 상담 종료 후 지체 없이 파기(관계 법령에 따른 보관 의무가 있는

@@ -18,7 +18,7 @@ import {
 const PANEL =
   'flex flex-col gap-16 rounded-glass border border-glass-line bg-glass-bg p-24 backdrop-blur-glass-mobile'
 
-const EMPTY_CTA = { label: '', href: '' }
+const EMPTY_CTA = { label: '', labelEn: '', href: '' }
 
 function SettingsAdmin() {
   useTitle('사이트 설정')
@@ -64,6 +64,8 @@ function SettingsAdmin() {
         .filter((cta) => cta.label.trim() !== '' && cta.href.trim() !== '')
         .map((cta) => ({
           label: cta.label.trim(),
+          // S2-1: 영문 라벨(EN 모드 히어로 버튼) — 비우면 HeroSection이 i18n 기본 영문으로 폴백
+          labelEn: (cta.labelEn || '').trim() || undefined,
           href: cta.href.trim(),
           external: /^https?:\/\//.test(cta.href.trim()),
         }))
@@ -96,9 +98,12 @@ function SettingsAdmin() {
             URL(https://) 모두 가능합니다.
           </p>
           {ctas.map((cta, i) => (
-            <div key={i} className="grid grid-cols-1 gap-16 md:grid-cols-2">
+            <div key={i} className="grid grid-cols-1 gap-16 md:grid-cols-3">
               <Field label={`버튼 ${i + 1} 텍스트`}>
                 <Input value={cta.label} onChange={(e) => setCta(i, 'label', e.target.value)} />
+              </Field>
+              <Field label={`버튼 ${i + 1} 영문 텍스트`} hint="비우면 기본 영문 사용">
+                <Input value={cta.labelEn || ''} onChange={(e) => setCta(i, 'labelEn', e.target.value)} />
               </Field>
               <Field label={`버튼 ${i + 1} 링크`}>
                 <Input value={cta.href} onChange={(e) => setCta(i, 'href', e.target.value)} />

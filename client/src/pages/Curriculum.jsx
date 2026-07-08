@@ -135,7 +135,7 @@ function fitBlockName(name, maxW) {
   return name
 }
 
-function buildDiagramLayout(lanes, items) {
+function buildDiagramLayout(lanes, items, lang) {
   const W = 960
   const colW = W / 4
   const semW = colW / 2
@@ -160,10 +160,11 @@ function buildDiagramLayout(lanes, items) {
       sems.forEach((semItems, si) => {
         semItems.forEach((course, ri) => {
           const w = semW - 12
+          const nm = courseName(course, lang)
           blocks.push({
             key: `${lane.key}-${yi}-${si}-${course.name}-${ri}`,
-            name: course.name,
-            display: fitBlockName(course.name, w - 12),
+            name: nm,
+            display: fitBlockName(nm, w - 12),
             x: yi * colW + si * semW + 6,
             y: top + labelH + ri * rowH,
             w,
@@ -186,7 +187,7 @@ function Curriculum() {
     { key: 'common', label: t('tracks.common') },
     ...tracks.map((track) => ({ key: track.id, label: t(`tracks.${track.id}`) })),
   ]
-  const diagram = buildDiagramLayout(lanes, curriculum)
+  const diagram = buildDiagramLayout(lanes, curriculum, lang)
 
   return (
     <>
@@ -224,7 +225,7 @@ function Curriculum() {
               <svg
                 viewBox={`0 0 ${diagram.W} ${diagram.H}`}
                 role="img"
-                aria-label="공통기초를 최상단에 두고 학년과 학기 축으로 배치한 트랙별 교육과정 로드맵"
+                aria-label={t('curriculum.roadmapAria')}
                 className="h-auto w-full"
               >
                 {[0, 1, 2, 3].map((i) => (

@@ -164,6 +164,7 @@ export const en = {
     credit: 'Credit-Lecture-Lab',
     sem1: 'Semester 1',
     sem2: 'Semester 2',
+    roadmapAria: 'Curriculum roadmap by track, arranged along year and semester axes with Common Core at the top',
   },
   // P13: code sharing type + table header labels
   codesharing: {

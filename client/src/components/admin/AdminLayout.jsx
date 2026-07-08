@@ -4,11 +4,12 @@
 //     (sticky, 뷰포트 높이 기준 overflow-y-auto — 길어져도 콘텐츠와 따로 스크롤).
 // J2: ErrorBoundary — 렌더 크래시 시 빈 화면 대신 오류 안내를 표시한다.
 
-import { Component } from 'react'
+import { Component, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import PageBanner from '../layout/PageBanner'
 import Container from '../layout/Container'
+import { GhostButton, PrimaryButton } from './FormControls'
 import { RequireRole, useAuth } from '../../context/AuthContext'
 
 const NAV_GROUPS = [
@@ -100,50 +101,109 @@ class AdminErrorBoundary extends Component {
   }
 }
 
-function AdminNav() {
-  const { user, logout, hasRole } = useAuth()
+// 로그아웃 확인 모달 — 즉시 로그아웃 방지. LoginModal과 동일 글래스 패턴(백드롭·ESC 닫기).
+// 브라우저 네이티브 다이얼로그(window.confirm) 금지. 포커스 트랩은 요구 안 함(ESC·백드롭만).
+function LogoutConfirm({ onCancel, onConfirm }) {
+  const panelRef = useRef(null)
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    panelRef.current?.querySelector('button')?.focus()
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onCancel()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [onCancel])
 
   return (
-    <nav
-      aria-label="관리 메뉴"
-      className="flex flex-col gap-24 rounded-glass border border-glass-line bg-glass-bg p-16 backdrop-blur-glass-mobile"
-    >
-      <div className="flex items-center justify-between gap-8 border-b border-border-subtle pb-16">
-        <span className="min-w-0">
-          <span className="block truncate text-body-m font-semibold text-text-pri">
-            {user?.name}
-          </span>
-          <span className="block font-mono text-caption-m uppercase tracking-label text-text-meta">
-            {user?.role}
-          </span>
-        </span>
-        <button
-          type="button"
-          onClick={logout}
-          aria-label="로그아웃"
-          className="flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
-        >
-          <LogOut size={16} />
-        </button>
-      </div>
-
-      {NAV_GROUPS.filter((group) => hasRole(group.role)).map((group) => (
-        <div key={group.label} className="flex flex-col gap-8">
-          <p className="font-mono text-label-m uppercase tracking-label text-text-meta">
-            {group.label}
-          </p>
-          <ul className="flex flex-wrap gap-4 lg:flex-col">
-            {group.items.map((item) => (
-              <li key={item.to} className="min-w-0">
-                <NavLink to={item.to} end={item.end} className={navLinkClass}>
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-gutter-m">
+      <button
+        type="button"
+        aria-label="닫기"
+        tabIndex={-1}
+        onClick={onCancel}
+        className="absolute inset-0 bg-black/60"
+      />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="logout-confirm-title"
+        className="relative w-full max-w-sm rounded-glass border border-glass-line bg-cosmos-depth1/[0.96] p-32 backdrop-blur-glass"
+      >
+        <h2 id="logout-confirm-title" className="text-h3-m font-bold text-text-pri md:text-h3-d">
+          로그아웃 하시겠습니까?
+        </h2>
+        <div className="mt-24 flex justify-end gap-8">
+          <GhostButton onClick={onCancel}>취소</GhostButton>
+          <PrimaryButton onClick={onConfirm}>확인</PrimaryButton>
         </div>
-      ))}
-    </nav>
+      </div>
+    </div>
+  )
+}
+
+function AdminNav() {
+  const { user, logout, hasRole } = useAuth()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  return (
+    <>
+      <nav
+        aria-label="관리 메뉴"
+        className="flex flex-col gap-24 rounded-glass border border-glass-line bg-glass-bg p-16 backdrop-blur-glass-mobile"
+      >
+        <div className="flex items-center justify-between gap-8 border-b border-border-subtle pb-16">
+          <span className="min-w-0">
+            <span className="block truncate text-body-m font-semibold text-text-pri">
+              {user?.name}
+            </span>
+            <span className="block font-mono text-caption-m uppercase tracking-label text-text-meta">
+              {user?.role}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setConfirmOpen(true)}
+            aria-label="로그아웃"
+            className="flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
+
+        {NAV_GROUPS.filter((group) => hasRole(group.role)).map((group) => (
+          <div key={group.label} className="flex flex-col gap-8">
+            <p className="font-mono text-label-m uppercase tracking-label text-text-meta">
+              {group.label}
+            </p>
+            <ul className="flex flex-wrap gap-4 lg:flex-col">
+              {group.items.map((item) => (
+                <li key={item.to} className="min-w-0">
+                  <NavLink to={item.to} end={item.end} className={navLinkClass}>
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+      {confirmOpen && (
+        <LogoutConfirm
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={() => {
+            setConfirmOpen(false)
+            logout()
+          }}
+        />
+      )}
+    </>
   )
 }
 

@@ -55,6 +55,9 @@ function FeaturedExhibition({ item }) {
   // J5: EN 모드 소개문 — intro_en 우선, 없으면 국문 intro + Korean only 뱃지
   const introText = lang === 'en' ? item.intro_en || item.intro : item.intro
   const introKoFallback = lang === 'en' && !item.intro_en && Boolean(item.intro)
+  // EN: cta_label_en 우선, 없으면 영문 풀네임(관리자 국문 cta_label이 EN에 새지 않게). KR: cta_label > 풀네임.
+  const ctaLabel =
+    lang === 'en' ? item.cta_label_en || fullTitle : item.cta_label || fullTitle
   return (
     <div className="grid gap-24 md:grid-cols-[220px_1fr] md:gap-40 lg:grid-cols-[260px_1fr] lg:gap-48">
       <div className="w-full max-w-[220px] md:max-w-none">
@@ -97,7 +100,7 @@ function FeaturedExhibition({ item }) {
               href={item.cta_url || item.site_url || `/programs/exhibitions/${item.id}`}
               external={Boolean(item.cta_url || item.site_url)}
             >
-              {item.cta_label || fullTitle}
+              {ctaLabel}
             </Button>
           </div>
         )}

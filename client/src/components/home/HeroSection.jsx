@@ -51,6 +51,10 @@ function HeroSection({ settings }) {
   const remoteCtas = (settings?.settings?.hero ?? settings?.hero)?.ctas
   const ctas =
     Array.isArray(remoteCtas) && remoteCtas.length > 0 ? remoteCtas : defaultCtas
+  // 렌더 라벨은 언어별로 선택 — EN: labelEn > 동일 인덱스 i18n 기본 라벨(EN) > label,
+  // KR: label. 링크(href/to/external)는 remote 값을 그대로 써 관리자 커스텀 링크를 보존.
+  const ctaLabel = (cta, i) =>
+    lang === 'en' ? cta.labelEn || defaultCtas[i]?.label || cta.label : cta.label
 
   return (
     <section className="relative flex min-h-[calc(100svh-theme(spacing.header))] flex-col justify-center overflow-hidden">
@@ -89,7 +93,7 @@ function HeroSection({ settings }) {
                 href={cta.href || cta.to}
                 external={Boolean(cta.external)}
               >
-                {cta.label}
+                {ctaLabel(cta, i)}
               </Button>
             ))}
             {/* 히어로 버튼 편집(owner·admin, site_settings) — 비로그인 미렌더는 EditPencil 내부 처리 */}

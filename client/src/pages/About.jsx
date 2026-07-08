@@ -2,9 +2,8 @@ import PageBanner from '../components/layout/PageBanner'
 import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
-import ArrowLink from '../components/common/ArrowLink'
 import { useTitle } from '../hooks/useTitle'
-import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
+import { useLang } from '../i18n/LangContext'
 import { history } from '../data/history'
 import { motion } from '../styles/tokens'
 
@@ -114,7 +113,7 @@ function IconEcosystem() {
 const VISION_ICONS = [IconLeader, IconKnowledge, IconEcosystem]
 
 // About 전용 조각 — 연혁 타임라인 (수직: 좌측 헤어라인 세로선 + 좌 mono 날짜 + 우 내용)
-function HistoryTimeline({ items }) {
+function HistoryTimeline({ items, lang }) {
   if (items.length === 0) return null
   return (
     <ol className="border-l border-border-subtle">
@@ -127,7 +126,7 @@ function HistoryTimeline({ items }) {
             {item.date}
           </time>
           <p className="mt-4 text-body-m text-text-pri md:mt-0 md:text-body-d">
-            {item.text}
+            {lang === 'en' ? item.textEn : item.text}
           </p>
         </li>
       ))}
@@ -185,9 +184,11 @@ function About() {
               <h2 className="mt-16 max-w-4xl text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:text-h2-d">
                 {MISSION_EN}
               </h2>
-              <p className="mt-24 max-w-[960px] text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
-                {copy.missionKr}
-              </p>
+              {lang !== 'en' && (
+                <p className="mt-24 max-w-[960px] text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
+                  {copy.missionKr}
+                </p>
+              )}
             </div>
           </Reveal>
 
@@ -221,13 +222,12 @@ function About() {
           </div>
         </Container>
 
-        {/* 03 연혁 타임라인 — 항목은 국문 원문(EN 페이지는 Korean only 뱃지 병기) */}
+        {/* 03 연혁 타임라인 — 항목은 언어별(KR: text / EN: textEn) 렌더 */}
         {history.length > 0 && (
           <Container as="section" id="history" className="scroll-mt-header pt-section-m md:pt-section-d">
             <Reveal>
               <div className="flex flex-wrap items-center gap-12">
                 <SectionLabel index="03" text="HISTORY" />
-                <KoreanOnlyBadge />
               </div>
               <h2 className="mt-24 text-h1-m font-extrabold leading-tight tracking-display text-text-pri md:mt-32 md:text-h1-d">
                 {t('sections.history')}
@@ -235,15 +235,10 @@ function About() {
             </Reveal>
             <div className="mt-48 md:mt-64">
               {/* K2-7: 최신 연도 최상단(내림차순) — 데이터 원문 순서(오름차순)는 유지, 렌더에서만 정렬 */}
-              <HistoryTimeline items={[...history].sort((a, b) => b.date.localeCompare(a.date))} />
+              <HistoryTimeline items={[...history].sort((a, b) => b.date.localeCompare(a.date))} lang={lang} />
             </div>
           </Container>
         )}
-
-        {/* K1-9.5: 전공소개 하단 상담 신청 텍스트 링크 */}
-        <Container as="section" className="pt-section-m md:pt-section-d">
-          <ArrowLink href="/consult">{t('footer.consult')}</ArrowLink>
-        </Container>
       </div>
     </>
   )

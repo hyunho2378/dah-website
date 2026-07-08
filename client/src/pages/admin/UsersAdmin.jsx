@@ -139,15 +139,15 @@ function UsersAdmin() {
       {!loading && !items.length && <EmptyNote>등록된 계정이 없습니다</EmptyNote>}
 
       {items.length > 0 && (
-        <ul className="flex flex-col">
+        <ul className="grid grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => {
             const isMe = me?.id === item.id
             return (
               <li
                 key={item.id}
-                className="flex min-w-0 flex-wrap items-center gap-12 border-b border-border-subtle py-12 first:border-t"
+                className="flex min-w-0 flex-col gap-12 rounded-md border border-border-subtle bg-bg-elev p-16"
               >
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0">
                   <span className="block truncate text-body-m text-text-pri md:text-body-d">
                     {item.name}
                     {isMe && (
@@ -159,38 +159,40 @@ function UsersAdmin() {
                   </span>
                 </span>
                 {item.must_set_pw && (
-                  <span className="inline-flex items-center rounded-sm border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-meta">
+                  <span className="inline-flex w-fit items-center rounded-sm border border-glass-line bg-glass-bg px-12 py-4 font-mono text-caption-m text-text-meta">
                     비밀번호 미설정
                   </span>
                 )}
-                <Select
-                  value={item.role}
-                  onChange={(e) => changeRole(item, e.target.value)}
-                  disabled={isMe}
-                  aria-label={`${item.email} 롤`}
-                  options={ROLE_OPTIONS.map((o) => ({ value: o.value, label: o.value }))}
-                  className="w-auto"
-                />
-                <button
-                  type="button"
-                  onClick={() => reset(item)}
-                  disabled={isMe}
-                  aria-label={`${item.email} 비밀번호 리셋`}
-                  title="비밀번호 리셋"
-                  className={ICON_BTN}
-                >
-                  <KeyRound size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => remove(item)}
-                  disabled={isMe}
-                  aria-label={`${item.email} 삭제`}
-                  title="계정 삭제"
-                  className={ICON_BTN}
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="mt-auto flex items-center gap-8">
+                  <Select
+                    value={item.role}
+                    onChange={(e) => changeRole(item, e.target.value)}
+                    disabled={isMe}
+                    aria-label={`${item.email} 롤`}
+                    options={ROLE_OPTIONS.map((o) => ({ value: o.value, label: o.value }))}
+                    className="min-w-0 flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => reset(item)}
+                    disabled={isMe}
+                    aria-label={`${item.email} 비밀번호 리셋`}
+                    title="비밀번호 리셋"
+                    className={ICON_BTN}
+                  >
+                    <KeyRound size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remove(item)}
+                    disabled={isMe}
+                    aria-label={`${item.email} 삭제`}
+                    title="계정 삭제"
+                    className={ICON_BTN}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </li>
             )
           })}

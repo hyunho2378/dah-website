@@ -18,23 +18,23 @@ function ShowcaseCard({ item }) {
 
   return (
     <Link to={`/showcase/${item.id}`} className="group block h-full">
-      <GlassCard hover className="flex h-full flex-col gap-12 p-20 md:p-28">
-        {/* M3-3: 카드 메인 이미지 16:9 (사진 → object-cover로 꽉 채움) */}
+      <GlassCard hover className="flex h-full flex-col gap-16 p-24 md:p-32">
+        {/* M3-3: 카드 메인 이미지 16:9 (사진 → object-cover로 꽉 채움) — 카드 최상단 지배 요소 */}
         <ImageFrame
           src={item.main_img || undefined}
           alt={`${item.title} 메인 이미지`}
           ratio="16/9"
           placeholder="NO IMAGE"
         />
-        <div className="flex min-w-0 flex-1 flex-col gap-8">
-          <h3 className="min-w-0 text-body-l-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-body-l-d">
+        <div className="flex min-w-0 flex-1 flex-col gap-12">
+          <h3 className="min-w-0 text-h3-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-h3-d">
             {item.title}
           </h3>
           <p className="font-mono text-caption-m text-text-meta">
             {[item.topic, item.creator].filter(Boolean).join(' · ')}
           </p>
           {tools.length > 0 && (
-            <div className="mt-auto flex flex-wrap gap-8">
+            <div className="mt-auto flex flex-wrap gap-8 pt-4">
               {tools.slice(0, 3).map((tool) => (
                 <Tag key={tool}>{tool}</Tag>
               ))}
