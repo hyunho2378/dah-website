@@ -142,7 +142,7 @@ function TagField({ value, onChange }) {
 }
 
 /** 첨부 목록 — 문서 첨부 attachments jsonb [{ name, url }] (K1-3: gallery와 분리) */
-function AttachmentsField({ value = [], onChange }) {
+function AttachmentsField({ value = [], onChange, onUploadingChange }) {
   const inputRef = useRef(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
@@ -153,6 +153,7 @@ function AttachmentsField({ value = [], onChange }) {
     if (!file) return
     setBusy(true)
     setError(null)
+    onUploadingChange?.(true)
     try {
       const res = await api.upload(file, { usage: 'general' })
       if (!res?.url) throw new Error('업로드 응답에 url이 없습니다.')
@@ -161,6 +162,7 @@ function AttachmentsField({ value = [], onChange }) {
       setError(err.message)
     } finally {
       setBusy(false)
+      onUploadingChange?.(false)
     }
   }
 
@@ -208,7 +210,7 @@ function AttachmentsField({ value = [], onChange }) {
 }
 
 /** 이미지 갤러리 — gallery jsonb [url] (이미지 URL 문자열 배열, K1-3 데이터 계약) */
-function GalleryField({ value = [], onChange, usage = 'exhibition' }) {
+function GalleryField({ value = [], onChange, usage = 'exhibition', onUploadingChange }) {
   const inputRef = useRef(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
@@ -219,6 +221,7 @@ function GalleryField({ value = [], onChange, usage = 'exhibition' }) {
     if (!file) return
     setBusy(true)
     setError(null)
+    onUploadingChange?.(true)
     try {
       const res = await api.upload(file, { usage })
       if (!res?.url) throw new Error('업로드 응답에 url이 없습니다.')
@@ -227,6 +230,7 @@ function GalleryField({ value = [], onChange, usage = 'exhibition' }) {
       setError(err.message)
     } finally {
       setBusy(false)
+      onUploadingChange?.(false)
     }
   }
 
@@ -275,7 +279,7 @@ function GalleryField({ value = [], onChange, usage = 'exhibition' }) {
 }
 
 /** 공모전 회차 리피터 — body.editions [{ semester_label, poster_url, period, link }] (M1-3) */
-function EditionsField({ value = [], onChange }) {
+function EditionsField({ value = [], onChange, onUploadingChange }) {
   const rows = Array.isArray(value) ? value : []
   const setRow = (i, key, v) =>
     onChange(rows.map((row, idx) => (idx === i ? { ...row, [key]: v } : row)))
@@ -317,6 +321,7 @@ function EditionsField({ value = [], onChange }) {
                   value={row.poster_url || ''}
                   onChange={(v) => setRow(i, 'poster_url', v)}
                   usage="poster"
+                  onUploadingChange={onUploadingChange}
                 />
               </Field>
             </div>
@@ -555,7 +560,10 @@ function PostForm() {
   const [form, setForm] = useState(() => emptyForm(template, type))
   const [hydrated, setHydrated] = useState(isNew)
   const [busy, setBusy] = useState(false)
+  const [uploading, setUploading] = useState(0) // 진행 중 업로드 수 — 0보다 크면 저장 차단
   const [saveError, setSaveError] = useState(null)
+  const onUploadingChange = (active) =>
+    setUploading((n) => Math.max(0, n + (active ? 1 : -1)))
 
   // 편집 모드 — 단건 도착 시 1회 주입
   useEffect(() => {
@@ -572,6 +580,7 @@ function PostForm() {
 
   const save = async (e) => {
     e.preventDefault()
+    if (uploading > 0) return // 업로드 완료 전 저장 차단 — 빈 URL 저장 방지
     setBusy(true)
     setSaveError(null)
     try {
@@ -637,7 +646,12 @@ function PostForm() {
           {type === 'club' && (
             <div className="md:col-span-2">
               <Field label="로고" hint="투명 PNG면 아래 배경 토글을 켜세요">
-                <ImageUpload value={form.poster_url} onChange={set('poster_url')} usage="poster" />
+                <ImageUpload
+                  value={form.poster_url}
+                  onChange={set('poster_url')}
+                  usage="poster"
+                  onUploadingChange={onUploadingChange}
+                />
               </Field>
             </div>
           )}
@@ -658,7 +672,12 @@ function PostForm() {
               </Field>
               <div className="md:col-span-2">
                 <Field label="포스터">
-                  <ImageUpload value={form.poster_url} onChange={set('poster_url')} usage="poster" />
+                  <ImageUpload
+                    value={form.poster_url}
+                    onChange={set('poster_url')}
+                    usage="poster"
+                    onUploadingChange={onUploadingChange}
+                  />
                 </Field>
               </div>
             </>
@@ -674,7 +693,11 @@ function PostForm() {
               </div>
               <div className="md:col-span-2">
                 <Field label="회차" hint="회차별 학기 라벨·포스터·기간·링크">
-                  <EditionsField value={form.editions} onChange={set('editions')} />
+                  <EditionsField
+                    value={form.editions}
+                    onChange={set('editions')}
+                    onUploadingChange={onUploadingChange}
+                  />
                 </Field>
               </div>
             </>
@@ -752,12 +775,21 @@ function PostForm() {
               </div>
               <div className="md:col-span-2">
                 <Field label="포스터">
-                  <ImageUpload value={form.poster_url} onChange={set('poster_url')} usage="poster" />
+                  <ImageUpload
+                    value={form.poster_url}
+                    onChange={set('poster_url')}
+                    usage="poster"
+                    onUploadingChange={onUploadingChange}
+                  />
                 </Field>
               </div>
               <div className="md:col-span-2">
                 <Field label="갤러리">
-                  <GalleryField value={form.gallery} onChange={set('gallery')} />
+                  <GalleryField
+                    value={form.gallery}
+                    onChange={set('gallery')}
+                    onUploadingChange={onUploadingChange}
+                  />
                 </Field>
               </div>
               {/* Q2: 상단 고정을 켜면 CTA 버튼 입력 노출(표시 여부·텍스트·링크). 끄면 숨김 */}
@@ -815,7 +847,12 @@ function PostForm() {
           {(template === 't1' || template === 't2') && (
             <div className="md:col-span-2">
               <Field label="이미지" hint="상세 페이지 갤러리에 표시됩니다">
-                <GalleryField value={form.gallery} onChange={set('gallery')} usage="general" />
+                <GalleryField
+                  value={form.gallery}
+                  onChange={set('gallery')}
+                  usage="general"
+                  onUploadingChange={onUploadingChange}
+                />
               </Field>
             </div>
           )}
@@ -823,7 +860,11 @@ function PostForm() {
           {config.attachments && (
             <div className="md:col-span-2">
               <Field label="첨부 파일">
-                <AttachmentsField value={form.attachments} onChange={set('attachments')} />
+                <AttachmentsField
+                  value={form.attachments}
+                  onChange={set('attachments')}
+                  onUploadingChange={onUploadingChange}
+                />
               </Field>
             </div>
           )}
@@ -864,8 +905,8 @@ function PostForm() {
 
         <ErrorText>{saveError}</ErrorText>
         <div className="flex items-center gap-8">
-          <PrimaryButton type="submit" disabled={busy || (!isNew && !hydrated)}>
-            {busy ? '저장 중' : '저장'}
+          <PrimaryButton type="submit" disabled={busy || uploading > 0 || (!isNew && !hydrated)}>
+            {busy ? '저장 중' : uploading > 0 ? '업로드 완료 대기' : '저장'}
           </PrimaryButton>
           <GhostButton onClick={() => navigate(backTo)}>취소</GhostButton>
         </div>

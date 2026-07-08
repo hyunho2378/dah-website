@@ -87,7 +87,7 @@ function PairsField({ field, value = [], onChange }) {
   )
 }
 
-function FieldControl({ field, value, onChange }) {
+function FieldControl({ field, value, onChange, onUploadingChange }) {
   switch (field.kind) {
     case 'textarea':
       return (
@@ -116,7 +116,14 @@ function FieldControl({ field, value, onChange }) {
     case 'toggle':
       return <Toggle checked={Boolean(value)} onChange={onChange} label={field.label} />
     case 'image':
-      return <ImageUpload value={value || ''} onChange={onChange} usage={field.usage} />
+      return (
+        <ImageUpload
+          value={value || ''}
+          onChange={onChange}
+          usage={field.usage}
+          onUploadingChange={onUploadingChange}
+        />
+      )
     case 'file':
       return (
         <ImageUpload
@@ -125,6 +132,7 @@ function FieldControl({ field, value, onChange }) {
           accept={field.accept}
           preview={false}
           usage={field.usage}
+          onUploadingChange={onUploadingChange}
         />
       )
     case 'pairs':
@@ -172,7 +180,10 @@ function EntityCrud({
   const [editing, setEditing] = useState(null) // null | 'new' | id
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [uploading, setUploading] = useState(0) // 진행 중 업로드 수 — 0보다 크면 저장 차단
   const [saveError, setSaveError] = useState(null)
+  const onUploadingChange = (active) =>
+    setUploading((n) => Math.max(0, n + (active ? 1 : -1)))
 
   const raw = data?.items || (Array.isArray(data) ? data : [])
   const items = [...raw].sort(
@@ -192,10 +203,12 @@ function EntityCrud({
   const close = () => {
     setEditing(null)
     setForm(null)
+    setUploading(0)
   }
 
   const save = async (e) => {
     e.preventDefault()
+    if (uploading > 0) return // 업로드 완료 전 저장 차단 — 빈 URL 저장 방지
     setBusy(true)
     setSaveError(null)
     try {
@@ -261,6 +274,7 @@ function EntityCrud({
                 field={f}
                 value={form[f.key]}
                 onChange={(v) => setForm((prev) => ({ ...prev, [f.key]: v }))}
+                onUploadingChange={onUploadingChange}
               />
             </Field>
           </div>
@@ -268,8 +282,8 @@ function EntityCrud({
       </div>
       <ErrorText>{saveError}</ErrorText>
       <div className="flex items-center gap-8">
-        <PrimaryButton type="submit" disabled={busy}>
-          {busy ? '저장 중' : '저장'}
+        <PrimaryButton type="submit" disabled={busy || uploading > 0}>
+          {busy ? '저장 중' : uploading > 0 ? '업로드 완료 대기' : '저장'}
         </PrimaryButton>
         <GhostButton onClick={close}>취소</GhostButton>
       </div>

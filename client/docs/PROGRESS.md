@@ -263,6 +263,15 @@
 - [x] 검증: npm run build 성공, 서버 node --check 통과, migrate-phase12 배포 Neon 실행(cta 3컬럼, Neon control-plane 일시 오류로 재시도 후 성공)
 - [!] 실사이트 육안(사용자): 코드쉐어링 문장 수정 반영 / 전시 제목 크게·버튼 편집 / 동아리 로고 표시·배경 토글 / 교수 4열 / 헤더 균등·단일 라벨
 
+## PHASE 13 — 업로드 레이스 컨디션 (동아리 로고·위원회 로고·교수 사진·전시 포스터)
+- [x] [버그] 업로드 불안정 근본원인: ImageUpload.handleFile은 async(setBusy→await api.upload→onChange(url))라 URL은 업로드 완료 후에야 form에 들어감. 그런데 저장 버튼은 폼 자체 busy(저장 진행)만 보고 업로드 진행(busy)은 안 봄 → "업로드 중"에 저장 클릭 시 poster_url='' 빈 값 저장 후 PostForm이 navigate로 이탈, 뒤늦은 onChange 유실. 재시도(미리보기 뜬 뒤 저장)는 됨 = "한두 번 재시도해야 뜬다" 정확히 일치. "아예 안 뜬다"=Render 콜드스타트 업로드 실패(이미 ErrorText 노출, 웜업 후 재시도 성공)
+- [x] 수정: ImageUpload에 onUploadingChange(active) prop 신설 — 업로드 시작/종료를 상위에 전파. PostForm·EntityCrud가 진행 중 업로드 카운터(uploading) 유지, uploading>0이면 저장 버튼 disabled('업로드 완료 대기') + save() 조기 return으로 빈 URL 저장 원천 차단
+- [x] 전 업로드 필드 배선: PostForm(동아리 로고·t2 포스터·전시 포스터·공모전 회차 EditionsField·전시 갤러리·본문 갤러리·첨부 AttachmentsField), EntityCrud(FieldControl image·file → 위원회 로고·교수 사진·자료 등 공용). GalleryField·AttachmentsField·EditionsField도 onUploadingChange 관통
+- [x] 피드백: 업로드 중 "업로드 중 — 완료된 뒤 저장하세요" 캡션 + 버튼 "업로드 중", 성공=미리보기 렌더, 실패=ErrorText(성공 URL만 onChange로 저장). 서버 Blob put 실패·sharp 디코드 실패는 wrap→500→ErrorText로 이미 노출(삼키지 않음), 투명 PNG→WebP는 알파 보존(정상)
+- [x] 재조회: 저장 후 PostForm은 목록으로 navigate(마운트 시 새 fetch), EntityCrud는 refetch() — 클라이언트 캐시 없음(useApi는 마운트마다 fetch), 옛 데이터 고착 없음. (공개 페이지의 3초 타임아웃→스냅샷 폴백은 콜드스타트 산물이며 offline 플래그로 구분 — 앱 캐시 아님)
+- [x] 검증: npm run build 성공(2014 모듈). 3파일 수정(ImageUpload·EntityCrud·PostForm), 토큰 경유·JSX·하드코딩 없음
+- [!] 실사이트 육안(사용자): 동아리 로고 업로드 반복 안정 표시 / 위원회 로고 / 교수 사진 / 전시 포스터 — 업로드 중 저장 버튼 비활성 확인
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

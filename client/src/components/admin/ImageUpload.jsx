@@ -8,9 +8,12 @@ import { ErrorText, GhostButton } from './FormControls'
 /**
  * @param {{
  *   value: string, onChange: Function, accept?: string,
- *   preview?: boolean, buttonLabel?: string, usage?: string
+ *   preview?: boolean, buttonLabel?: string, usage?: string,
+ *   onUploadingChange?: Function
  * }} props - preview false면 이미지 미리보기 대신 파일 링크 표시(HWP 등).
  *   usage: 서버 리사이즈 정책(general 1600 | poster 2400 | showcase 1920x1080 | exhibition)
+ *   onUploadingChange(active): 업로드 진행 중 여부를 상위에 전파 — 저장 버튼이 업로드 완료를
+ *     기다리게 해, 업로드가 URL을 form에 넣기 전에 저장돼 빈 값이 저장되는 레이스를 막는다.
  */
 function ImageUpload({
   value = '',
@@ -19,6 +22,7 @@ function ImageUpload({
   preview = true,
   buttonLabel = '파일 선택',
   usage = 'general',
+  onUploadingChange,
 }) {
   const inputRef = useRef(null)
   const [busy, setBusy] = useState(false)
@@ -30,14 +34,17 @@ function ImageUpload({
     if (!file) return
     setBusy(true)
     setError(null)
+    onUploadingChange?.(true)
     try {
       const res = await api.upload(file, { usage })
       if (!res?.url) throw new Error('업로드 응답에 url이 없습니다.')
       onChange(res.url)
     } catch (err) {
+      // 업로드 실패(콜드 스타트·네트워크·서버 오류)를 명확히 노출 — 실패 시 URL은 저장하지 않음
       setError(err.message)
     } finally {
       setBusy(false)
+      onUploadingChange?.(false)
     }
   }
 
@@ -76,6 +83,11 @@ function ImageUpload({
           </GhostButton>
         )}
       </div>
+      {busy && (
+        <p className="font-mono text-caption-m text-text-meta">
+          업로드 중 — 완료된 뒤 저장하세요
+        </p>
+      )}
       <ErrorText>{error}</ErrorText>
       <input
         ref={inputRef}
