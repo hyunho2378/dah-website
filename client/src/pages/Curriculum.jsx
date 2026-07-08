@@ -2,14 +2,11 @@ import PageBanner from '../components/layout/PageBanner'
 import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
-import ArrowLink from '../components/common/ArrowLink'
 import { EditPencil } from '../components/content/EditControls'
 import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
 import { tracks } from '../data/tracks'
 import { curriculum } from '../data/curriculum'
-import { nanodegree } from '../data/nanodegree'
-import { motion } from '../styles/tokens'
 
 // 교육과정 (J10, 20_PHASE8) — 표 형식 전환.
 // 트랙(공통기초 포함)별로 1학기·2학기 표를 나란히(데스크탑 2열, 모바일 세로) 배치.
@@ -334,34 +331,6 @@ function Curriculum() {
             </div>
           </Container>
         )}
-
-        {/* 코드쉐어링·나노디그리 — 분리 페이지 안내 (K2-13: 같은 위계로 나란히) */}
-        <Container as="section" className="pt-section-m md:pt-section-d">
-          <div className="grid grid-cols-1 gap-48 md:grid-cols-2 md:gap-24">
-            <Reveal delay={motion.stagger}>
-              <SectionLabel index="06" text="CODE SHARING" />
-              <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
-                {t('sections.codesharing')}
-              </h2>
-              <div className="mt-24">
-                <ArrowLink href="/curriculum/codesharing">{t('actions.detail')}</ArrowLink>
-              </div>
-            </Reveal>
-            <Reveal delay={motion.stagger * 2}>
-              <SectionLabel index="07" text="NANODEGREE" />
-              <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
-                {t('sections.nanodegree')}
-              </h2>
-              {/* 요약 1줄 — 원문 intro 그대로(EN은 대역) */}
-              <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
-                {lang === 'en' && nanodegree.introEn ? nanodegree.introEn : nanodegree.intro}
-              </p>
-              <div className="mt-24">
-                <ArrowLink href="/curriculum/nanodegree">{t('actions.detail')}</ArrowLink>
-              </div>
-            </Reveal>
-          </div>
-        </Container>
       </div>
     </>
   )

@@ -120,7 +120,7 @@ function Exhibitions() {
   return (
     <>
       <PageBanner
-        titleKo="전시회"
+        titleKo="프로젝트 전시회"
         titleEn="EXHIBITIONS"
         breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.events') }, { label: t('titles.exhibitions'), to: '/programs/exhibitions' }]}
         nebulaX="18%"

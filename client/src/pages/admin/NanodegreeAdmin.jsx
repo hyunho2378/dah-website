@@ -20,17 +20,19 @@ const ICON_BTN =
   'flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
 
 const PROGRAM_KEYS = [
-  { key: 'name', label: '프로그램명' },
-  { key: 'courses', label: '이수 과목' },
-  { key: 'partner', label: '참여 기관' },
-  { key: 'rule', label: '이수 기준' },
-  { key: 'note', label: '비고 (선택)' },
+  { key: 'name', label: '과정명' },
+  { key: 'criteria', label: '이수기준' },
+  { key: 'partner', label: '유관 기관' },
+  { key: 'completion', label: '이수 규칙' },
+]
+
+const COURSE_KEYS = [
+  { key: 'code', label: '과목번호' },
+  { key: 'name', label: '교과목명' },
+  { key: 'credit', label: '학점' },
 ]
 
 const EMPTY = { intro: '', cert: '', programs: [] }
-
-// 시드 데이터의 courses가 배열이어도 편집 가능한 문자열로 정규화
-const asText = (v) => (Array.isArray(v) ? v.join(', ') : v || '')
 
 function NanodegreeAdmin() {
   useTitle('나노디그리 관리')
@@ -48,13 +50,21 @@ function NanodegreeAdmin() {
     setForm({
       intro: item.body.intro || '',
       cert: item.body.cert || '',
+      // 신규 shape {name, criteria, partner, completion, courses:[{code,name,credit}]}로 정규화.
+      // 구 shape(courses 문자열·rule·note)는 courses 배열 없음 → 빈 행으로 관대하게 시작.
       programs: Array.isArray(item.body.programs)
         ? item.body.programs.map((p) => ({
-            name: asText(p.name),
-            courses: asText(p.courses),
-            partner: asText(p.partner),
-            rule: asText(p.rule),
-            note: asText(p.note),
+            name: p.name || '',
+            criteria: p.criteria || '',
+            partner: p.partner || '',
+            completion: p.completion || '',
+            courses: Array.isArray(p.courses)
+              ? p.courses.map((c) => ({
+                  code: c.code || '',
+                  name: c.name || '',
+                  credit: c.credit || '',
+                }))
+              : [],
           }))
         : [],
     })
@@ -70,6 +80,16 @@ function NanodegreeAdmin() {
     set('programs')(form.programs.map((row, idx) => (idx === i ? { ...row, [key]: v } : row)))
   }
 
+  const mapCourses = (pi, fn) => {
+    set('programs')(
+      form.programs.map((p, idx) => (idx === pi ? { ...p, courses: fn(p.courses) } : p)),
+    )
+  }
+  const setCourse = (pi, ci, key, v) =>
+    mapCourses(pi, (courses) => courses.map((c, cdx) => (cdx === ci ? { ...c, [key]: v } : c)))
+  const addCourse = (pi) => mapCourses(pi, (courses) => [...courses, { code: '', name: '', credit: '' }])
+  const removeCourse = (pi, ci) => mapCourses(pi, (courses) => courses.filter((_, cdx) => cdx !== ci))
+
   const save = async (e) => {
     e.preventDefault()
     setBusy(true)
@@ -80,7 +100,17 @@ function NanodegreeAdmin() {
         body: {
           intro: form.intro,
           cert: form.cert,
-          programs: form.programs.filter((p) => (p.name || '').trim() !== ''),
+          programs: form.programs
+            .filter((p) => (p.name || '').trim() !== '')
+            .map((p) => ({
+              name: p.name,
+              criteria: p.criteria,
+              partner: p.partner,
+              completion: p.completion,
+              courses: p.courses.filter((c) =>
+                COURSE_KEYS.some((k) => (c[k.key] || '').trim() !== ''),
+              ),
+            })),
         },
       })
       setSaved(true)
@@ -137,27 +167,62 @@ function NanodegreeAdmin() {
             {form.programs.map((row, i) => (
               <div
                 key={i}
-                className="flex items-start gap-8 rounded-md border border-border-subtle p-16"
+                className="flex flex-col gap-12 rounded-md border border-border-subtle p-16"
               >
-                <div className="grid min-w-0 flex-1 grid-cols-1 gap-8 md:grid-cols-2">
-                  {PROGRAM_KEYS.map((k) => (
-                    <Input
-                      key={k.key}
-                      value={row[k.key] || ''}
-                      onChange={(e) => setProgram(i, k.key, e.target.value)}
-                      placeholder={k.label}
-                      aria-label={`프로그램 ${i + 1} ${k.label}`}
-                    />
-                  ))}
+                <div className="flex items-start gap-8">
+                  <div className="grid min-w-0 flex-1 grid-cols-1 gap-8 md:grid-cols-2">
+                    {PROGRAM_KEYS.map((k) => (
+                      <Input
+                        key={k.key}
+                        value={row[k.key] || ''}
+                        onChange={(e) => setProgram(i, k.key, e.target.value)}
+                        placeholder={k.label}
+                        aria-label={`과정 ${i + 1} ${k.label}`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => set('programs')(form.programs.filter((_, idx) => idx !== i))}
+                    aria-label={`과정 ${i + 1} 제거`}
+                    className={ICON_BTN}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => set('programs')(form.programs.filter((_, idx) => idx !== i))}
-                  aria-label={`프로그램 ${i + 1} 제거`}
-                  className={ICON_BTN}
-                >
-                  <Trash2 size={16} />
-                </button>
+
+                {/* 인정 교과목 표 — 과목번호/교과목명/학점 행 리피터 */}
+                <div className="flex flex-col gap-8 border-t border-border-subtle pt-12">
+                  {row.courses.map((c, ci) => (
+                    <div key={ci} className="flex items-center gap-8">
+                      <div className="grid min-w-0 flex-1 grid-cols-1 gap-8 md:grid-cols-3">
+                        {COURSE_KEYS.map((k) => (
+                          <Input
+                            key={k.key}
+                            value={c[k.key] || ''}
+                            onChange={(e) => setCourse(i, ci, k.key, e.target.value)}
+                            placeholder={k.label}
+                            aria-label={`과정 ${i + 1} 과목 ${ci + 1} ${k.label}`}
+                          />
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeCourse(i, ci)}
+                        aria-label={`과정 ${i + 1} 과목 ${ci + 1} 제거`}
+                        className={ICON_BTN}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  <div>
+                    <GhostButton onClick={() => addCourse(i)}>
+                      <Plus size={16} aria-hidden="true" />
+                      과목 추가
+                    </GhostButton>
+                  </div>
+                </div>
               </div>
             ))}
             <div>
@@ -165,12 +230,12 @@ function NanodegreeAdmin() {
                 onClick={() =>
                   set('programs')([
                     ...form.programs,
-                    { name: '', courses: '', partner: '', rule: '', note: '' },
+                    { name: '', criteria: '', partner: '', completion: '', courses: [] },
                   ])
                 }
               >
                 <Plus size={16} aria-hidden="true" />
-                프로그램 추가
+                과정 추가
               </GhostButton>
             </div>
           </div>

@@ -4,12 +4,17 @@
  * 대원칙: intro·cert·programs 국문 값은 사용자 제공 원문 한 글자 그대로. 수정 금지.
  * introEn·certEn·programsEn: 정보 증감 없는 영문 대역. 과목명은 curriculum.js nameEn과 일치.
  *
+ * @typedef {Object} NanodegreeCourse
+ * @property {string} code - 과목번호
+ * @property {string} name - 교과목명
+ * @property {string} credit - 학점-강의-실습
+ *
  * @typedef {Object} NanodegreeProgram
  * @property {string} name - 과정명
- * @property {string} courses - 인정 교과목(원문 그대로, 쉼표 나열 문자열)
+ * @property {string} criteria - 이수기준 (9학점)
  * @property {string} partner - 유관 기관
- * @property {string} rule - 이수 기준
- * @property {string} [note] - 부가 설명(각주)
+ * @property {string} completion - 이수 규칙(수료 조건)
+ * @property {NanodegreeCourse[]} courses - 인정 교과목 표
  *
  * @typedef {Object} Nanodegree
  * @property {string} intro
@@ -25,30 +30,51 @@ export const nanodegree = {
   cert: '각 과정별 인정 교과목 9학점 취득 시 이수증 발급',
   programs: [
     {
-      name: 'UX디자인 과정',
-      courses: 'UX디자인, 서비스디자인, 경험디자인의 고급과정1, 경험디자인의 고급과정2',
-      partner: '*H9',
-      rule: '인정 교과목 중 3과목 선택 이수',
-      note: '*100명 규모의 UX 디자인 및 개발 기업',
-    },
-    {
-      name: 'AI디자인 과정',
-      courses: '디지털디자인1, 서비스디자인, AI디자인',
-      partner: '루아흐 스튜디오',
-      rule: '인정 교과목 모두 이수',
-    },
-    {
-      name: '디지털디자인 과정',
-      courses: '디지털 디자인1, 디지털 디자인2, 디지털 디자인3, UI 디자인',
-      partner: '루아흐 스튜디오',
-      rule: '인정 교과목 중 3과목 선택 이수',
-    },
-    {
-      name: 'AI와 길 정보 구축 과정 (HUSS 사업)',
-      courses:
-        '도시의 탄생과 인간 삶의 이해(사학전공), AI 활용 데이터 리터러시, 생성형 AI와 지역 문화 데이터',
+      name: 'AI 디자인',
+      criteria: '9학점',
       partner: '파이미디어',
-      rule: '인정 교과목 모두 이수',
+      completion: '4과목 중 3과목 이수하면 수료',
+      courses: [
+        { code: '713014', name: 'UX디자인', credit: '3-3-0' },
+        { code: '713037', name: 'AI디자인', credit: '3-3-0' },
+        { code: '713031', name: '서비스디자인', credit: '3-3-0' },
+        { code: '713035', name: 'AI 이해의 기초', credit: '3-3-0' },
+      ],
+    },
+    {
+      name: 'UX 디자인',
+      criteria: '9학점',
+      partner: 'H9',
+      completion: '4과목 중 3과목 이수하면 수료',
+      courses: [
+        { code: '713014', name: 'UX디자인', credit: '3-3-0' },
+        { code: '713044', name: '경험디자인의 고급과정1', credit: '3-2-2' },
+        { code: '713031', name: '서비스디자인', credit: '3-3-0' },
+        { code: '713033', name: '경험디자인의 고급과정2', credit: '3-1-4' },
+      ],
+    },
+    {
+      name: '디지털 디자인',
+      criteria: '9학점',
+      partner: '루아흐 스튜디오',
+      completion: '4과목 중 3과목 이수하면 수료',
+      courses: [
+        { code: '713010', name: '디지털디자인1', credit: '3-2-2' },
+        { code: '713007', name: '디지털디자인2', credit: '3-2-2' },
+        { code: '713043', name: '디지털디자인3', credit: '3-2-2' },
+        { code: '713042', name: '디지털디자인4', credit: '3-2-2' },
+      ],
+    },
+    {
+      name: 'AI와 길 정보 구축 (HUSS)',
+      criteria: '9학점',
+      partner: '파이미디어',
+      completion: '인정교과목 모두 이수하면 수료',
+      courses: [
+        { code: '108522', name: '도시의 탄생과 인간 삶의 이해', credit: '4-2-2' },
+        { code: '713035', name: 'AI 이해의 기초', credit: '3-3-0' },
+        { code: '713045', name: '생성형AI와 지역문화데이터', credit: '3-3-0' },
+      ],
     },
   ],
   introEn:
@@ -56,31 +82,51 @@ export const nanodegree = {
   certEn: 'A certificate is issued upon earning 9 credits from the recognized courses of each program.',
   programsEn: [
     {
-      name: 'UX Design Program',
-      courses:
-        'UX Design, Service Design, Advanced Experience Design 1, Advanced Experience Design 2',
-      partner: '*H9',
-      rule: 'Complete any three of the recognized courses',
-      note: '*A UX design and development company with about 100 employees',
-    },
-    {
-      name: 'AI Design Program',
-      courses: 'Digital Design 1, Service Design, AI Design',
-      partner: 'Ruach Studio',
-      rule: 'Complete all recognized courses',
-    },
-    {
-      name: 'Digital Design Program',
-      courses: 'Digital Design 1, Digital Design 2, Digital Design 3, UI Design',
-      partner: 'Ruach Studio',
-      rule: 'Complete any three of the recognized courses',
-    },
-    {
-      name: 'AI and Route Information Building Program (HUSS Project)',
-      courses:
-        'The Birth of Cities and Understanding Human Life (History Major), Data Literacy with AI, Generative AI and Local Culture Data',
+      name: 'AI Design',
+      criteria: '9 credits',
       partner: 'Pi Media',
-      rule: 'Complete all recognized courses',
+      completion: 'Complete 3 of the 4 courses to finish',
+      courses: [
+        { code: '713014', name: 'UX Design', credit: '3-3-0' },
+        { code: '713037', name: 'AI Design', credit: '3-3-0' },
+        { code: '713031', name: 'Service Design', credit: '3-3-0' },
+        { code: '713035', name: 'AI Fundamentals', credit: '3-3-0' },
+      ],
+    },
+    {
+      name: 'UX Design',
+      criteria: '9 credits',
+      partner: 'H9',
+      completion: 'Complete 3 of the 4 courses to finish',
+      courses: [
+        { code: '713014', name: 'UX Design', credit: '3-3-0' },
+        { code: '713044', name: 'Advanced Experience Design 1', credit: '3-2-2' },
+        { code: '713031', name: 'Service Design', credit: '3-3-0' },
+        { code: '713033', name: 'Advanced Experience Design 2', credit: '3-1-4' },
+      ],
+    },
+    {
+      name: 'Digital Design',
+      criteria: '9 credits',
+      partner: 'Ruach Studio',
+      completion: 'Complete 3 of the 4 courses to finish',
+      courses: [
+        { code: '713010', name: 'Digital Design 1', credit: '3-2-2' },
+        { code: '713007', name: 'Digital Design 2', credit: '3-2-2' },
+        { code: '713043', name: 'Digital Design 3', credit: '3-2-2' },
+        { code: '713042', name: 'Digital Design 4', credit: '3-2-2' },
+      ],
+    },
+    {
+      name: 'AI and Route Information Building (HUSS)',
+      criteria: '9 credits',
+      partner: 'Pi Media',
+      completion: 'Complete all recognized courses to finish',
+      courses: [
+        { code: '108522', name: 'The Birth of Cities and Understanding Human Life', credit: '4-2-2' },
+        { code: '713035', name: 'AI Fundamentals', credit: '3-3-0' },
+        { code: '713045', name: 'Generative AI and Local Culture Data', credit: '3-3-0' },
+      ],
     },
   ],
 };

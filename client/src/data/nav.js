@@ -1,11 +1,13 @@
 /**
  * nav.js — 헤더·GlassDock가 공유하는 단일 진실 소스
- * H1(19_PHASE7) 헤더 IA 확정 — 1차 메뉴 6개:
- * About(=홈, 하위 없음) / 전공 소개 / 학과 행사 / 학생 활동 / 공지사항 / 자료실
- * - About 클릭 = / (홈) 이동
- * - 전공 소개 하위: 전공소개(/about) · 교육 과정(/curriculum) · 교수진 · 멘토
+ * 헤더 IA(진흥원 방식) — 1차 메뉴 6개, 각 그룹 클릭 시 첫 하위 페이지로 이동:
+ * About / 학사 안내 / 학과 행사 / 학생 활동 / 공지사항 / 자료실
+ * - 각 그룹 대표 경로(to) = 첫 하위 항목 경로
+ * - About 하위: 전공 소개 · 연혁 · 교수진 · 멘토 · CI
+ * - 학사 안내 하위: 교육과정 · 코드쉐어링 · 나노디그리
+ * - 학과 행사 하위: 프로젝트 전시회 · 공모전 · 특강
  * - 학생 활동 하위: 운영위원회 · 동아리 · 학생 성과 · 웹&앱 쇼케이스 · 취업 현황
- * - "멘토단" 표기는 전부 "멘토", "진로"는 "취업 현황"
+ * - 공지사항·자료실은 하위 없는 단일 링크
  *
  * @typedef {Object} NavChild
  * @property {string} label - 하위 메뉴 라벨(KR, 명사형)
@@ -22,21 +24,23 @@ export const nav = [
   {
     label: 'About',
     labelEn: 'About',
-    to: '/',
-    children: [],
-  },
-  {
-    label: '전공 소개',
-    labelEn: 'Major',
     to: '/about',
     children: [
-      { label: '전공소개', labelEn: 'Overview', to: '/about' },
-      { label: '교육 과정', labelEn: 'Curriculum', to: '/curriculum' },
-      { label: '코드쉐어링', labelEn: 'Code Sharing', to: '/curriculum/codesharing' },
-      { label: '나노디그리', labelEn: 'Nanodegree', to: '/curriculum/nanodegree' },
+      { label: '전공 소개', labelEn: 'Overview', to: '/about' },
+      { label: '연혁', labelEn: 'History', to: '/about#history' },
       { label: '교수진', labelEn: 'Faculty', to: '/about/people' },
       { label: '멘토', labelEn: 'Mentors', to: '/about/people#mentors' },
       { label: 'CI', labelEn: 'CI', to: '/about/ci' },
+    ],
+  },
+  {
+    label: '학사 안내',
+    labelEn: 'Academics',
+    to: '/curriculum',
+    children: [
+      { label: '교육과정', labelEn: 'Curriculum', to: '/curriculum' },
+      { label: '코드쉐어링', labelEn: 'Code Sharing', to: '/curriculum/codesharing' },
+      { label: '나노디그리', labelEn: 'Nanodegree', to: '/curriculum/nanodegree' },
     ],
   },
   {
@@ -44,14 +48,14 @@ export const nav = [
     labelEn: 'Events',
     to: '/programs/exhibitions',
     children: [
-      { label: '전시회', labelEn: 'Exhibitions', to: '/programs/exhibitions' },
+      { label: '프로젝트 전시회', labelEn: 'Exhibitions', to: '/programs/exhibitions' },
       { label: '공모전', labelEn: 'Contests', to: '/programs/contests' },
       { label: '특강', labelEn: 'Lectures', to: '/programs/lectures' },
     ],
   },
   {
     label: '학생 활동',
-    labelEn: 'Activities',
+    labelEn: 'Student Life',
     to: '/students/council',
     children: [
       { label: '운영위원회', labelEn: 'Student Council', to: '/students/council' },

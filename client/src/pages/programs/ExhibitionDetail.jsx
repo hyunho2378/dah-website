@@ -95,7 +95,7 @@ function ExhibitionDetail() {
   return (
     <>
       <PageBanner
-        titleKo="전시회"
+        titleKo="프로젝트 전시회"
         titleEn="EXHIBITIONS"
         breadcrumb={[
           { label: t('nav.home'), to: '/' },

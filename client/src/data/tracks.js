@@ -86,7 +86,10 @@ export const tracks = [
  * @property {string} note - 유의 사항 (원문 그대로)
  * @property {string[]} steps - 승인 절차 4단계 (원문 '승인과정' 그대로)
  * @property {Array<{ name: string, detail: string }>} types - 코드쉐어링 유형 3종 (원문 그대로)
- * @property {string[]} departments - 인정 학과 19개 (원문 그대로)
+ * @property {string} substitute - 교과목 대체형 코드쉐어링 값 (원문 그대로)
+ * @property {string[]} departments - 학점인정형 인정 학과 18개 (원문 그대로)
+ * @property {Array<{ semester: string, code: string, name: string, credit: string, major: string }>} recognizedCourses - 타과교과목 인정형 교과목 14개 (원문 그대로)
+ * @property {string[]} graduation - 졸업인증 기준 (원문 그대로)
  */
 export const codeSharing = {
   definition:
@@ -109,6 +112,10 @@ export const codeSharing = {
     { name: '타과교과목 인정형 코드쉐어링', detail: '아래 교과목을 최대 9학점 이내에서 전공으로 인정합니다.' },
     { name: '학점인정형 코드쉐어링 교과목', detail: '해당 학과의 교과목을 최대 9학점 이내에서 전공으로 인정합니다.' },
   ],
+  // 교과목 대체형 코드쉐어링 = 없음 (원문 그대로)
+  substitute: '없음',
+  substituteEn: 'None',
+  // 학점인정형 인정 학과 18개 (원문 그대로, 이 순서)
   departments: [
     '국어국문학전공',
     '철학전공',
@@ -123,11 +130,39 @@ export const codeSharing = {
     '임상의학통계전공',
     '디지털금융정보전공',
     '미디어스쿨',
-    '미디어커뮤니케이션전공',
+    '언론방송융합미디어전공',
     '디지털미디어콘텐츠전공',
     '글로벌협력전공',
     '인문콘텐츠융합전공',
     'MICE기획경영전공',
-    '스타트업비즈니스전공',
+  ],
+  // 타과교과목 인정형 교과목 14개 (원문 그대로, 이 순서). EN은 고유명사·숫자 동일.
+  recognizedCourses: [
+    { semester: '2학기', code: '101405', name: '한국어 데이터의 구축과 활용', credit: '3-3-0', major: '국어국문학전공' },
+    { semester: '1학기', code: '102419', name: '코퍼스언어학', credit: '3-3-0', major: '영어영문학과' },
+    { semester: '1학기', code: '102421', name: '영미문학과 네트워크', credit: '3-3-0', major: '영어영문학과' },
+    { semester: '2학기', code: '102416', name: '디지털시대의 영어영문학', credit: '3-3-0', major: '영어영문학과' },
+    { semester: '2학기', code: '103531', name: '멀티모달AI중국어', credit: '3-3-0', major: '중국학과' },
+    { semester: '2학기', code: '103480', name: '중국옛문인들의삶과예술', credit: '3-3-0', major: '중국학과' },
+    { semester: '1학기', code: '714092', name: '사회적 기업가 정신', credit: '3-3-0', major: '스타트업비즈니스전공' },
+    { semester: '2학기', code: '600002', name: '자연언어처리', credit: '3-2-2', major: '소프트웨어학부' },
+    { semester: '2학기', code: '712006', name: '텍스트마이닝', credit: '3-2-2', major: '데이터사이언스학부' },
+    { semester: '1학기', code: '903066', name: '[명저]인공지능시대의인문학적상상력', credit: '3-3-0', major: '자유교양전공' },
+    { semester: '1학기', code: '730001', name: '융합캡스톤디자인', credit: '3-3-0', major: '산학연계교육원' },
+    { semester: '2학기', code: '730002', name: '글로벌 캡스톤 디자인', credit: '3-2-2', major: '산학연계교육원' },
+    { semester: '2학기', code: '504151', name: '로컬프러너십', credit: '3-2-2', major: '스타트업비즈니스전공' },
+    { semester: '1,2학기', code: '717046', name: '스타트업 투어링', credit: '3-2-2', major: '스타트업비즈니스전공' },
+  ],
+  // 졸업인증 기준 (원문 그대로)
+  graduation: [
+    '필수 수강 과목 없음',
+    '복수전공 학점 33학점 이수.',
+    '영상문예창작 협동전공 소속 학생이 이미 수강한 영상문예창작 협동전공 교과목은 모두 디지털 인문예술전공 교과 이수 학점으로 인정한다.',
+  ],
+  // J5: EN 대역(정보 증감 없는 번역)
+  graduationEn: [
+    'No required courses.',
+    'Complete 33 credits in the double major.',
+    'For students belonging to the Visual Literary Creative Writing cooperative major, all Visual Literary Creative Writing cooperative major courses they have already taken are recognized as Digital Arts and Humanities course credits.',
   ],
 };

@@ -26,7 +26,7 @@ export const POST_TYPES = {
     template: 't2', // external_url 있으면 카드에서 바로 외부 분기 (10_IA_V2)
   },
   exhibitions: {
-    label: '전시회',
+    label: '프로젝트 전시회',
     template: 'exhibition', // T2 확장 — 기존 아카이브 소급 입력도 동일 폼
   },
   achievement: {

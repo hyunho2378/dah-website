@@ -272,6 +272,25 @@
 - [x] 검증: npm run build 성공(2014 모듈). 3파일 수정(ImageUpload·EntityCrud·PostForm), 토큰 경유·JSX·하드코딩 없음
 - [!] 실사이트 육안(사용자): 동아리 로고 업로드 반복 안정 표시 / 위원회 로고 / 교수 사진 / 전시 포스터 — 업로드 중 저장 버튼 비활성 확인
 
+## PHASE 13 · IA — 헤더 IA 개편 + 코드쉐어링/나노디그리 표 (25_PHASE13_IA_FIXES, 병렬 P1·P2 + 통합 P3)
+### P1 IA·헤더·공개 (data/nav.js, GlassDock.jsx, Curriculum.jsx, About.jsx)
+- [x] P1-1 헤더 IA 진흥원식 6그룹: About(→/about) · 학사 안내(→/curriculum) · 학과 행사(→/programs/exhibitions) · 학생 활동(→/students/council) · 공지사항(→/news) · 자료실(→/resources). 각 그룹 대표 to=첫 하위 경로라 클릭 시 첫 하위로 점프. About 하위=전공 소개·연혁(/about#history)·교수진·멘토·CI / 학사 안내=교육과정·코드쉐어링·나노디그리 / 학과 행사=프로젝트 전시회·공모전·특강 / 학생 활동=운영위·동아리·학생 성과·웹&앱 쇼케이스·취업 현황. Header.jsx는 hasChildren·navLabel 제네릭 로직으로 무변경(검증만)
+- [x] GlassDock(모바일): 각 그룹 라벨 링크 + 하위 항목 들여쓰기 서브링크로 전개(코드쉐어링·나노디그리·연혁·CI 모바일 도달 가능). 활성 언어 단일 라벨·포커스트랩·스와이프/ESC 유지
+- [x] About #history: 연혁 섹션 Container에 id="history" + scroll-mt-header (연혁 하위 항목 앵커 착지)
+- [x] P1-2 교육과정 하단 "자세히 보기"(06 코드쉐어링·07 나노디그리) 블록 삭제 + 그로 인해 유휴가 된 import(ArrowLink·nanodegree·motion) 정리(SectionLabel은 05 로드맵서 계속 사용 → 유지). 트랙 표+로드맵만 남김
+### P2 코드쉐어링·나노디그리 표·데이터·어드민 (Table.jsx 신설, 페이지·데이터·어드민·마이그레이션)
+- [x] P2-3 공용 Table.jsx(common): 다크·헤어라인·radius 4, 컬럼 {key,label,align,nowrap,mono}, 표만 overflow-x-auto(min-w-0)로 격리해 페이지 가로 스크롤 0. Curriculum SemesterTable 토큰 언어 그대로
+- [x] P2-1 코드쉐어링 표 재구성: 01 개요(정의·유의·HWP) · 02 절차 유지 + 03 대체형(없음) · 04 인정형(타과교과목 14개 Table: 개설학기/교과목 번호/과목명/학점-강의-실습/전공) · 05 학점인정형(인정 학과 18개 Tag) · 06 졸업인증 기준(3항). 데이터는 tracks.js codeSharing에 substitute·recognizedCourses(14)·graduation(3) 추가 + departments 19→18 교체(사용자 확정본 그대로). DB 우선·시드 폴백 유지
+- [x] P2-2 나노디그리 표(학교 레이아웃): 과정별 제목 + 이수기준·유관기관 메타 + 과목표(과목번호/교과목명/학점) + 이수 규칙. data/nanodegree.js programs 새 구조 {name,criteria,partner,completion,courses:[{code,name,credit}]}로 전면 교체 — AI 디자인/UX 디자인/디지털 디자인/AI와 길 정보 구축(HUSS), 과목번호=학교 페이지 번호·과목명=사용자 확정본·학점-강의-실습 그대로. 이전 잘못된 시드 대체
+- [x] 어드민 편집: CodeSharingAdmin에 substitute·graduation·recognizedCourses(5입력 행 리피터) 추가+저장 배선. NanodegreeAdmin은 새 program 구조(name/criteria/partner/completion + 과목 code/name/credit 리피터), 구 shape 관대 하이드레이션
+- [x] Nanodegree.jsx 방어 가드(통합): DB body가 새 구조(program.courses 배열)일 때만 채택, 구 시드(courses 문자열)면 새 시드 폴백 — migrate-phase13 실행 전에도 Table .map 크래시 없이 새 데이터 렌더
+### P3 통합
+- [x] "전시회"→"프로젝트 전시회" 개명: nav.js 하위 라벨 + i18n titles.exhibitions·hero.ctaExhibition·programs.exhibitions.label·notFoundPage.exhibitions + Exhibitions·ExhibitionDetail PageBanner + 어드민 콘텐츠 라벨(AdminLayout·Dashboard·postTypes). "전시회 접수/설정/출품" 및 council·clubs 사용자 원문은 별개 개념이라 미변경
+- [x] i18n 신규 키(ko+en): codesharing.{substituteType,recognizedType,creditType,none,graduationTitle,thSemester,thCode,thCourse,thCredit,thMajor} · nanodegree.{criteria,completion,thCode,thCourse,thCredit}
+- [x] 검증: npm run build 성공(2015 모듈). 20파일(수정 18 + 신규 Table.jsx·migrate-phase13.mjs). 토큰 경유·JSX·하드코딩 없음
+- [!] 마이그레이션 대기(사용자 승인 후 실행): server/scripts/migrate-phase13.mjs를 배포 Neon에 실행해야 (1)DB nanodegree body를 새 구조로 정정, (2)codesharing depts 19→18 반영. 미실행이어도 나노디그리는 가드로 새 시드 렌더(무크래시)되나, 코드쉐어링 학점인정형은 DB depts(구 19개)를 그대로 노출
+- [!] 실사이트 육안(사용자): 헤더 6그룹·그룹 클릭 첫 하위 점프·호버 세로 드롭다운 미잘림 / 프로젝트 전시회 개명 / 코드쉐어링·나노디그리 표 렌더
+
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표

@@ -130,17 +130,31 @@ function GlassDock() {
           <div inert={!open} className="min-h-0 overflow-hidden">
             <nav aria-label={t('aria.mobileMenu')} className="flex flex-col px-8 pt-12">
               {nav.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={close}
-                  className="flex items-baseline rounded-md px-12 py-12 transition-colors duration-fast ease-out hover:bg-glass-strong"
-                >
-                  {/* 활성 언어 라벨만 — 국문/영문 병기 금지(언어 단일화) */}
-                  <span className="text-body-m font-semibold text-text-pri">
-                    {navLabel(item)}
-                  </span>
-                </Link>
+                <div key={item.to} className="flex flex-col">
+                  <Link
+                    to={item.to}
+                    onClick={close}
+                    className="flex items-baseline rounded-md px-12 py-12 transition-colors duration-fast ease-out hover:bg-glass-strong"
+                  >
+                    {/* 활성 언어 라벨만 — 국문/영문 병기 금지(언어 단일화) */}
+                    <span className="text-body-m font-semibold text-text-pri">
+                      {navLabel(item)}
+                    </span>
+                  </Link>
+                  {/* 하위 페이지 — 살짝 작게·들여쓰기(하위 없으면 그룹 링크만) */}
+                  {item.children.map((child) => (
+                    <Link
+                      key={child.to}
+                      to={child.to}
+                      onClick={close}
+                      className="flex items-baseline rounded-md py-8 pl-24 pr-12 transition-colors duration-fast ease-out hover:bg-glass-strong"
+                    >
+                      <span className="text-small-m text-text-sec">
+                        {navLabel(child)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               ))}
             </nav>
             <div className="mx-20 mt-8 flex items-center justify-between border-t border-border-subtle py-16">

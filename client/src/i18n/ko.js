@@ -28,7 +28,7 @@ export const ko = {
     codesharing: '코드쉐어링',
     nanodegree: '나노디그리',
     ci: 'CI',
-    exhibitions: '전시회',
+    exhibitions: '프로젝트 전시회',
     contests: '공모전',
     lectures: '특강',
     council: '운영위원회',
@@ -43,7 +43,7 @@ export const ko = {
   },
   hero: {
     ctaAbout: '전공 소개',
-    ctaExhibition: '전시회 보러가기',
+    ctaExhibition: '프로젝트 전시회 보러가기',
   },
   sections: {
     programs: '프로그램',
@@ -76,7 +76,7 @@ export const ko = {
     common: '공통기초',
   },
   programs: {
-    exhibitions: { label: '전시회', desc: '학기별 전공 프로젝트 전시회 아카이브' },
+    exhibitions: { label: '프로젝트 전시회', desc: '학기별 전공 프로젝트 전시회 아카이브' },
     contests: { label: '공모전', desc: '전공과 교내외 공모전의 모집·결과 안내' },
     lectures: { label: '특강', desc: '산업·학계 연사 초청 특강 안내' },
     showcase: { label: '쇼케이스', desc: '재학생 웹·앱 프로젝트 쇼케이스' },
@@ -128,7 +128,7 @@ export const ko = {
     host: '주최',
   },
   notFoundPage: {
-    exhibitions: '전시회를 찾을 수 없습니다',
+    exhibitions: '프로젝트 전시회를 찾을 수 없습니다',
     contests: '공모전을 찾을 수 없습니다',
     lectures: '특강을 찾을 수 없습니다',
     showcase: '쇼케이스 항목을 찾을 수 없습니다',
@@ -164,12 +164,30 @@ export const ko = {
     sem1: '1학기',
     sem2: '2학기',
   },
-  // K2-13: 나노디그리 렌더 라벨(원문 표기 그대로)
+  // P13: 코드쉐어링 유형·표 헤더 라벨
+  codesharing: {
+    substituteType: '교과목 대체형 코드쉐어링',
+    recognizedType: '타과교과목 인정형 코드쉐어링',
+    creditType: '학점인정형 코드쉐어링 교과목',
+    none: '없음',
+    graduationTitle: '졸업인증 기준',
+    thSemester: '개설학기',
+    thCode: '교과목 번호',
+    thCourse: '과목명',
+    thCredit: '학점-강의-실습',
+    thMajor: '전공',
+  },
+  // K2-13: 나노디그리 렌더 라벨(원문 표기 그대로). P13: 이수기준·표 헤더 추가
   nanodegree: {
     cert: '인증기준',
     programs: '운영과정',
     courses: '인정 교과목',
     partner: '유관 기관',
+    criteria: '이수기준',
+    completion: '이수 규칙',
+    thCode: '과목번호',
+    thCourse: '교과목명',
+    thCredit: '학점',
   },
   news: {
     searchPlaceholder: '공지 검색',

@@ -6,6 +6,7 @@ import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import GlassCard from '../components/common/GlassCard'
+import Table from '../components/common/Table'
 import { EditPencil } from '../components/content/EditControls'
 import { useApi, firstItem } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
@@ -17,12 +18,18 @@ function Nanodegree() {
   const { lang, t } = useLang()
   useTitle(t('titles.nanodegree'))
 
-  // DB 문서가 있으면 body 우선(K1 데이터 계약), 미기동·미등록이면 정적 원문
+  // DB 문서가 있으면 body 우선(K1 데이터 계약), 미기동·미등록이면 정적 원문.
+  // P13: DB body는 새 구조(각 program.courses가 배열)일 때만 채택. 구 시드(courses가 문자열)면
+  // Table에 문자열이 넘어가 .map 크래시 → migrate-phase13 전에도 안전하도록 새 시드로 폴백.
   const { data } = useApi('/content/nanodegree')
   const doc = firstItem(data)
   const body = doc?.body
-  const source =
-    body && Array.isArray(body.programs) && body.programs.length > 0 ? body : nanodegree
+  const isNewShape =
+    body &&
+    Array.isArray(body.programs) &&
+    body.programs.length > 0 &&
+    body.programs.every((p) => Array.isArray(p.courses))
+  const source = isNewShape ? body : nanodegree
 
   const intro = lang === 'en' && source.introEn ? source.introEn : source.intro
   const cert = lang === 'en' && source.certEn ? source.certEn : source.cert
@@ -85,7 +92,7 @@ function Nanodegree() {
                 {t('nanodegree.programs')}
               </h2>
             </Reveal>
-            <div className="mt-32 grid grid-cols-1 gap-16 md:mt-48 md:grid-cols-2 md:gap-24">
+            <div className="mt-32 grid grid-cols-1 items-start gap-16 md:mt-48 md:grid-cols-2 md:gap-24">
               {programs.map((program, i) => (
                 <Reveal key={program.name} delay={i < 6 ? i * motion.stagger : 0}>
                   <GlassCard className="flex h-full flex-col gap-16 p-24 md:p-32">
@@ -97,22 +104,26 @@ function Nanodegree() {
                     </h3>
                     <div className="flex flex-col gap-8 border-t border-border-subtle pt-16">
                       <p className="text-body-m leading-relaxed text-text-sec md:text-body-d">
-                        <span className="text-text-pri">{t('nanodegree.courses')} : </span>
-                        {program.courses}
+                        <span className="text-text-pri">{t('nanodegree.criteria')} : </span>
+                        {program.criteria}
                       </p>
                       <p className="text-body-m leading-relaxed text-text-sec md:text-body-d">
                         <span className="text-text-pri">{t('nanodegree.partner')} : </span>
                         {program.partner}
                       </p>
                     </div>
-                    <p className="mt-auto border-t border-border-subtle pt-16 text-small-m text-text-pri md:text-small-d">
-                      {program.rule}
+                    <Table
+                      columns={[
+                        { key: 'code', label: t('nanodegree.thCode'), mono: true },
+                        { key: 'name', label: t('nanodegree.thCourse') },
+                        { key: 'credit', label: t('nanodegree.thCredit'), mono: true, nowrap: true },
+                      ]}
+                      rows={program.courses ?? []}
+                    />
+                    <p className="mt-auto text-small-m text-text-pri md:text-small-d">
+                      <span className="text-text-meta">{t('nanodegree.completion')} : </span>
+                      {program.completion}
                     </p>
-                    {program.note && (
-                      <p className="text-caption-m text-text-meta md:text-caption-d">
-                        {program.note}
-                      </p>
-                    )}
                   </GlassCard>
                 </Reveal>
               ))}

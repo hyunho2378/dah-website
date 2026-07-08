@@ -26,7 +26,7 @@ const NAV_GROUPS = [
       { to: '/admin/posts/resource', label: '자료실' },
       { to: '/admin/posts/lecture', label: '특강' },
       { to: '/admin/posts/contest', label: '공모전' },
-      { to: '/admin/posts/exhibitions', label: '전시회' },
+      { to: '/admin/posts/exhibitions', label: '프로젝트 전시회' },
       { to: '/admin/posts/achievement', label: '학생 성과' },
       { to: '/admin/posts/club', label: '동아리' },
       { to: '/admin/posts/portfolios', label: '포트폴리오' },

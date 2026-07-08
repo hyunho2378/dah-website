@@ -16,7 +16,7 @@ const COUNT_TARGETS = [
   { type: 'resource', label: '자료실', to: '/admin/posts/resource', role: 'manager' },
   { type: 'lecture', label: '특강', to: '/admin/posts/lecture', role: 'manager' },
   { type: 'contest', label: '공모전', to: '/admin/posts/contest', role: 'manager' },
-  { type: 'exhibitions', label: '전시회', to: '/admin/posts/exhibitions', role: 'manager' },
+  { type: 'exhibitions', label: '프로젝트 전시회', to: '/admin/posts/exhibitions', role: 'manager' },
   { type: 'achievement', label: '학생 성과', to: '/admin/posts/achievement', role: 'manager' },
   { type: 'club', label: '동아리', to: '/admin/posts/club', role: 'manager' },
   { type: 'portfolios', label: '포트폴리오', to: '/admin/posts/portfolios', role: 'manager' },

@@ -223,7 +223,7 @@ function About() {
 
         {/* 03 연혁 타임라인 — 항목은 국문 원문(EN 페이지는 Korean only 뱃지 병기) */}
         {history.length > 0 && (
-          <Container as="section" className="pt-section-m md:pt-section-d">
+          <Container as="section" id="history" className="scroll-mt-header pt-section-m md:pt-section-d">
             <Reveal>
               <div className="flex flex-wrap items-center gap-12">
                 <SectionLabel index="03" text="HISTORY" />

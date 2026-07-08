@@ -160,12 +160,30 @@ export const en = {
     sem1: 'Semester 1',
     sem2: 'Semester 2',
   },
-  // K2-13: nanodegree render labels
+  // P13: code sharing type + table header labels
+  codesharing: {
+    substituteType: 'Course Substitution Code Sharing',
+    recognizedType: 'Cross-Department Course Recognition',
+    creditType: 'Credit-Recognition Code Sharing',
+    none: 'None',
+    graduationTitle: 'Graduation Certification Criteria',
+    thSemester: 'Semester',
+    thCode: 'Course No.',
+    thCourse: 'Course',
+    thCredit: 'Credit-Lecture-Lab',
+    thMajor: 'Major',
+  },
+  // K2-13: nanodegree render labels. P13: criteria + table headers
   nanodegree: {
     cert: 'Certification',
     programs: 'Programs',
     courses: 'Recognized Courses',
     partner: 'Partner Organization',
+    criteria: 'Criteria',
+    completion: 'Completion',
+    thCode: 'Course No.',
+    thCourse: 'Course',
+    thCredit: 'Credit',
   },
   news: {
     searchPlaceholder: 'Search notices',

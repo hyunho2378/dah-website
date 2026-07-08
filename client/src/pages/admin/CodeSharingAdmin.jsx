@@ -53,11 +53,22 @@ function StringListField({ label, value = [], onChange, addLabel = '항목 추�
   )
 }
 
+const RECOGNIZED_KEYS = [
+  { key: 'semester', label: '개설학기' },
+  { key: 'code', label: '교과목 번호' },
+  { key: 'name', label: '과목명' },
+  { key: 'credit', label: '학점-강의-실습' },
+  { key: 'major', label: '전공' },
+]
+
 const EMPTY = {
   definition: '',
   note: '',
   steps: [],
   types: [],
+  substitute: '',
+  recognizedCourses: [],
+  graduation: [],
   depts: [],
   hwp_url: '',
 }
@@ -80,6 +91,11 @@ function CodeSharingAdmin() {
       note: item.body?.note || '',
       steps: Array.isArray(item.body?.steps) ? item.body.steps : [],
       types: Array.isArray(item.body?.types) ? item.body.types : [],
+      substitute: item.body?.substitute || '',
+      recognizedCourses: Array.isArray(item.body?.recognizedCourses)
+        ? item.body.recognizedCourses
+        : [],
+      graduation: Array.isArray(item.body?.graduation) ? item.body.graduation : [],
       depts: Array.isArray(item.depts) ? item.depts : [],
       hwp_url: item.hwp_url || '',
     })
@@ -95,6 +111,12 @@ function CodeSharingAdmin() {
     set('types')(form.types.map((row, idx) => (idx === i ? { ...row, [key]: v } : row)))
   }
 
+  const setRecognized = (i, key, v) => {
+    set('recognizedCourses')(
+      form.recognizedCourses.map((row, idx) => (idx === i ? { ...row, [key]: v } : row)),
+    )
+  }
+
   const save = async (e) => {
     e.preventDefault()
     setBusy(true)
@@ -102,11 +124,17 @@ function CodeSharingAdmin() {
     try {
       // 싱글턴 upsert — POST /admin/content/codesharing (id=1 고정, B1 계약)
       await api.post('/admin/content/codesharing', {
+        // body 전체가 교체되므로 새 필드(substitute·recognizedCourses·graduation)도 함께 보낸다.
         body: {
           definition: form.definition,
           note: form.note,
           steps: form.steps.filter((s) => s.trim() !== ''),
           types: form.types.filter((t) => (t.name || '').trim() !== ''),
+          substitute: form.substitute,
+          recognizedCourses: form.recognizedCourses.filter((c) =>
+            RECOGNIZED_KEYS.some((k) => (c[k.key] || '').trim() !== ''),
+          ),
+          graduation: form.graduation.filter((g) => g.trim() !== ''),
         },
         depts: form.depts.filter((d) => d.trim() !== ''),
         hwp_url: form.hwp_url || null,
@@ -197,8 +225,59 @@ function CodeSharingAdmin() {
           </div>
         </Field>
 
+        <Field label="교과목 대체형" hint="교과목 대체형 코드쉐어링 값 (예: 없음)">
+          <Input value={form.substitute} onChange={(e) => set('substitute')(e.target.value)} />
+        </Field>
+
+        <Field label={`타과교과목 인정형 교과목 (${form.recognizedCourses.length})`}>
+          <div className="flex flex-col gap-8">
+            {form.recognizedCourses.map((row, i) => (
+              <div key={i} className="flex items-start gap-8">
+                <div className="grid min-w-0 flex-1 grid-cols-1 gap-8 md:grid-cols-5">
+                  {RECOGNIZED_KEYS.map((k) => (
+                    <Input
+                      key={k.key}
+                      value={row[k.key] || ''}
+                      onChange={(e) => setRecognized(i, k.key, e.target.value)}
+                      placeholder={k.label}
+                      aria-label={`교과목 ${i + 1} ${k.label}`}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    set('recognizedCourses')(form.recognizedCourses.filter((_, idx) => idx !== i))
+                  }
+                  aria-label={`교과목 ${i + 1} 제거`}
+                  className={ICON_BTN}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+            <div>
+              <GhostButton
+                onClick={() =>
+                  set('recognizedCourses')([
+                    ...form.recognizedCourses,
+                    { semester: '', code: '', name: '', credit: '', major: '' },
+                  ])
+                }
+              >
+                <Plus size={16} aria-hidden="true" />
+                과목 추가
+              </GhostButton>
+            </div>
+          </div>
+        </Field>
+
         <Field label={`인정 학과 (${form.depts.length})`}>
           <StringListField label="인정 학과" value={form.depts} onChange={set('depts')} addLabel="학과 추가" />
+        </Field>
+
+        <Field label="졸업인증 기준" hint="순서대로 렌더됩니다">
+          <StringListField label="졸업인증 기준" value={form.graduation} onChange={set('graduation')} addLabel="기준 추가" />
         </Field>
 
         <Field label="HWP 신청서" hint="코드쉐어링 인정원 파일 교체">
