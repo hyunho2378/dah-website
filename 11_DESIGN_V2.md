@@ -103,3 +103,4 @@ displayXL 스케일 하향: 48→104(기존 128은 Space Grotesk에서 과대). 
 ## 11. 유지 항목
 
 모노크롬 원칙(액센트 0), 그레이 3단, 헤어라인, 4pt 간격, lucide-react, 접근성 AA, 이모지 금지, localStorage 금지, 명사형 제목. v1 DESIGN.md와 충돌 시 이 문서가 우선.
+1
