@@ -144,6 +144,13 @@ export const shadow = {
   // 다크 배경에서 그림자 대신 보더+글로우
   cardGlow: '0 0 0 1px rgba(255,255,255,0.08)',
   cardGlowHover: '0 0 0 1px rgba(255,255,255,0.16)',
+  // X2(33_PHASE18) 버튼 질감 — 상단 화이트 하이라이트(inset) + 퍼플 글로우.
+  // 글로우는 #815FD7 rgb(129,95,215), 딥 그림자는 #100D18 rgb(16,13,24) — CI 색만 사용.
+  btnPrimary: 'inset 0 1px 0 rgba(255,255,255,0.20), 0 4px 24px rgba(129,95,215,0.35)',
+  btnPrimaryHover: 'inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 32px rgba(129,95,215,0.50)',
+  // X3 글래스 위계 — 상단 1px 화이트 하이라이트 + 내부 은은한 깊이
+  glassPanel: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 32px -16px rgba(16,13,24,0.80)',
+  glassPanelHover: 'inset 0 1px 0 rgba(255,255,255,0.16), 0 12px 40px -16px rgba(16,13,24,0.90)',
 };
 
 export const motion = {

@@ -181,7 +181,9 @@ function Careers() {
           )}
         </section>
         <Divider />
-        <section className="py-section-m lg:py-section-d">
+        {/* Y3-3(33_PHASE18) 통합: 학생 활동 하위 '포트폴리오' 메뉴의 앵커 착지점.
+            헤더가 고정이라 scroll-mt로 헤더 높이만큼 여백을 준다. */}
+        <section id="portfolios" className="scroll-mt-96 py-section-m lg:py-section-d">
           <Reveal>
             <SectionLabel index="02" text="PORTFOLIO" />
             <div className="mt-24 flex flex-wrap items-center justify-between gap-16">

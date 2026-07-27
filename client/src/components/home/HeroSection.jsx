@@ -3,6 +3,8 @@ import OrbitCanvas from './OrbitCanvas'
 import Container from '../layout/Container'
 import Button from '../common/Button'
 import Reveal from '../common/Reveal'
+import Accent from '../common/Accent'
+import { ACCENT } from '../../styles/accents'
 import { EditPencil } from '../content/EditControls'
 import { useLang } from '../../i18n/LangContext'
 import { hero, site } from '../../data/site'
@@ -64,6 +66,11 @@ function HeroSection({ settings }) {
   const ctaLabel = (cta, i) =>
     lang === 'en' ? cta.labelEn || defaultCtas[i]?.label || cta.label : cta.label
 
+  // Y1-3(X1 포인트): eyebrow의 연도만 purple.light로 끊어 읽힌다. 원문 문자열은 바꾸지 않고
+  // 표시만 분리한다(매칭 실패 시 원문 그대로 렌더).
+  const eyebrow = String(hero.eyebrow ?? '')
+  const eyebrowParts = eyebrow.match(/^(.*?)(\d{4})(.*)$/)
+
   return (
     <section className="relative flex min-h-[calc(100svh-theme(spacing.header))] flex-col justify-center overflow-hidden">
       <div className="absolute inset-0 -z-10" aria-hidden="true">
@@ -75,8 +82,18 @@ function HeroSection({ settings }) {
 
       <Container className="py-section-m lg:py-section-d">
         <Reveal>
-          <p className="text-label-m font-medium uppercase tracking-label text-text-sec lg:text-label-d">
-            {hero.eyebrow}
+          <p
+            className={`text-label-m font-medium uppercase tracking-label lg:text-label-d ${ACCENT.eyebrow}`}
+          >
+            {eyebrowParts ? (
+              <>
+                {eyebrowParts[1]}
+                <Accent kind="proper">{eyebrowParts[2]}</Accent>
+                {eyebrowParts[3]}
+              </>
+            ) : (
+              eyebrow
+            )}
           </p>
           <h1 className="mt-24 font-display text-display-xl-m font-bold uppercase leading-heading tracking-display text-text-pri md:text-display-xl-d">
             {(hero.titleEn || []).map((line) => (
@@ -94,15 +111,20 @@ function HeroSection({ settings }) {
             {lang === 'en' && hero.bodyEn ? hero.bodyEn : hero.body}
           </p>
           <div className="mt-40 flex flex-wrap items-center gap-16">
+            {/* Y1-3: 히어로 버튼은 1=primary·2=secondary, 둘 다 텍스트만.
+                외부 링크 동작(target=_blank)은 그대로 두되 Button이 붙이는 ArrowUpRight만
+                감춘다. 공용 Button은 X2 산출물이라 수정할 수 없어 display:contents 래퍼로
+                아이콘만 비활성화한다(버튼은 여전히 부모 flex의 직접 아이템). */}
             {ctas.map((cta, i) => (
-              <Button
-                key={cta.label}
-                variant={i === 0 ? 'primary' : 'secondary'}
-                href={cta.href || cta.to}
-                external={Boolean(cta.external)}
-              >
-                {ctaLabel(cta, i)}
-              </Button>
+              <span key={cta.label} className="contents [&_svg]:hidden">
+                <Button
+                  variant={i === 0 ? 'primary' : 'secondary'}
+                  href={cta.href || cta.to}
+                  external={Boolean(cta.external)}
+                >
+                  {ctaLabel(cta, i)}
+                </Button>
+              </span>
             ))}
             {/* 히어로 버튼 편집(owner·admin, site_settings) — 비로그인 미렌더는 EditPencil 내부 처리 */}
             <EditPencil type="settings" to="/admin/settings" />

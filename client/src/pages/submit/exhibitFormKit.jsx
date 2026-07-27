@@ -1,9 +1,13 @@
 // 전시회 접수 폼 공용 컴포넌트 (12_BACKEND 5절) — ExhibitSubmit·ExhibitEdit 전용
 // 상수·헬퍼는 exhibitFormShared.js(비 JSX 모듈) — 이 파일은 컴포넌트만 export.
-import { ImagePlus, Lock, X } from 'lucide-react'
-import { MAX_IMAGES, formatKst, inputCls, labelCls } from './exhibitFormShared'
+import { Lock, X } from 'lucide-react'
+import GlassCard from '../../components/common/GlassCard'
+import RadioCards from '../../components/common/RadioCards'
+import { ACCENT } from '../../styles/accents'
+import { formatPhone } from '../../utils/format'
+import { formatKst, inputCls, labelCls, semesterDesc } from './exhibitFormShared'
 
-/** 라벨+힌트 래퍼. 입력 1개면 기본 label, 그룹(이미지·팀원 등)은 as="div". */
+/** 라벨+힌트 래퍼. 입력 1개면 기본 label, 그룹(팀원·과목 등)은 as="div". */
 export function Field({ as: Tag = 'label', label, required = false, hint, children }) {
   return (
     <Tag className="flex min-w-0 flex-col gap-8">
@@ -16,6 +20,23 @@ export function Field({ as: Tag = 'label', label, required = false, hint, childr
       {children}
       {hint && <p className="text-caption-m text-text-meta">{hint}</p>}
     </Tag>
+  )
+}
+
+/**
+ * 폼 제출 버튼 — Button 컴포넌트는 링크 전용이라 submit에는 쓸 수 없다.
+ * 시각은 X2 Primary 위계와 동일한 토큰(bg-button-primary + shadow-btn)만 사용한다.
+ */
+export function SubmitButton({ busy = false, children, ...rest }) {
+  return (
+    <button
+      type="submit"
+      disabled={busy}
+      className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed disabled:cursor-not-allowed disabled:opacity-50 md:h-48 md:text-body-d"
+      {...rest}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -45,73 +66,58 @@ export function LockedField({ label, value }) {
   )
 }
 
-export function PickButton({ children, onFiles, multiple = false }) {
+/**
+ * 연락처 입력 — 010-XXXX-XXXX 고정(Y2-4-5).
+ * onChange에는 포맷이 끝난 값만 올린다. 숫자 외 문자는 formatPhone이 제거하므로
+ * 입력 자체가 반영되지 않고, 11자리를 넘겨 칠 수도 없다.
+ */
+export function PhoneInput({ value, onChange, ...rest }) {
   return (
-    <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-8 rounded-sm border border-border-subtle px-24 text-body-m font-semibold text-text-pri transition-colors duration-fast ease-out hover:border-border-strong md:h-48 md:text-body-d">
-      <ImagePlus size={16} aria-hidden="true" />
-      {children}
-      <input
-        type="file"
-        accept="image/*"
-        multiple={multiple}
-        className="sr-only"
-        onChange={(event) => {
-          onFiles([...event.target.files])
-          event.target.value = ''
-        }}
-      />
-    </label>
+    <input
+      type="tel"
+      required
+      inputMode="numeric"
+      autoComplete="tel"
+      value={value}
+      onChange={(event) => onChange(formatPhone(event.target.value))}
+      className={inputCls}
+      placeholder="010-0000-0000"
+      {...rest}
+    />
   )
 }
 
 /**
- * 작품 이미지 필드 — 항목은 { url }(기존 업로드) 또는 { file, preview }(신규 선택).
- * 미리보기는 object URL — 제거 시 revoke. 최대 MAX_IMAGES.
+ * 과목 선택(Y2-4-8) — 어드민이 등록한 과목을 카드형 라디오로 고른다(네이티브 셀렉트 금지).
+ * Y3의 과목 관리가 아직 비어 있으면 목록이 없으므로 자유 입력으로 폴백해 접수를 막지 않는다.
  */
-export function ImagesField({ images, onChange }) {
-  const add = (files) => {
-    const next = files.map((file) => ({ file, preview: URL.createObjectURL(file) }))
-    onChange([...images, ...next].slice(0, MAX_IMAGES))
-  }
-  const remove = (idx) => {
-    const target = images[idx]
-    if (target?.preview) URL.revokeObjectURL(target.preview)
-    onChange(images.filter((_, i) => i !== idx))
+export function SubjectField({ subjects, value, onChange }) {
+  if (subjects.length === 0) {
+    return (
+      <Field label="과목" required hint="출품작이 제작된 수강 과목명">
+        <input
+          type="text"
+          required
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className={inputCls}
+          placeholder="과목명"
+        />
+      </Field>
+    )
   }
   return (
-    <Field
-      as="div"
-      label={`작품 이미지 (최대 ${MAX_IMAGES}장)`}
-      hint="작품을 보여주는 이미지를 등록합니다. 용량 상한은 서버에서 검증됩니다."
-    >
-      {images.length > 0 && (
-        <ul className="grid grid-cols-1 gap-16 md:grid-cols-2">
-          {images.map((image, idx) => (
-            <li key={image.url ?? image.preview} className="relative min-w-0">
-              <img
-                src={image.url ?? image.preview}
-                alt={`작품 이미지 ${idx + 1} 미리보기`}
-                className="aspect-video w-full rounded-md border border-border-subtle object-cover"
-              />
-              <button
-                type="button"
-                aria-label={`작품 이미지 ${idx + 1} 제거`}
-                onClick={() => remove(idx)}
-                className="absolute right-8 top-8 flex cursor-pointer items-center justify-center rounded-sm border border-glass-line bg-glass-strong p-4 text-text-pri transition-colors duration-fast ease-out hover:border-border-strong"
-              >
-                <X size={16} aria-hidden="true" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {images.length < MAX_IMAGES && (
-        <div>
-          <PickButton onFiles={add} multiple>
-            이미지 선택
-          </PickButton>
-        </div>
-      )}
+    <Field as="div" label="과목" required hint="출품작이 제작된 수강 과목을 선택해 주세요">
+      <RadioCards
+        name="course"
+        value={value}
+        onChange={onChange}
+        options={subjects.map((s) => ({
+          value: s.value,
+          label: s.label,
+          desc: semesterDesc(s.semester),
+        }))}
+      />
     </Field>
   )
 }
@@ -167,13 +173,43 @@ export function MemberRows({ members, onChange }) {
   )
 }
 
-/** 접수·수정 일정 표기 — settings/public.exhibition의 KST 일시. */
-export function ScheduleList({ exhibition }) {
-  const rows = [
+function scheduleRows(exhibition) {
+  return [
     { label: '접수 시작', value: formatKst(exhibition?.submit_open) },
     { label: '접수 마감', value: formatKst(exhibition?.submit_close) },
     { label: '수정 마감', value: formatKst(exhibition?.edit_close) },
   ].filter((row) => row.value)
+}
+
+/**
+ * Y2-4-7 일정 강조 패널 — 폼·온보딩 최상단에 유리 패널로 크게 둔다.
+ * 날짜는 ACCENT.proper(연보라)로 위계를 올린다. 작은 좌측 구석 표기 금지.
+ */
+export function ScheduleHighlight({ exhibition }) {
+  const rows = scheduleRows(exhibition)
+  if (!rows.length) return null
+  return (
+    <GlassCard as="section" className="p-24 md:p-32">
+      <h2 className={`${labelCls} mb-16`}>접수 일정</h2>
+      <dl className="grid gap-16 sm:grid-cols-3">
+        {rows.map(({ label, value }) => (
+          <div key={label} className="flex min-w-0 flex-col gap-8">
+            <dt className="text-small-m text-text-meta md:text-small-d">{label}</dt>
+            <dd
+              className={`min-w-0 text-h3-m font-bold leading-snug md:text-h3-d ${ACCENT.proper}`}
+            >
+              {value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </GlassCard>
+  )
+}
+
+/** 접수·수정 일정 표기(컴팩트) — settings/public.exhibition의 KST 일시. */
+export function ScheduleList({ exhibition }) {
+  const rows = scheduleRows(exhibition)
   if (!rows.length) return null
   return (
     <dl className="flex flex-col gap-8">

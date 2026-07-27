@@ -2,6 +2,8 @@
 // 전시회 접수: POST/PUT /submit/exhibition — 기간 서버 검증(클라 시계 불신), readonly 필드 보호
 // 쇼케이스: POST /submit/showcase, PUT /submit/showcase/:id — status pending, 비번 수정
 // 보조: POST /submit/exhibition/list — /submit/edit 화면의 본인 접수 목록 (8절 계약 외 확장)
+// 보조: POST /submit/exhibition/lookup — 접수 확인·수정 진입(33_PHASE18 Y2-5).
+//        목록 + 수정 마감 판정을 서버 시계로 함께 반환한다(클라 시계 불신).
 import { Router } from 'express'
 import bcrypt from 'bcrypt'
 import { query } from '../db.js'
@@ -12,7 +14,9 @@ const router = Router()
 
 const MAX_ENTRY_IMAGES = 5 // 접수 1건당 이미지 개수 상한 (용량은 /upload에서 제한)
 const MAX_SHOWCASE_SUB_IMGS = 2
-const MIN_SUBMIT_PW = 6 // 제출용 비밀번호 최소 길이 (스태프 계정 8자와 별개)
+const MIN_SUBMIT_PW = 6 // 쇼케이스 제출용 비밀번호 최소 길이 (스태프 계정 8자와 별개)
+// 전시회 접수 수정용 비밀번호 최소 길이 — 접수 폼 안내·클라 검증(utils/format isValidPassword)과 동일 4자.
+const MIN_ENTRY_PW = 4
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // 전시회 접수 readonly 보호 대상 (12_BACKEND 5절: 참가 유형·과목·이메일은 수정 불가)
@@ -69,8 +73,8 @@ router.post(
     const { entry_type, email, password, fields, images } = req.body || {}
     if (!['solo', 'team'].includes(entry_type)) return res.status(400).json({ error: 'entry_type must be solo or team' })
     if (!EMAIL_RE.test(String(email || ''))) return res.status(400).json({ error: 'valid email required' })
-    if (!password || String(password).length < MIN_SUBMIT_PW) {
-      return res.status(400).json({ error: `password must be at least ${MIN_SUBMIT_PW} characters` })
+    if (!password || String(password).length < MIN_ENTRY_PW) {
+      return res.status(400).json({ error: `password must be at least ${MIN_ENTRY_PW} characters` })
     }
     if (fields !== undefined && (typeof fields !== 'object' || fields === null || Array.isArray(fields))) {
       return res.status(400).json({ error: 'fields must be an object' })
@@ -113,11 +117,15 @@ router.put(
       })
     }
 
-    const { id, email, password, fields, images } = req.body || {}
+    const { id, email, password, new_password, fields, images } = req.body || {}
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'entry id required' })
     if (!email || !password) return res.status(400).json({ error: 'email and password required' })
     if (!validImages(images)) {
       return res.status(400).json({ error: `images must be an array of at most ${MAX_ENTRY_IMAGES} urls` })
+    }
+    // 비밀번호 변경은 선택 — 보내지 않으면 기존 해시 유지. 평문은 저장·응답하지 않는다.
+    if (new_password !== undefined && String(new_password).length < MIN_ENTRY_PW) {
+      return res.status(400).json({ error: `new_password must be at least ${MIN_ENTRY_PW} characters` })
     }
 
     const { rows } = await query(
@@ -154,12 +162,13 @@ router.put(
       }
     }
 
+    const nextHash = new_password === undefined ? null : await bcrypt.hash(String(new_password), 10)
     const updated = await query(
       `UPDATE exhibition_entries
-       SET fields = $1, images = COALESCE($2, images), updated_at = now()
-       WHERE id = $3
+       SET fields = $1, images = COALESCE($2, images), pw_hash = COALESCE($3, pw_hash), updated_at = now()
+       WHERE id = $4
        RETURNING id, semester_label, entry_type, fields, email, images, created_at, updated_at`,
-      [JSON.stringify(mergedFields), images ? JSON.stringify(images) : null, entry.id]
+      [JSON.stringify(mergedFields), images ? JSON.stringify(images) : null, nextHash, entry.id]
     )
     res.json({ entry: updated.rows[0] })
   })
@@ -182,6 +191,39 @@ router.post(
     }
     if (entries.length === 0) return res.status(401).json({ error: 'invalid credentials' })
     res.json({ entries })
+  })
+)
+
+// 접수 확인·수정 진입 (33_PHASE18 Y2-5) — 이메일+수정용 비밀번호 검증 후 본인 항목만 반환.
+// /list와 달리 수정 마감 판정(can_edit)을 서버 시계로 함께 내려준다. 클라 시계는 신뢰하지 않으며
+// 실제 저장 차단은 PUT /submit/exhibition의 403이 최종 권한이다.
+router.post(
+  '/exhibition/lookup',
+  submitLimiter,
+  wrap(async (req, res) => {
+    const { email, password } = req.body || {}
+    if (!EMAIL_RE.test(String(email || ''))) return res.status(400).json({ error: 'valid email required' })
+    if (!password) return res.status(400).json({ error: 'password required' })
+
+    const { rows } = await query(
+      'SELECT * FROM exhibition_entries WHERE email = $1 ORDER BY created_at DESC',
+      [String(email).trim().toLowerCase()]
+    )
+    const entries = []
+    for (const row of rows) {
+      if (await bcrypt.compare(String(password), row.pw_hash)) entries.push(stripSensitive(row))
+    }
+    // 존재하지 않는 이메일과 비밀번호 불일치를 같은 응답으로 묶어 계정 존재 여부를 노출하지 않는다
+    if (entries.length === 0) return res.status(401).json({ error: 'invalid credentials' })
+
+    const settings = await getExhibitionSettings()
+    const now = new Date()
+    res.json({
+      entries,
+      can_edit: Boolean(settings) && within(now, settings.submit_open, settings.edit_close),
+      edit_close: settings?.edit_close ?? null,
+      submit_close: settings?.submit_close ?? null,
+    })
   })
 )
 

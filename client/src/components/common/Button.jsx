@@ -7,12 +7,18 @@ import { ArrowUpRight } from 'lucide-react'
 const base =
   'inline-flex h-11 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm px-24 text-body-m font-semibold transition duration-fast ease-out md:h-48 md:text-body-d'
 
-// K2-9: press 시 미세 감광(active) — transition은 base의 duration-fast(motion 토큰) 공유
+// X2(33_PHASE18) 버튼 3위계 — 전 버튼은 이 셋 중 하나만 쓴다.
+// Primary: 보라 채움 + 상단 화이트 하이라이트(inset) + 퍼플 글로우 → hover 시 글로우 강화, pressed 감광
+// Secondary: 유리 패널 + hairline → hover 시 보더 보라
+// Ghost: 연보라 텍스트 → hover 시 유리 배경
+// 그림자는 tokens.shadow(btn/btn-hover) 경유. 포커스 링은 index.css 전역(#A286E9).
 const variants = {
   primary:
-    'bg-button-primary text-button-primaryText hover:bg-button-primaryHover active:bg-button-primaryPressed',
+    'bg-button-primary text-button-primaryText shadow-btn hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed active:shadow-btn',
   secondary:
-    'border border-glass-line bg-glass-bg text-text-pri hover:border-border-strong hover:bg-glass-strong active:opacity-90',
+    'border border-glass-line bg-glass-bg text-text-pri shadow-glass hover:border-border-purple hover:bg-glass-strong active:opacity-90',
+  ghost:
+    'text-button-ghostText hover:bg-button-ghostHover active:opacity-90',
 }
 
 function Button({ variant = 'primary', href, external = false, children }) {

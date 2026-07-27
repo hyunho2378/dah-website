@@ -30,6 +30,7 @@ import CIAdmin from './CIAdmin'
 import CouncilAdmin from './CouncilAdmin'
 import CareersAdmin from './CareersAdmin'
 import ExhibitionAdmin from './ExhibitionAdmin'
+import EntriesSheet from './EntriesSheet'
 import SettingsAdmin from './SettingsAdmin'
 import ConsultationsAdmin from './ConsultationsAdmin'
 import UsersAdmin from './UsersAdmin'
@@ -55,4 +56,13 @@ export const ADMIN_ROUTES = [
   { path: 'settings', Component: SettingsAdmin, role: 'admin' },
   { path: 'consultations', Component: ConsultationsAdmin, role: 'admin' },
   { path: 'users', Component: UsersAdmin, role: 'owner' },
+]
+
+/**
+ * Y3-2(33_PHASE18): AdminLayout 밖(형제 라우트)에서 전체화면으로 여는 관리 화면.
+ * 사이드바·PageBanner 없이 화면 전체를 쓰는 시트가 필요해 레이아웃 하위에 두지 않는다.
+ * @type {Array<{ path: string, Component: Function, role: 'manager'|'admin'|'owner' }>}
+ */
+export const ADMIN_FULLSCREEN_ROUTES = [
+  { path: 'exhibition-entries/sheet', Component: EntriesSheet, role: 'admin' },
 ]

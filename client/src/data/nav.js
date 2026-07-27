@@ -63,6 +63,14 @@ export const nav = [
       { label: '학생 성과', labelEn: 'Achievements', to: '/students/achievements' },
       { label: '웹&앱 쇼케이스', labelEn: 'Web & App Showcase', to: '/showcase' },
       { label: '취업 현황', labelEn: 'Employment', to: '/students/careers' },
+      // Y3-3(33_PHASE18): 대시보드에서 포트폴리오를 공개로 켜면 나타난다(기본 비공개).
+      // visibilityKey가 있는 하위는 Header가 useContentVisibility로 필터링한다.
+      {
+        label: '포트폴리오',
+        labelEn: 'Portfolio',
+        to: '/students/careers#portfolios',
+        visibilityKey: 'portfolios',
+      },
     ],
   },
   {

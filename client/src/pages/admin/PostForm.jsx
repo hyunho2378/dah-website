@@ -20,6 +20,7 @@ import {
   PrimaryButton,
   TextArea,
   Toggle,
+  DateInput,
 } from '../../components/admin/FormControls'
 import { POST_TYPES } from './postTypes'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
@@ -403,6 +404,8 @@ function emptyForm(template, type) {
         base.host = ''
         base.editions = []
       }
+      // Y3-5(33_PHASE18): 동아리 공식 사이트 URL — 상세 페이지 링크 버튼
+      if (type === 'club') base.site_url = ''
       return base
     }
   }
@@ -482,6 +485,8 @@ function fromItem(template, item, type) {
         next.host = Array.isArray(hostRaw) ? hostRaw.join('\n') : hostRaw || ''
         next.editions = Array.isArray(item.body?.editions) ? item.body.editions : []
       }
+      // Y3-5: 동아리 사이트 URL (레거시 external_url 폴백)
+      if (type === 'club') next.site_url = item.site_url || item.external_url || ''
       return next
     }
   }
@@ -556,8 +561,11 @@ function toPayload(template, config, form, type) {
         payload.event_start = nul(form.event_start)
         payload.event_end = nul(form.event_end)
       }
-      // Q3: 동아리 로고(poster_url) 저장
-      if (type === 'club') payload.poster_url = nul(form.poster_url)
+      // Q3: 동아리 로고(poster_url) 저장. Y3-5: 사이트 URL(site_url)
+      if (type === 'club') {
+        payload.poster_url = nul(form.poster_url)
+        payload.site_url = nul(form.site_url)
+      }
       // M1-3: 공모전 body = { host, editions } (Tiptap doc 대신 구조화 저장)
       if (type === 'contest') {
         payload.body = { host: form.host, editions: form.editions }
@@ -699,25 +707,33 @@ function PostForm() {
 
           {/* Q3: 동아리 로고 업로드 — poster_url. 투명 PNG는 아래 "배경" 토글과 함께 사용 */}
           {type === 'club' && (
-            <div className="md:col-span-2">
-              <Field label="로고" hint="투명 PNG면 아래 배경 토글을 켜세요">
-                <ImageUpload
-                  value={form.poster_url}
-                  onChange={set('poster_url')}
-                  usage="poster"
-                  onUploadingChange={onUploadingChange}
-                />
-              </Field>
-            </div>
+            <>
+              <div className="md:col-span-2">
+                <Field label="로고" hint="투명 PNG면 아래 배경 토글을 켜세요">
+                  <ImageUpload
+                    value={form.poster_url}
+                    onChange={set('poster_url')}
+                    usage="poster"
+                    onUploadingChange={onUploadingChange}
+                  />
+                </Field>
+              </div>
+              {/* Y3-5: 동아리 사이트 — 상세 페이지의 "사이트 바로가기" 버튼(새 탭) */}
+              <div className="md:col-span-2">
+                <Field label="사이트 URL" hint="상세 페이지에 새 탭 링크 버튼으로 노출됩니다">
+                  <Input type="url" value={form.site_url} onChange={setInput('site_url')} />
+                </Field>
+              </div>
+            </>
           )}
 
           {template === 't2' && (
             <>
               <Field label="일정 시작">
-                <Input type="date" value={form.event_start} onChange={setInput('event_start')} />
+                <DateInput value={form.event_start} onChange={setInput('event_start')} />
               </Field>
               <Field label="일정 종료">
-                <Input type="date" value={form.event_end} onChange={setInput('event_end')} />
+                <DateInput value={form.event_end} onChange={setInput('event_end')} />
               </Field>
               <Field
                 label="외부 접수 URL"
@@ -820,10 +836,10 @@ function PostForm() {
               </Field>
               {/* M1-2: 전시 기간. N1-3: 시작일 = 개최일 */}
               <Field label="시작일" hint="개최일">
-                <Input type="date" value={form.start_date} onChange={setInput('start_date')} />
+                <DateInput value={form.start_date} onChange={setInput('start_date')} />
               </Field>
               <Field label="종료일">
-                <Input type="date" value={form.end_date} onChange={setInput('end_date')} />
+                <DateInput value={form.end_date} onChange={setInput('end_date')} />
               </Field>
               <div className="md:col-span-2">
                 <Field label="소개">

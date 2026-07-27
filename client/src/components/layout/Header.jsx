@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import Link, { LangNavLink as NavLink } from '../common/LangLink'
-import { CalendarCheck, Settings } from 'lucide-react'
+import { CalendarCheck, ChevronRight, Menu, Settings, X } from 'lucide-react'
 import { nav } from '../../data/nav'
 import { useLang } from '../../i18n/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLoginModal } from '../../context/LoginModalContext'
 import { useApi } from '../../hooks/useApi'
+import useLiquidGlass from '../../hooks/useLiquidGlass'
+import useContentVisibility from '../../hooks/useContentVisibility'
 import { cosmos } from '../../styles/tokens'
 import Container from './Container'
 import LangToggle from './LangToggle'
@@ -18,11 +20,18 @@ import logoUrl from '../../assets/logo.svg'
 // G15: 메뉴·로그인 라벨은 KR/EN 두 라벨을 같은 칸에 겹쳐 렌더(비활성 invisible)해
 //     언어 전환 시 폭이 변하지 않는다(레이아웃 시프트 0).
 // 성능 규칙(11_DESIGN_V2 2절): blur 상한 3 중 헤더 1계층.
+// Y1-2(33_PHASE18): 하단 GlassDock 폐기 → 모바일 내비는 헤더 우측 햄버거 + 유리 시트.
+// 우측 유틸 순서는 [KR/EN 토글(항상)] [설정 아이콘(로그인 관리자만)] [햄버거(lg 미만)].
+// 시트는 최상위 메뉴만 먼저 보여주고(전부 접힘) ChevronRight 탭 시 하위가 아코디언으로 열린다.
 const SHRINK_Y = 80
 
 function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [openIndex, setOpenIndex] = useState(null) // 메가메뉴 활성 1차 메뉴 index
+  const [sheetOpen, setSheetOpen] = useState(false) // 모바일 유리 시트
+  const [openGroup, setOpenGroup] = useState(null) // 시트 아코디언 확장 그룹(to)
+  const sheetRef = useRef(null)
+  const burgerRef = useRef(null)
   const { lang, t } = useLang()
   // Q7: 활성 언어 라벨만 렌더 — 국문/영문 병기·숨김 span 없음(DOM 트리에도 단일)
   const navLabel = (item) => (lang === 'en' ? item.labelEn : item.label)
@@ -64,27 +73,80 @@ function Header() {
     return () => window.removeEventListener('keydown', onKey)
   }, [openIndex])
 
-  // 라우트 이동 시 메가메뉴 닫기
+  // 라우트 이동 시 메가메뉴·모바일 시트 닫기
   useEffect(() => {
     setOpenIndex(null)
+    setSheetOpen(false)
   }, [pathname])
 
+  // 시트 열림: ESC 닫기 + 포커스 트랩 + body 스크롤 잠금(storage 미사용)
+  useEffect(() => {
+    if (!sheetOpen) return undefined
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSheetOpen(false)
+        burgerRef.current?.focus()
+        return
+      }
+      if (e.key !== 'Tab' || !sheetRef.current) return
+      // 접힌 아코디언(inert) 안의 링크는 포커스 순회에서 제외한다
+      const focusables = Array.from(
+        sheetRef.current.querySelectorAll('a[href], button:not([disabled])')
+      ).filter((el) => !el.closest('[inert]'))
+      if (!focusables.length) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [sheetOpen])
+
   const close = () => setOpenIndex(null)
+  const closeSheet = () => setSheetOpen(false)
 
   // 포커스가 헤더 밖으로 나가면 메가메뉴 닫기
   const onBlur = (e) => {
     if (headerRef.current && !headerRef.current.contains(e.relatedTarget)) close()
   }
 
+  // Y3-3(33_PHASE18) 통합: visibilityKey가 붙은 하위 메뉴는 대시보드에서 해당 유형을
+  // 공개로 켰을 때만 노출한다(예: 포트폴리오는 기본 비공개). 데스크탑 드롭다운과
+  // 모바일 시트가 같은 목록을 쓰도록 여기서 한 번만 필터링한다.
+  const { isPublic } = useContentVisibility()
+  const visibleNav = nav.map((item) => ({
+    ...item,
+    children: item.children.filter((c) => !c.visibilityKey || isPublic(c.visibilityKey)),
+  }))
+
   const glassed = scrolled || openIndex !== null
+  // X3: 헤더가 실제로 유리가 된 뒤에만 리퀴드글래스 초기화(투명 상태에서 스냅샷 낭비 방지)
+  useLiquidGlass('.dah-liquid-header', { refraction: 0.01, bevelDepth: 0.06 }, glassed)
+  // X3 표면 3/3 — 모바일 메뉴 시트. 훅이 lg 미만·WebGL 부재를 걸러 CSS 글래스로 폴백한다.
+  useLiquidGlass('.dah-liquid-sheet', {}, sheetOpen)
 
   return (
     <>
+      {/* X3: liquidGL 적용 표면 1/3 — 클래스 훅(dah-liquid-header)만 제공하고 실제 적용은
+          useLiquidGlass가 담당(데스크탑·WebGL 가능할 때만). 실패·모바일이면 아래 CSS 글래스가
+          그대로 남아 기능 저하가 없다. */}
       <header
         ref={headerRef}
         onMouseLeave={close}
         onBlur={onBlur}
-        className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
+        className={`dah-liquid-header fixed inset-x-0 top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
           glassed
             ? 'border-glass-line bg-glass-bg backdrop-blur-glass-mobile md:backdrop-blur-glass'
             : 'border-transparent bg-transparent'
@@ -111,7 +173,7 @@ function Header() {
 
         {/* Q6: 항목 사이 고정 gap(32px)으로 균등 간격 — 글자폭이 아니라 gap 기준. 링크 px 통일 */}
         <nav aria-label={t('aria.mainMenu')} className="hidden h-full items-center gap-32 lg:flex">
-          {nav.map((item, i) => {
+          {visibleNav.map((item, i) => {
             const hasChildren = item.children.length > 0
             const isOpen = hasChildren && openIndex === i
             return (
@@ -182,10 +244,8 @@ function Header() {
               {t('actions.submitExhibition')}
             </Link>
           )}
-          {/* EN 토글은 데스크탑 유틸만 — lg 미만은 GlassDock 확장부에 노출 */}
-          <span className="hidden lg:block">
-            <LangToggle />
-          </span>
+          {/* Y1-2: KR/EN 토글은 모든 뷰포트에 노출 */}
+          <LangToggle />
           <span aria-hidden="true" className="hidden h-16 w-px bg-border-subtle lg:block" />
           {/* G14: 로그인 상태는 관리 아이콘 버튼 하나로만 — 역할은 호버 툴팁(title). 텍스트 뱃지 금지 */}
           {user ? (
@@ -194,23 +254,142 @@ function Header() {
               title={`${user.role} ${t('actions.admin')}`}
               aria-label={`${user.role} ${t('actions.admin')}`}
               /* H7.5: 아이콘 시각 여백(7px)을 상쇄해 Container 우측선에 정렬 */
-              className="-mr-8 flex h-32 w-32 items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri"
+              className="flex h-32 w-32 items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri lg:-mr-8"
             >
               <Settings size={18} aria-hidden="true" />
             </Link>
           ) : (
+            // 비로그인 로그인 버튼은 데스크탑 유틸만 — lg 미만은 시트 하단에 노출
             <button
               type="button"
               onClick={openLogin}
-              className="cursor-pointer whitespace-nowrap text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d"
+              className="hidden cursor-pointer whitespace-nowrap text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d lg:block"
             >
               {t('actions.login')}
             </button>
           )}
+          {/* Y1-2: 햄버거 — 우측 유틸의 마지막. lg 이상은 메가메뉴가 담당하므로 미노출 */}
+          <button
+            ref={burgerRef}
+            type="button"
+            aria-expanded={sheetOpen}
+            aria-controls="dah-mobile-sheet"
+            aria-label={sheetOpen ? t('aria.closeMenu') : t('aria.openMenu')}
+            onClick={() => setSheetOpen((v) => !v)}
+            className="-mr-8 flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri lg:hidden"
+          >
+            {sheetOpen ? (
+              <X size={22} aria-hidden="true" />
+            ) : (
+              <Menu size={22} aria-hidden="true" />
+            )}
+          </button>
         </div>
       </Container>
 
       </header>
+
+      {/* Y1-2: 모바일 유리 시트 — 헤더 아래를 덮는다. 최상위 메뉴는 전부 접힌 상태로 시작하고
+          ChevronRight 항목을 탭하면 하위가 아코디언으로 펼쳐진다. 하위 탭 = 이동 + 시트 닫힘. */}
+      {sheetOpen && (
+        <div className="fixed inset-x-0 bottom-0 top-header-s z-40 lg:hidden">
+          <div
+            aria-hidden="true"
+            onClick={closeSheet}
+            className="absolute inset-0 bg-bg-base/70"
+          />
+          <div
+            id="dah-mobile-sheet"
+            ref={sheetRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('aria.mobileMenu')}
+            className="dah-liquid-sheet absolute inset-x-0 top-0 max-h-full overflow-y-auto border-b border-glass-line bg-glass-bg pb-[env(safe-area-inset-bottom)] shadow-glass backdrop-blur-glass-mobile"
+          >
+            <nav aria-label={t('aria.mobileMenu')}>
+              <ul>
+                {visibleNav.map((item) => {
+                  const hasChildren = item.children.length > 0
+                  const expanded = openGroup === item.to
+                  return (
+                    <li key={item.to} className="border-b border-border-subtle">
+                      {hasChildren ? (
+                        <>
+                          <button
+                            type="button"
+                            aria-expanded={expanded}
+                            onClick={() => setOpenGroup(expanded ? null : item.to)}
+                            className="flex w-full cursor-pointer items-center justify-between gap-16 px-gutter-m py-16 text-left transition-colors duration-fast ease-out hover:bg-glass-strong md:px-gutter-t"
+                          >
+                            <span className="text-body-m font-semibold text-text-pri">
+                              {navLabel(item)}
+                            </span>
+                            <ChevronRight
+                              size={20}
+                              aria-hidden="true"
+                              className={`shrink-0 text-icon transition-transform duration-fast ease-out ${
+                                expanded ? 'rotate-90 text-icon-active' : ''
+                              }`}
+                            />
+                          </button>
+                          <div
+                            className={`grid transition-[grid-template-rows] duration-base ease-out ${
+                              expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                            }`}
+                          >
+                            <ul inert={!expanded} className="min-h-0 overflow-hidden">
+                              {item.children.map((child) => (
+                                <li key={child.to}>
+                                  <Link
+                                    to={child.to}
+                                    onClick={closeSheet}
+                                    className="block py-12 pl-32 pr-gutter-m text-small-m text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri md:pl-40 md:pr-gutter-t"
+                                  >
+                                    {navLabel(child)}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </>
+                      ) : (
+                        <Link
+                          to={item.to}
+                          onClick={closeSheet}
+                          className="flex items-center justify-between gap-16 px-gutter-m py-16 transition-colors duration-fast ease-out hover:bg-glass-strong md:px-gutter-t"
+                        >
+                          <span className="text-body-m font-semibold text-text-pri">
+                            {navLabel(item)}
+                          </span>
+                          <ChevronRight
+                            size={20}
+                            aria-hidden="true"
+                            className="shrink-0 text-icon"
+                          />
+                        </Link>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </nav>
+            {!user && (
+              <div className="px-gutter-m py-16 md:px-gutter-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeSheet()
+                    openLogin()
+                  }}
+                  className="cursor-pointer text-small-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri"
+                >
+                  {t('actions.login')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* G9: fixed 헤더가 차지하던 자리를 본문에서 확보하는 스페이서 */}
       <div aria-hidden="true" className="h-header-s lg:h-header" />
       {/* H10: 접수 버튼 플로팅 모드 (button_mode=floating) — 우하단 고정 */}

@@ -1,6 +1,7 @@
 // /students/clubs — 동아리 (로고 중심 카드 그리드, 데스크탑 4열)
 import { useEffect, useState } from 'react'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import Link from '../../components/common/LangLink'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
@@ -11,7 +12,9 @@ import { DragHandle, useDragSort } from '../../components/common/DragHandle'
 import InlineEditBar from '../../components/content/InlineEditBar'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, api } from '../../hooks/useApi'
+import { useContentVisibility } from '../../hooks/useContentVisibility'
 import { useTitle } from '../../hooks/useTitle'
+import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../i18n/LangContext'
 import { clubs as staticClubs, clubFieldEn } from '../../data/clubs'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
@@ -33,6 +36,8 @@ function ClubCard({ item, sorting }) {
   // R3: EN 분야 라벨 — 정적 폴백은 fieldEn, API 항목은 clubFieldEn 맵(국문→영문), 매핑 없으면 국문
   const field =
     lang === 'en' ? item.fieldEn || clubFieldEn?.[item.tag] || item.tag : item.tag
+  // API 항목은 소개가 body.intro에 들어 있다(시드 계약). 정적 폴백은 평면 intro.
+  const intro = item.intro ?? item.body?.intro ?? null
 
   // Q3: 로고 크게 중앙 상단. contain으로 원본 비율 유지(잘림 없음). 투명 PNG는 has_bg 배경 프레임.
   const content = (
@@ -55,15 +60,14 @@ function ClubCard({ item, sorting }) {
         {title}
       </h3>
       {field && <Tag>{field}</Tag>}
-      {item.intro && (
-        <p className="text-small-m leading-relaxed text-text-sec md:text-small-d">
-          {item.intro}
-        </p>
+      {intro && (
+        <p className="text-small-m leading-relaxed text-text-sec md:text-small-d">{intro}</p>
       )}
     </>
   )
 
-  // 중첩 앵커 금지 — EditPencil(내부 링크)은 외부 링크 앵커 밖에 둔다. 정렬 모드에선 링크 비활성.
+  // Y3-5: 카드 클릭 = 동아리 상세 진입(외부 사이트 직행 폐기 — 사이트 링크는 상세의 버튼).
+  // 중첩 앵커 금지 — EditPencil(내부 링크)은 카드 링크 밖에 둔다. 정렬 모드에선 링크 비활성.
   return (
     <GlassCard hover className="flex h-full flex-col p-20 md:p-24">
       {sorting && (
@@ -71,24 +75,22 @@ function ClubCard({ item, sorting }) {
           <DragHandle />
         </div>
       )}
-      {item.external_url && !sorting ? (
-        <a
-          href={item.external_url}
-          target="_blank"
-          rel="noopener noreferrer"
+      {sorting ? (
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-12 text-center">
+          {content}
+        </div>
+      ) : (
+        <Link
+          to={`/students/clubs/${item.id}`}
           className="group flex min-w-0 flex-1 flex-col items-center gap-12 text-center"
         >
           {content}
-          <ArrowUpRight
+          <ArrowRight
             size={16}
             aria-hidden="true"
             className="text-text-meta transition-colors duration-fast ease-out group-hover:text-text-pri"
           />
-        </a>
-      ) : (
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-12 text-center">
-          {content}
-        </div>
+        </Link>
       )}
       <div className="mt-16 flex justify-end">
         <EditPencil type="club" to={`/admin/posts/club/${item.id}/edit`} />
@@ -110,6 +112,11 @@ function Clubs() {
   useEffect(() => {
     setItems(data?.items?.length ? data.items : FALLBACK_CLUBS)
   }, [data])
+
+  // Y3-3: 비공개 전환 시 일반 방문자에겐 목록 미렌더(편집 권한자는 유지)
+  const { isPublic } = useContentVisibility()
+  const { canEdit } = useAuth()
+  const hidden = !isPublic('club') && !canEdit('club')
 
   // 정렬: 드롭 시 새 순서대로 sort 재계산 — 값이 달라진 항목만 순차 PUT (12_BACKEND api.put)
   const { dragIndex, overIndex, rowProps } = useDragSort((from, to) => {
@@ -140,7 +147,9 @@ function Clubs() {
           sorting={sorting}
           onToggleSort={() => setSorting((s) => !s)}
         />
-        {loading ? (
+        {hidden ? (
+          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.empty')}</p>
+        ) : loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : items.length === 0 ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">

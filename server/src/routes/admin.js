@@ -104,6 +104,26 @@ router.post(
     if (cfg.postType) {
       data.type = cfg.postType
       data.created_by = req.user.id
+      // Y3-4(33_PHASE18): sort 미지정 신규 글은 "맨 위" 자리를 받는다.
+      // 진단 — 기존에는 sort가 NULL로 저장됐고 orderBy가 'sort ASC NULLS LAST'라
+      // 신규 성과가 항상 해당 연도 맨 아래로 내려갔다. 여기서 (최소 sort - 1)을 배정한다.
+      if (cfg.sortScope && data.sort === undefined) {
+        const params = [cfg.postType]
+        let scope = 'type = $1'
+        if (cfg.sortScope === 'tag') {
+          if (data.tag === undefined || data.tag === null) {
+            scope += ' AND tag IS NULL'
+          } else {
+            params.push(data.tag)
+            scope += ` AND tag = $${params.length}`
+          }
+        }
+        const { rows } = await query(
+          `SELECT COALESCE(MIN(sort), 0) - 1 AS next FROM posts WHERE ${scope}`,
+          params
+        )
+        data.sort = rows[0]?.next ?? 0
+      }
     }
     const cols = Object.keys(data)
     const values = cols.map((c) => data[c])

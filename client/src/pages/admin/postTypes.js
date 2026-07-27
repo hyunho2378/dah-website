@@ -20,6 +20,9 @@ export const POST_TYPES = {
     label: '동아리',
     template: 't1',
     enRequired: true,
+    // Y3-4(33_PHASE18): 어드민 목록에서 6점 핸들 드래그 정렬 (sortScope 'type' = 유형 전체 한 줄)
+    sortable: true,
+    sortScope: 'type',
   },
   lecture: {
     label: '특강',
@@ -40,6 +43,9 @@ export const POST_TYPES = {
     label: '학생 성과',
     template: 'achievement', // 수상명/수상자/주최/연도/대회 URL. 게시판 렌더 금지
     enRequired: true,
+    // Y3-4(33_PHASE18): 같은 연도(tag) 안에서만 드래그 정렬. 신규 등록은 서버가 연도 맨 위로 배정.
+    sortable: true,
+    sortScope: 'tag',
   },
   portfolios: {
     label: '포트폴리오',

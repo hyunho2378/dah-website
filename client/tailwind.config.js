@@ -98,6 +98,11 @@ export default {
       boxShadow: {
         'card-glow': shadow.cardGlow,
         'card-glow-hover': shadow.cardGlowHover,
+        // X2·X3(33_PHASE18): 버튼 질감·글래스 위계 (토큰 경유, JSX 하드코딩 금지)
+        btn: shadow.btnPrimary,
+        'btn-hover': shadow.btnPrimaryHover,
+        glass: shadow.glassPanel,
+        'glass-hover': shadow.glassPanelHover,
       },
       transitionTimingFunction: {
         out: motion.ease,

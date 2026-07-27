@@ -11,7 +11,8 @@ function Footer() {
   const { t } = useLang()
   return (
     <footer className="relative z-10 border-t border-border-subtle bg-bg-elev">
-      <Container className="flex flex-col gap-16 pb-96 pt-24 lg:py-32">
+      {/* Y1-2로 하단 GlassDock이 사라져 도크 회피용 pb-96 여백은 불필요해졌다 */}
+      <Container className="flex flex-col gap-16 py-24 lg:py-32">
         <div className="flex flex-col gap-16 lg:flex-row lg:items-start lg:justify-between">
           {/* 좌: 로고 + 학과명 한 줄 */}
           <div className="flex items-center gap-16">
@@ -23,9 +24,13 @@ function Footer() {
 
           {/* 우: 정책 링크 줄 + TEL + 메일 */}
           <div className="flex flex-col gap-4 lg:items-end">
+            {/* Y1-6: 정책·상담 링크는 새 탭. target이 _self가 아니면 react-router가 클릭을
+                가로채지 않고 실제 새 문서 로드가 일어나므로, 열린 탭은 항상 최상단에서 시작한다. */}
             <div className="flex flex-wrap items-center gap-x-12 text-small-m text-text-sec md:text-small-d">
               <Link
                 to="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="transition-colors duration-fast ease-out hover:text-text-pri"
               >
                 {t('footer.privacy')}
@@ -33,6 +38,8 @@ function Footer() {
               <span aria-hidden="true" className="text-text-meta">|</span>
               <Link
                 to="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="transition-colors duration-fast ease-out hover:text-text-pri"
               >
                 {t('footer.terms')}
@@ -40,6 +47,8 @@ function Footer() {
               <span aria-hidden="true" className="text-text-meta">|</span>
               <Link
                 to="/consult"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="transition-colors duration-fast ease-out hover:text-text-pri"
               >
                 {t('footer.consult')}

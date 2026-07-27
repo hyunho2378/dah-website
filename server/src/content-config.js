@@ -16,6 +16,8 @@ function postType(type, minRole, opts = {}) {
   const jsonb = opts.attachments ? [...POST_JSONB, 'attachments'] : POST_JSONB
   // G1: 원문 등장 순서(sort) 지원 — 성과 등 순서가 의미인 type만
   if (opts.sortable) columns = [...columns, 'sort']
+  // Y3-5(33_PHASE18): 동아리 사이트 링크 등 type 한정 추가 컬럼
+  if (opts.extra) columns = [...columns, ...opts.extra]
   return {
     table: 'posts',
     postType: type,
@@ -27,6 +29,9 @@ function postType(type, minRole, opts = {}) {
     publicWhere: 'published = TRUE',
     searchCols: ['title_ko', 'title_en'],
     tagCol: 'tag',
+    // Y3-4(33_PHASE18): 신규 등록 시 sort 자동 배정 범위.
+    // 'tag' = 같은 연도(tag) 안에서 맨 위, 'type' = 유형 전체에서 맨 위, undefined = 자동 배정 없음.
+    sortScope: opts.sortScope,
   }
 }
 
@@ -37,13 +42,21 @@ export const CONTENT_TYPES = {
   lecture: postType('lecture', 'manager'),
   contest: postType('contest', 'manager'),
   // G1: 연도(tag) 내림차순 + 연도 내 원문 등장 순서(sort) 오름차순 = 화면이 원문과 1:1
+  // Y3-4: sortScope 'tag' — 신규 성과는 같은 연도 최소 sort - 1을 받아 그 연도 맨 위로 온다.
   achievement: postType('achievement', 'manager', {
     sortable: true,
+    sortScope: 'tag',
     orderBy: 'tag DESC, sort ASC NULLS LAST, id ASC',
   }),
   resource: postType('resource', 'manager', { attachments: true }),
   // M3-2: 동아리 DragHandle 정렬 저장 — sort 컬럼 화이트리스트 + sort 오름차순
-  club: postType('club', 'manager', { sortable: true, orderBy: 'sort ASC NULLS LAST, id ASC' }),
+  // Y3-5: site_url — 동아리 공식 사이트(상세 페이지 링크 버튼)
+  club: postType('club', 'manager', {
+    sortable: true,
+    sortScope: 'type',
+    extra: ['site_url'],
+    orderBy: 'sort ASC NULLS LAST, id ASC',
+  }),
 
   // ── 독립 테이블 계열 ──
   professors: {

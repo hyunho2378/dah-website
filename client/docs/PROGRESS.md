@@ -415,3 +415,29 @@
 - [ ] 커밋·푸시·배포: 커밋·푸시 완료 후 Vercel/Render GitHub 연동 시 자동 배포(미연동이면 대시보드 수동 배포 1회)
 - [!] 실사이트 육안(사용자 수행): 배포 URL은 Vercel 대시보드 도메인(레포에 미기재). 홈·About·CI·전시회·학생 성과·어드민 육안 확인 필요
 - [!] 남은 항목(콘텐츠·에셋, 버그 아님): (1)히어로 영상 hero.mp4 자체가 청록·핑크 3D 렌더 = CI 외 색 → 완전 준수하려면 사용자가 보라 계열 온브랜드 영상으로 교체(리브랜딩 스코프상 영상 교체 금지, 오버레이만 강화) (2)로고 원본 파일(AI/시그니처 이미지)·CI 매뉴얼 PDF는 어드민 업로드 또는 public/ci 교체 대기(현재 시그니처는 "이미지 준비 중" 플레이스홀더) (3)public/ci/README.md는 구 플레이스홀더 파일명 안내 유지(문서, 미갱신)
+
+## PHASE 20 · GLASS — 위계 재정립·리퀴드글래스·접수 시스템 (33_PHASE18_GLASS, 단독 STEP1 → 병렬 Y1·Y2·Y3 → 단독 STEP3)
+색상 유일 기준 docs/CI.md. 스킬 활용: apple-design(스프링·인터럽터빌러티·머티리얼 위계·타이포 트래킹·reduced-motion/-transparency), improve/review-animations 원칙. 진단 원칙: 위계 실종이 문제(보라 과다 아님) → CI 4.3(강조 보라 ≤10%) 유지하며 포인트 복원.
+### STEP 1 (단독, 공용·시스템)
+- [x] X1 보라 포인트 규약: `src/styles/accents.js`(ACCENT) + `common/Accent.jsx`. 섹션번호=purple.mid, 연도·기수·고유명=purple.light, 직책=purple.mid, 링크=링크토큰, 본문=text.sec 유지. SectionLabel 인덱스에 적용
+- [x] X2 버튼 3위계: Primary=보라채움+상단 화이트 하이라이트(inset)+퍼플 글로우(shadow-btn `0 4px 24px rgba(129,95,215,.35)`), hover 글로우 강화, pressed 감광 / Secondary=유리+hairline→hover 보라 / Ghost 신설. 그림자는 tokens.shadow(btn/btn-hover/glass/glass-hover) 경유(하드코딩 없음)
+- [x] X3 리퀴드글래스(liquidGL): vendor를 public/vendor/liquidgl/로 배치(번들 제외), `hooks/useLiquidGlass.js` 지연로드+4중 폴백가드(reduced-motion·reduced-transparency·뷰포트<1024·코어<4·WebGL 실패→CSS 글래스 유지). **적용 3곳만**: 데스크탑 헤더(`.dah-liquid-header`, glassed일 때)·전시회 피처드 CTA(`.dah-liquid-cta`, Y2)·모바일 메뉴 시트(`.dah-liquid-sheet`, Y1). GlassCard도 shadow-glass+hover 보라 hairline 강화. 성능 특성: html2canvas 스냅샷은 init·resize 시 1회(rAF 렌더 루프는 캐시 텍스처 셰이더만) — 페이지 첫 스크롤 시 일시 비용, 실패해도 CSS 글래스로 무저하 폴백
+- [x] X4 선 장식 제거: SectionLabel `h-px w-24` 장식선 제거(간격만으로 구분). 전역 잔존 0(ArrowLink `after:h-px`는 링크 밑줄 draw 인터랙션이라 유지)
+- [x] X5 네이티브 UI 전수 대체: `common/Select`(포털·키보드 ↑↓/Home/End/타이핑점프·listbox ARIA)·`DatePicker`(월그리드·연월네비·시간, 값계약 네이티브 동일 'YYYY-MM-DD'/'…THH:mm' → 저장 로직 무변경)·`Checkbox`·`RadioCards`(카드형 선택링). 교체: FormControls Select 위임(어드민 select 4곳 일괄), date 5곳+datetime-local 3곳→DateInput. **네이티브 select/date/time 잔존 0**
+- [x] X6 어드민 사이드바 상태 유지[근본원인]: App.jsx PageFade key=pathname이 어드민 이동마다 AdminRoutes·AdminLayout 통째 재마운트 → 사이드바 스크롤 소실·페이드 재생. key를 `/admin`으로 고정(fadeKey) → 셸 유지·Outlet만 교체
+- [x] 공용 유틸 `utils/format.js`: formatPhone(010-XXXX-XXXX 강제·비숫자 차단·11자 상한)·isValidPhone·isValidEmail·isValidPassword(4자). 단위검증 통과. STEP1 빌드 성공
+### STEP 2 (병렬 Y1·Y2·Y3, 공용 X 산출물 수정 금지·사용만)
+- [x] Y1 홈·헤더·푸터·상담·법적·운영위: 프로그램 패널 "02" 제거·좌우 높이 정합 / **모바일 하단 GlassDock 폐기 → 헤더 우측 [KR/EN][설정(관리자)][햄버거] + 유리 시트(아코디언·ESC·포커스트랩·스크롤잠금, liquidGL 표면 3/3)** / 히어로 버튼 텍스트만(화살표 제거)·1=primary 2=secondary·eyebrow 연도 purple.light / 운영위 연도·기수명=purple.light·직책=purple.mid(원문 불변) / 편집·전체관리 이중버튼 → 아이콘+「편집」 단일 / 푸터 정책·상담 링크 새 탭+최상단 / **Privacy·Terms 대학 격식 재작성**(실제 수집항목·bcrypt·GA 예정·보유기간·제3자 없음·파기·권리·문의처, 지어낸 수탁사·해외이전 없음) / 상담 재설계(Container 준수·2열 레이블·우측 sticky 동의패널+Checkbox·동의 전 비활성·formatPhone). 브라우저 375/1280 육안 검증
+- [x] Y2 전시회·접수: 피처드 확대·포스터 유리 프레임·CTA liquidGL·퍼플 글로우 / 상세 상단 여백 축소(첫 화면에 헤드라인+포스터) / **접수 온보딩(전시회명·대상·기간·절차·유의사항 → 시작)** / 폼 정비(Container·이미지필드 삭제·비번 세로 4자·이메일 @검증·**연락처 formatPhone 강제**·작품명 '-'→'_' 안내 원문·기간 유리패널 purple.light 강조·과목 RadioCards) / **접수 확인·수정 진입 신설**(이메일+비번 lookup → 목록/단건 → readonly(유형·과목·이메일)/editable → 저장, 수정마감 서버검증). 신규 API POST /submit/exhibition/lookup(bcrypt·pw_hash strip·균일 401·서버시계 can_edit), PUT에 new_password(COALESCE)
+- [x] Y3 어드민·시트·데이터: **성과 정렬[근본원인]** — PostForm이 sort 미전송 → NULL → 'sort ASC NULLS LAST'로 맨 아래. 수정: 서버 POST가 sortScope(achievement=tag/club=type)로 MIN(sort)-1 배정(맨 위) + 공개·어드민 DragHandle 순서변경 / 동아리 상세(site_url 필드·새탭 링크·카드 진입) / 전시회 설정에 접수노출 스위치·**과목 관리(1·2학기)** → GET /settings/public 노출 / 대시보드 유형별 공개·비공개 토글(useContentVisibility, 포트폴리오 기본 비공개) / **접수 관리 시트**(/admin/exhibition-entries/sheet, AdminLayout 밖 admin 가드, 과목탭·검색·정렬·sticky헤더·셀·행 복사·CSV+.xls(SpreadsheetML, 새 의존성 없음)·수동+20초 자동폴링·라이트 시트 스타일). server tests 9/9
+### STEP 3 (단독 통합)
+- [x] 통합 배선(에이전트 소유 밖, 통합자 처리): App.jsx `<GlassDock/>` 사용·import·파일 삭제(Y1이 return null로 대체) + /students/clubs/:id 라우트·ClubDetail import(선배치) / nav.js '학생 활동'에 포트폴리오(visibilityKey) 추가 + Header가 useContentVisibility로 visibleNav 필터(데스크탑·모바일 공용) / Careers 포트폴리오 섹션 id="portfolios"+scroll-mt-96 앵커
+- [x] 잔존 재검색 0건: 네이티브 select/date/time(라이브) 0 · 선 장식 0 · JSX 비-CI 하드코딩 hex 0 · 금지색(fbbc04/1c1c1c/bg-black/#000000) 0 · Pretendard 단일
+- [x] CI 위반 교정: EntriesSheet 라이트 시트에서 Y3가 CI에 없는 #DCD6E8(그리드선)을 만들었음 → #211A31(Glass Surface) 15% 헤어라인으로 대체(CI 4.2 "색+불투명도" 방식). 시트 전 색 CI.md HEX만
+- [x] migrate-phase18.mjs 배포 Neon 실행(멱등·트랜잭션): posts.site_url 추가·동아리 백필 0건, achievement.sort 정규화 19건
+- [x] client build 성공, server 전 라우트 node --check 통과, server npm test 9/9
+- [x] 로컬 프리뷰 육안: 홈(2017 purple.light·Primary 글로우·CTA 텍스트만)·모바일 헤더 햄버거+시트 아코디언(학생활동 5하위·포트폴리오 비공개로 미노출)·운영위(2026 제1대 LUCID purple.light)·공지 정상
+- [ ] 커밋·푸시·배포: 커밋·푸시 후 Vercel(client)·Render(server) 자동/수동 배포. **server 배포 필요**(submit lookup·settings subjects·admin sort API 신규)
+- [!] 조율 필요(사용자 판단): (1)**접수 수정 비밀번호 최소길이 서버 6→4 완화**(Y2) — 클라 안내·공용 isValidPassword가 4자라 기존 6자 서버와 불일치(클라 통과 후 400)했던 것 해소. 보안상 6 유지 원하면 format.js·안내문구를 6으로 올려야 함 (2)/consult 연락처는 전화 전용(formatPhone)인데 미변경 원문 안내에 "전화 또는 이메일" 표기 잔존 — 이메일 경로 원하면 POST /consult 서버 계약 확장 필요 (3)접수 온보딩 "접수 대상" 문구("…수강생·개인 또는 팀")는 원문 부재로 Y2 임시 작성 → 확정본 필요
+- [!] liquidGL 성능 특성: 데스크탑·WebGL에서만 동작(모바일·저성능은 CSS 글래스). html2canvas 스냅샷이 페이지 첫 스크롤 시 일시 비용(수백ms, 1회). 과하면 useLiquidGlass 옵션 resolution 하향 또는 헤더 표면만 비활성 가능 — 기능 저하 없이 CSS 폴백
+- [!] 실사이트 육안(사용자, 배포 후): 헤더 버튼 질감·보라 포인트 / 모바일 햄버거 시트 / 전시 피처드·온보딩·접수폼(하이픈·@·과목 카드)·수정 진입 / 접수 시트(정렬·복사·CSV/xls·폴링) / 대시보드 공개토글→메뉴 연동(포트폴리오) / 성과 신규 맨 위+드래그 저장 유지 / 어드민 사이드바 이동 시 스크롤 유지 / 커스텀 Select·DatePicker

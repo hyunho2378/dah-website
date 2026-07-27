@@ -107,7 +107,8 @@ router.get(
   requireRole('admin'),
   wrap(async (req, res) => {
     const p = Math.max(1, parseInt(req.query.page, 10) || 1)
-    const ps = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 50))
+    // Y3-2(33_PHASE18): 접수 관리 시트가 전량을 한 화면에서 정렬·검색하므로 상한 500
+    const ps = Math.min(500, Math.max(1, parseInt(req.query.pageSize, 10) || 50))
     const countRes = await query('SELECT COUNT(*)::int AS total FROM exhibition_entries', [])
     const { rows } = await query(
       `SELECT id, semester_label, entry_type, fields, email, images, created_at, updated_at

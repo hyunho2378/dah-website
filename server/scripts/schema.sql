@@ -230,6 +230,10 @@ ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FAL
 -- N1-2: 전시회 회차. full_title은 exhibitionFullTitle(ordinal)로 파생 — DB에는 회차만 저장.
 ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS ordinal INTEGER;
 
+-- ─── Phase 18 (33_PHASE18) ─────────────────────────────────────
+-- Y3-5: 동아리 공식 사이트 URL. 상세 페이지의 "사이트 바로가기" 버튼(새 탭)에 사용.
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS site_url TEXT;
+
 -- N1-5: CI(브랜드 아이덴티티) 단일 행 문서 (codesharing·nanodegree 동일 싱글턴 패턴. id=1 고정)
 -- body jsonb: { intro, elements:[{title,text,image}], logoGuide:[{title,image}], colors:[{name,hex}], downloads:[{label,url}] }
 CREATE TABLE IF NOT EXISTS ci (

@@ -8,7 +8,7 @@ import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useAuth } from '../../context/AuthContext'
 import ExportButton from '../../components/admin/ExportButton'
-import { EmptyNote, ErrorText, PageHead } from '../../components/admin/FormControls'
+import { EmptyNote, ErrorText, PageHead, Toggle } from '../../components/admin/FormControls'
 
 // 유형별 카운트 대상 — 롤 미충족 유형은 조회 자체를 생략(403 방지)
 const COUNT_TARGETS = [
@@ -31,6 +31,25 @@ const COUNT_TARGETS = [
 const PANEL =
   'rounded-glass border border-glass-line bg-glass-bg p-24 backdrop-blur-glass-mobile'
 
+// Y3-3(33_PHASE18): 콘텐츠 유형별 공개/비공개 기본값 — 서버(settings.js DEFAULT_VISIBILITY)와 동일.
+// 비공개 유형은 공개 사이트에서 해당 섹션·메뉴가 숨는다(포트폴리오는 기본 비공개).
+const DEFAULT_VISIBILITY = {
+  notice: true,
+  resource: true,
+  lecture: true,
+  contest: true,
+  exhibitions: true,
+  achievement: true,
+  club: true,
+  portfolios: false,
+  showcase: true,
+  professors: true,
+  mentors: true,
+  curriculum: true,
+  council: true,
+  careers: true,
+}
+
 function Dashboard() {
   useTitle('관리 대시보드')
   const { hasRole } = useAuth()
@@ -38,6 +57,10 @@ function Dashboard() {
 
   const [counts, setCounts] = useState({})
   const [countError, setCountError] = useState(null)
+
+  // Y3-3: 공개/비공개 토글 (admin+만 변경 가능 — PUT /admin/settings는 admin 게이트)
+  const [visibility, setVisibility] = useState(DEFAULT_VISIBILITY)
+  const [visError, setVisError] = useState(null)
 
   // pending 쇼케이스 큐 (13_CMS 6절)
   const pending = useApi('/admin/content/showcase', {
@@ -78,6 +101,28 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasRole])
 
+  // 설정 응답 도착 시 저장된 공개 상태를 반영
+  useEffect(() => {
+    const remote = settings.data?.settings?.contentVisibility
+    if (remote && typeof remote === 'object') {
+      setVisibility({ ...DEFAULT_VISIBILITY, ...remote })
+    }
+  }, [settings.data])
+
+  const toggleVisibility = async (type, next) => {
+    const prev = visibility
+    const merged = { ...visibility, [type]: next }
+    setVisibility(merged)
+    setVisError(null)
+    try {
+      await api.put('/admin/settings', { settings: { contentVisibility: merged } })
+      settings.refetch()
+    } catch (err) {
+      setVisibility(prev)
+      setVisError(err.hint ? `${err.message} (${err.hint})` : err.message)
+    }
+  }
+
   const approve = async (item) => {
     try {
       await api.put(`/admin/content/showcase/${item.id}`, { status: 'published' })
@@ -95,18 +140,35 @@ function Dashboard() {
       <div>
         <p className="font-mono text-label-m uppercase tracking-label text-text-meta">CONTENT</p>
         <ErrorText>{countError}</ErrorText>
+        <ErrorText>{visError}</ErrorText>
         <ul className="mt-16 grid grid-cols-2 gap-12 md:grid-cols-3 lg:grid-cols-4">
           {targets.map((t) => (
-            <li key={t.type}>
+            <li
+              key={t.type}
+              className="flex flex-col rounded-glass border border-glass-line bg-glass-bg backdrop-blur-glass-mobile"
+            >
               <Link
                 to={t.to}
-                className="flex flex-col gap-8 rounded-glass border border-glass-line bg-glass-bg p-16 backdrop-blur-glass-mobile transition duration-fast ease-out hover:bg-glass-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+                className="flex flex-col gap-8 rounded-glass p-16 transition duration-fast ease-out hover:bg-glass-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
               >
                 <span className="font-mono text-caption-m text-text-meta">{t.label}</span>
                 <span className="font-display text-h1-m font-bold tracking-display text-text-pri">
                   {counts[t.type] ?? '-'}
                 </span>
               </Link>
+              {/* Y3-3: 공개/비공개 — 끄면 공개 사이트에서 해당 섹션·메뉴가 숨는다 */}
+              {hasRole('admin') && (
+                <div className="flex items-center justify-between gap-8 border-t border-border-subtle px-16 py-12">
+                  <span className="font-mono text-caption-m text-text-meta">
+                    {visibility[t.type] ? '공개' : '비공개'}
+                  </span>
+                  <Toggle
+                    checked={Boolean(visibility[t.type])}
+                    onChange={(v) => toggleVisibility(t.type, v)}
+                    label={`${t.label} 공개 여부`}
+                  />
+                </div>
+              )}
             </li>
           ))}
         </ul>

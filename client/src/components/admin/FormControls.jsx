@@ -1,6 +1,9 @@
 // FormControls.jsx — 어드민 공용 폼·리스트 프리미티브 (13_CMS_SPEC 6절)
 // 어드민도 동일 디자인 시스템(우주+글래스). 별도 관리자 테마 금지.
 
+import CommonSelect from '../common/Select'
+import CommonDatePicker from '../common/DatePicker'
+
 const INPUT =
   'w-full rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri outline-none transition duration-fast ease-out placeholder:text-text-meta focus:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
 
@@ -59,15 +62,31 @@ export function TextArea({ rows = 4, ...props }) {
   )
 }
 
-export function Select({ options = [], ...props }) {
+// X5(33_PHASE18): 네이티브 <select> 폐기 → 공용 커스텀 드롭다운으로 위임.
+// 호출부 계약 유지를 위해 기존 시그니처(value/onChange 이벤트 형태)를 그대로 흡수한다 —
+// 어드민 호출부들은 e.target.value를 읽으므로 합성 이벤트 형태로 되돌려준다.
+export function Select({ options = [], value, onChange, ...props }) {
   return (
-    <select {...props} className={`${INPUT} appearance-none ${props.className || ''}`.trim()}>
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value} className="bg-bg-panel text-text-pri">
-          {opt.label}
-        </option>
-      ))}
-    </select>
+    <CommonSelect
+      options={options}
+      value={value}
+      onChange={(v) => onChange?.({ target: { value: v } })}
+      {...props}
+    />
+  )
+}
+
+// X5(33_PHASE18): 네이티브 <input type="date"|"datetime-local"> 폐기 → 공용 캘린더로 위임.
+// 값 문자열 계약이 네이티브와 같아('YYYY-MM-DD' / 'YYYY-MM-DDTHH:mm') 저장 로직은 무변경.
+// 호출부가 e.target.value를 읽으므로 합성 이벤트 형태로 되돌려준다.
+export function DateInput({ value, onChange, withTime = false, ...props }) {
+  return (
+    <CommonDatePicker
+      value={value}
+      withTime={withTime}
+      onChange={(v) => onChange?.({ target: { value: v } })}
+      {...props}
+    />
   )
 }
 

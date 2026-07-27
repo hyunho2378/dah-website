@@ -9,8 +9,10 @@ import Button from '../../components/common/Button'
 import RichBody from '../../components/content/RichBody'
 import Reveal from '../../components/common/Reveal'
 import InlineEditBar from '../../components/content/InlineEditBar'
+import { ACCENT } from '../../styles/accents'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 import { useApi } from '../../hooks/useApi'
+import useLiquidGlass from '../../hooks/useLiquidGlass'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 
@@ -42,9 +44,15 @@ function periodText(start, end, fallback) {
 }
 
 // 피처드 전시(is_featured) — 목록 최상단 히어로 블록
-// H(N2-2): 감싸는 카드(GlassCard) 제거 + 포스터 축소로 세로 높이 약 절반. 포스터는 페이지
-// 좌측 마진에 붙는 좁은 컬럼(ImageFrame bg 없이 포스터만). 제목은 풀네임(ordinal 파생).
-function FeaturedExhibition({ item }) {
+// Y2-1(33_PHASE18): 유리 질감의 정점. 포스터를 키우고 유리 프레임으로 감싸며,
+// 블록 뒤에 은은한 퍼플 글로우(bg-nebula-* 토큰)를 깐다. CTA는 별도 유리 패널(.dah-liquid-cta)로
+// 분리해 X3 liquidGL 대상이 된다(카드에는 절대 적용 금지 — 성능 계약).
+// 유리 표면은 backdrop-blur 없이 bg-glass-bg + hairline + shadow-glass로만 구성한다
+// (11_DESIGN_V2 2절: 동시 blur 상한 3 — 헤더·liquidGL CTA·모바일 시트 몫을 남긴다).
+const GLASS_SURFACE =
+  'rounded-glass border border-glass-line bg-glass-bg shadow-glass'
+
+function FeaturedExhibition({ item, showSubmit }) {
   const { lang } = useLang()
   const fullTitle =
     (lang === 'en'
@@ -58,52 +66,90 @@ function FeaturedExhibition({ item }) {
   // EN: cta_label_en 우선, 없으면 영문 풀네임(관리자 국문 cta_label이 EN에 새지 않게). KR: cta_label > 풀네임.
   const ctaLabel =
     lang === 'en' ? item.cta_label_en || fullTitle : item.cta_label || fullTitle
+  const hasCta = item.cta_show !== false
+  // X3: CTA 패널만 리퀴드글래스. 실패·모바일·reduced-motion은 훅 내부에서 CSS 글래스로 폴백한다.
+  useLiquidGlass('.dah-liquid-cta', {}, hasCta || showSubmit)
+
   return (
-    <div className="grid gap-24 md:grid-cols-[220px_1fr] md:gap-40 lg:grid-cols-[260px_1fr] lg:gap-48">
-      <div className="w-full max-w-[220px] md:max-w-none">
-        <ImageFrame
-          src={item.poster_url}
-          alt={`${item.title} 포스터`}
-          ratio="2/3"
-          loading="eager"
-          placeholder={fullTitle}
-        />
-      </div>
-      <div className="flex min-w-0 flex-col justify-center gap-16">
-        <div className="flex min-w-0 flex-col gap-8">
-          {/* Q2.1: 풀네임 제목 위계 상향 — displayL급, 더 볼드 */}
-          <h2 className="min-w-0 text-display-l-m font-extrabold leading-tight tracking-display text-text-pri md:text-display-l-d">
-            {fullTitle}
-          </h2>
-          {showTitle && (
-            <p className="min-w-0 text-body-l-m text-text-sec md:text-body-l-d">{item.title}</p>
-          )}
-          {period && (
-            <p className="font-mono text-caption-m text-text-meta">{period}</p>
+    <div className="relative isolate min-w-0">
+      {/* 배경 퍼플 글로우 — 토큰 그라디언트만 사용(임의 색 금지), 콘텐츠 뒤로 깔린다 */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-x-24 -inset-y-32 -z-10 bg-nebula-violet"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-x-24 -inset-y-32 -z-10 bg-nebula-deep"
+      />
+      <div className="grid gap-32 md:grid-cols-[280px_1fr] md:gap-40 lg:grid-cols-[360px_1fr] lg:gap-56">
+        {/* 포스터 유리 프레임 — 포스터 자체는 원색 유지(grayscale 금지) */}
+        <div className={`w-full max-w-[280px] p-12 md:max-w-none ${GLASS_SURFACE}`}>
+          <ImageFrame
+            src={item.poster_url}
+            alt={`${item.title} 포스터`}
+            ratio="2/3"
+            loading="eager"
+            placeholder={fullTitle}
+          />
+        </div>
+        <div className="flex min-w-0 flex-col justify-center gap-24">
+          <div className="flex min-w-0 flex-col gap-12">
+            {/* Y2-1: 피처드 제목 위계 최상단 — displayXL */}
+            <h2 className="min-w-0 text-display-xl-m font-extrabold leading-tight tracking-display text-text-pri md:text-display-xl-d">
+              {fullTitle}
+            </h2>
+            {showTitle && (
+              <p className="min-w-0 text-body-l-m text-text-sec md:text-body-l-d">{item.title}</p>
+            )}
+          </div>
+          {item.body ? (
+            <RichBody body={item.body} />
+          ) : introText ? (
+            <div className="flex min-w-0 flex-col items-start gap-8">
+              <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
+                {introText}
+              </p>
+              {introKoFallback && <KoreanOnlyBadge />}
+            </div>
+          ) : null}
+          {/* Q2.2: 상단 고정(피처드)일 때만 CTA. 라벨=cta_label 우선(없으면 full_title), 링크=cta_url>site_url>상세 */}
+          {(hasCta || showSubmit || period) && (
+            <div className={`dah-liquid-cta flex min-w-0 flex-col gap-20 p-24 md:p-32 ${GLASS_SURFACE}`}>
+              {period && (
+                <div className="flex min-w-0 flex-col gap-8">
+                  <p className="text-small-m text-text-meta md:text-small-d">전시 기간</p>
+                  <p
+                    className={`min-w-0 text-h3-m font-bold leading-snug md:text-h3-d ${ACCENT.proper}`}
+                  >
+                    {period}
+                  </p>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-16">
+                {hasCta && (
+                  <Button
+                    variant="primary"
+                    href={item.cta_url || item.site_url || `/programs/exhibitions/${item.id}`}
+                    external={Boolean(item.cta_url || item.site_url)}
+                  >
+                    {ctaLabel}
+                  </Button>
+                )}
+                {/* Y2-5: 접수 버튼 옆에 접수 내역 확인·수정 진입 */}
+                {showSubmit && (
+                  <>
+                    <Button variant="primary" href="/submit">
+                      전시회 접수
+                    </Button>
+                    <Button variant="secondary" href="/submit/edit">
+                      접수 내역 확인·수정
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
           )}
         </div>
-        {item.body ? (
-          <RichBody body={item.body} />
-        ) : introText ? (
-          <div className="flex min-w-0 flex-col items-start gap-8">
-            <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
-              {introText}
-            </p>
-            {introKoFallback && <KoreanOnlyBadge />}
-          </div>
-        ) : null}
-        {/* Q2.2: 상단 고정(피처드)일 때만 CTA. 라벨=cta_label 우선(없으면 full_title), 링크=cta_url>site_url>상세 */}
-        {item.cta_show !== false && (
-          <div className="mt-4">
-            <Button
-              variant="primary"
-              href={item.cta_url || item.site_url || `/programs/exhibitions/${item.id}`}
-              external={Boolean(item.cta_url || item.site_url)}
-            >
-              {ctaLabel}
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   )
@@ -142,6 +188,9 @@ function Exhibitions() {
   const { data, loading, error, offline } = useApi('/content/exhibitions', {
     params: { pageSize: 100 },
   })
+  // Y2-5: 접수 진입 노출 여부는 설정 스위치(show_button)가 결정 — 기간 검증은 서버(403)
+  const { data: settingsRes } = useApi('/settings/public')
+  const showSubmit = settingsRes?.exhibition?.show_button === true
   const items = data?.items ?? []
   const featured = items.find((it) => it?.is_featured)
   const rest = items.filter((it) => it !== featured)
@@ -170,11 +219,22 @@ function Exhibitions() {
             {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
-          <div className="mt-32 flex min-w-0 flex-col gap-48">
+          <div className="mt-32 flex min-w-0 flex-col gap-64">
             {featured && (
               <Reveal className="min-w-0">
-                <FeaturedExhibition item={featured} />
+                <FeaturedExhibition item={featured} showSubmit={showSubmit} />
               </Reveal>
+            )}
+            {/* 피처드가 없어도 접수 진입은 노출한다 */}
+            {!featured && showSubmit && (
+              <div className="flex flex-wrap items-center gap-16">
+                <Button variant="primary" href="/submit">
+                  전시회 접수
+                </Button>
+                <Button variant="secondary" href="/submit/edit">
+                  접수 내역 확인·수정
+                </Button>
+              </div>
             )}
             {rest.length > 0 && (
               <ul className="grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">

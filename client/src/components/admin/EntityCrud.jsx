@@ -7,6 +7,7 @@ import { useApi, api } from '../../hooks/useApi'
 import { DragHandle, useDragSort } from '../common/DragHandle'
 import ImageUpload from './ImageUpload'
 import {
+  DateInput,
   EmptyNote,
   ErrorText,
   Field,
@@ -138,9 +139,8 @@ function FieldControl({ field, value, onChange, onUploadingChange }) {
     case 'pairs':
       return <PairsField field={field} value={value || []} onChange={onChange} />
     case 'date':
-      return (
-        <Input type="date" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
-      )
+      // X5: 네이티브 date 입력 폐기 → 공용 캘린더(값 계약 'YYYY-MM-DD' 동일)
+      return <DateInput value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
     default:
       return (
         <Input

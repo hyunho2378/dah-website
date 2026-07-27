@@ -4,6 +4,8 @@ import { useState } from 'react'
 import PageBanner from '../../components/layout/PageBanner'
 import ImageFrame from '../../components/common/ImageFrame'
 import Container from '../../components/layout/Container'
+import Accent from '../../components/common/Accent'
+import { ACCENT } from '../../styles/accents'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
@@ -18,6 +20,28 @@ const toMember = (member) =>
 function majorsEn(majors) {
   if (!majors) return majors
   return majors.replace(/^디지털인문예술( ?전공)?/, 'Digital Arts & Humanities')
+}
+
+// Y1-4(X1 포인트): 기수 타이틀 안의 연도(2026)·기수 표기(제1대)·기수명(LUCID·CUBE 등)만
+// purple.light로 끊어 읽힌다. 원문 문자열은 자르거나 바꾸지 않고 표시만 분리하며,
+// 국문 조직어(운영위원회·학생회)와 EN 일반 명사는 text.pri를 유지한다.
+// g 플래그 없음: split은 g 없이도 전체를 분해하고, test는 lastIndex 상태가 남지 않는다.
+const PROPER_RE = /(^\d{4}|제\s?\d+대|\b[A-Z]{2,}\b)/
+
+function TitleWithAccents({ text }) {
+  return String(text ?? '')
+    .split(PROPER_RE)
+    .filter((part) => part !== '')
+    .map((part, i) =>
+      PROPER_RE.test(part) ? (
+        // eslint-disable-next-line react/no-array-index-key
+        <Accent key={`${part}-${i}`} kind="proper">
+          {part}
+        </Accent>
+      ) : (
+        part
+      )
+    )
 }
 
 // J6: 연속한 같은 부서(role)를 한 행으로 묶는다 — 원문 순서 보존. T1: 부서 EN(roleEn)도 함께
@@ -101,8 +125,9 @@ function Council() {
                       ? 'text-body-m font-bold md:text-body-d'
                       : 'text-small-m md:text-small-d'
                   } ${
+                    // Y1-4: 활성 연도는 선택 상태 하이라이트(purple.light, CI 4.5 3단계)
                     isActive
-                      ? 'border-text-pri text-text-pri'
+                      ? 'border-purple-light text-purple-light'
                       : 'border-transparent text-text-meta hover:text-text-sec'
                   }`}
                 >
@@ -148,7 +173,7 @@ function Council() {
                   ))}
                 <div className="flex min-w-0 flex-wrap items-center gap-12">
                   <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
-                    {titleText}
+                    <TitleWithAccents text={titleText} />
                   </h2>
                   <EditPencil type="council" to="/admin/council" />
                 </div>
@@ -181,7 +206,10 @@ function Council() {
                       key={row.role}
                       className="flex flex-col gap-8 border-b border-border-subtle py-16 md:flex-row md:items-baseline md:gap-24 md:py-20"
                     >
-                      <dt className="w-128 shrink-0 font-mono text-small-m text-text-meta md:text-small-d">
+                      {/* Y1-4: 직책·부서 라벨은 purple.mid(ACCENT.role). 원문 표기는 그대로 */}
+                      <dt
+                        className={`w-128 shrink-0 font-mono text-small-m font-semibold md:text-small-d ${ACCENT.role}`}
+                      >
                         {lang === 'en' ? row.roleEn || row.role : row.role}
                       </dt>
                       <dd className="flex min-w-0 flex-wrap gap-x-24 gap-y-8">

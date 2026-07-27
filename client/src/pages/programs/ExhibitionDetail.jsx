@@ -112,8 +112,10 @@ function ExhibitionDetail() {
         nebulaX="18%"
         nebulaY="30%"
       />
-      <Container as="section" className="py-section-m lg:py-section-d">
-        <div className="mb-32 flex flex-wrap items-center justify-end gap-16">
+      {/* Y2-2(33_PHASE18): 상단 수직 여백 축소 — 첫 화면에서 헤드라인+포스터+핵심 정보가
+          스크롤 없이 들어오도록 상단 패딩만 줄인다(하단 섹션 리듬은 유지). */}
+      <Container as="section" className="pb-section-m pt-24 lg:pb-section-d lg:pt-32">
+        <div className="flex flex-wrap items-center justify-end gap-16">
           <InlineEditBar type="exhibitions" manageTo="/admin/posts/exhibitions" />
         </div>
         {loading ? (
@@ -126,9 +128,10 @@ function ExhibitionDetail() {
             </Button>
           </div>
         ) : (
-          <article className="flex min-w-0 flex-col gap-64">
-            <div className="grid gap-32 lg:grid-cols-3 lg:gap-48">
-              <figure className="mx-auto w-full max-w-container lg:col-span-1">
+          <article className="flex min-w-0 flex-col gap-48">
+            <div className="grid gap-24 lg:grid-cols-3 lg:gap-40">
+              {/* 모바일에서 2:3 포스터가 화면을 다 먹지 않게 폭 상한 — 헤드라인·메타와 함께 보이게 */}
+              <figure className="w-full max-w-[240px] lg:col-span-1 lg:max-w-none">
                 <ImageFrame
                   src={item.poster_url}
                   alt={`${item.title} 포스터`}
@@ -137,7 +140,7 @@ function ExhibitionDetail() {
                   placeholder={item.semester_label || item.title}
                 />
               </figure>
-              <div className="flex min-w-0 flex-col gap-24 lg:col-span-2">
+              <div className="flex min-w-0 flex-col gap-16 lg:col-span-2">
                 <div className="flex flex-wrap items-start justify-between gap-16">
                   <div className="flex min-w-0 flex-col gap-8">
                     {koFallback && <KoreanOnlyBadge />}

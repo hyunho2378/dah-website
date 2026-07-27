@@ -6,7 +6,6 @@ import { LangProvider } from './i18n/LangContext'
 import CosmosBackground from './components/cosmos/CosmosBackground'
 import ScrollToTop from './components/layout/ScrollToTop'
 import Header from './components/layout/Header'
-import GlassDock from './components/layout/GlassDock'
 import Footer from './components/layout/Footer'
 import LoginModal from './components/auth/LoginModal'
 
@@ -24,6 +23,7 @@ import Lectures from './pages/programs/Lectures'
 import LectureDetail from './pages/programs/LectureDetail'
 import Council from './pages/students/Council'
 import Clubs from './pages/students/Clubs'
+import ClubDetail from './pages/students/ClubDetail'
 import StudentsAchievements from './pages/students/Achievements'
 import StudentsCareers from './pages/students/Careers'
 import ShowcaseGrid from './pages/showcase/ShowcaseGrid'
@@ -50,10 +50,20 @@ const AdminRoutes = lazy(() => import('./pages/AdminRoutes'))
 //   없음. 같은 컴포넌트 인스턴스가 유지되고 useLang 텍스트만 갱신된다(등장 애니메이션 재실행 금지).
 const normalizePath = (p) => (p === '/en' ? '/' : p.startsWith('/en/') ? p.slice(3) : p)
 
+// X6(33_PHASE18) 어드민 사이드바 상태 유지 [근본원인]:
+// 이 래퍼의 key가 pathname이라 어드민 내부 이동(/admin/posts/notice → /admin/settings)마다
+// AdminRoutes·AdminLayout까지 통째로 재마운트됐다 → 사이드바가 새로 그려지며 내부 스크롤 위치
+// 소실 + 페이드 재생("화면 초기화"). 어드민은 하나의 셸이므로 key를 '/admin'으로 고정해
+// 셸(사이드바)은 유지하고 <Outlet /> 콘텐츠만 교체한다. 공개 경로는 기존 동작 유지.
+const fadeKey = (p) => {
+  const n = normalizePath(p)
+  return n.startsWith('/admin') ? '/admin' : n
+}
+
 function PageFade({ children }) {
   const { pathname } = useLocation()
   return (
-    <div key={normalizePath(pathname)} className="page-fade">
+    <div key={fadeKey(pathname)} className="page-fade">
       {children}
     </div>
   )
@@ -77,6 +87,7 @@ const PUBLIC_ROUTES = [
   { path: '/programs/lectures/:id', element: <LectureDetail /> },
   { path: '/students/council', element: <Council /> },
   { path: '/students/clubs', element: <Clubs /> },
+  { path: '/students/clubs/:id', element: <ClubDetail /> },
   { path: '/students/achievements', element: <StudentsAchievements /> },
   { path: '/students/careers', element: <StudentsCareers /> },
   { path: '/showcase', element: <ShowcaseGrid /> },
@@ -146,7 +157,6 @@ function App() {
             </PageFade>
           </main>
           <Footer />
-          <GlassDock />
           <LoginModal />
           </LoginModalProvider>
         </AuthProvider>

@@ -32,12 +32,11 @@ function normalizeLatest(data) {
 
 function DetailPanel({ category, items, t }) {
   // K2-1: 패널 높이 = 좌측 리스트 높이 — h-full + flex-col, 부족분은 VIEW MORE 위(mt-auto) 여백으로
+  // Y1-1(33_PHASE18): 좌측 리스트가 이미 같은 번호를 노출하므로 패널 상단 인덱스 숫자는 삭제.
+  // 제목이 패널 최상단에 오면서 좌측 첫 항목과 같은 높이에서 읽힌다.
   return (
     <div className="relative flex h-full flex-col rounded-glass border border-glass-line bg-bg-elev p-24 backdrop-blur-glass-mobile md:p-32 md:backdrop-blur-glass">
-      <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
-        {category.no}
-      </p>
-      <h3 className="mt-12 text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
+      <h3 className="text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
         {t(`programs.${category.key}.label`)}
       </h3>
       <p className="mt-12 text-body-m leading-relaxed text-text-sec md:text-body-d">
@@ -91,19 +90,21 @@ function ProgramShowcase() {
         {/* 데스크탑: 좌 카테고리 리스트 + 우 패널 (같은 셀에 4장 겹침, 활성만 표시)
             K2-1: items-stretch로 우측 패널 높이를 좌측 리스트 전체 높이에 정합 */}
         <div className="mt-64 hidden items-stretch gap-48 lg:grid lg:grid-cols-2">
-          <ul>
+          {/* Y1-1: 좌측 리스트도 열 높이를 채우게(flex-col + 항목 flex-1) 해 마지막 헤어라인과
+              우측 패널 하단(VIEW MORE)이 같은 선에서 끝난다 */}
+          <ul className="flex flex-col">
             {CATEGORIES.map((category) => {
               const isActive = active === category.key
               return (
                 <li
                   key={category.key}
-                  className="border-b border-border-subtle first:border-t"
+                  className="flex flex-1 flex-col border-b border-border-subtle first:border-t"
                 >
                   <Link
                     to={category.to}
                     onMouseEnter={() => setActive(category.key)}
                     onFocus={() => setActive(category.key)}
-                    className={`group flex cursor-pointer items-center justify-between gap-24 py-24 transition-colors duration-200 ease-out ${
+                    className={`group flex h-full cursor-pointer items-center justify-between gap-24 py-24 transition-colors duration-200 ease-out ${
                       isActive ? 'text-text-pri' : 'text-text-sec'
                     }`}
                   >
@@ -135,7 +136,7 @@ function ProgramShowcase() {
                 <div
                   key={category.key}
                   inert={!isActive}
-                  className={`col-start-1 row-start-1 min-w-0 transition-all duration-200 ease-out ${
+                  className={`col-start-1 row-start-1 h-full min-w-0 transition-all duration-200 ease-out ${
                     isActive
                       ? 'translate-y-0 opacity-100'
                       : 'pointer-events-none translate-y-2 opacity-0'

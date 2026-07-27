@@ -1,24 +1,35 @@
 // /consult — 상담 신청 (Phase 9 K1-9, 비로그인 공개)
 // POST /consult {name, grade, mainMajor, doubleMajor, contact, message, agreed}. 제출 성공 시 완료 안내로 교체.
-// 폼 문안은 사용자 제공 원문 그대로(변경 금지). 개인정보처리방침 전문 보기만 내부 /privacy 링크.
-// 라우트 등록(App.jsx)은 통합자 소관 — 이 파일은 페이지만 제공한다.
+// 폼 안내 문안은 사용자 제공 원문 그대로(변경 금지). 개인정보처리방침 전문 보기만 내부 /privacy 링크.
+//
+// Y1-7(33_PHASE18) 재설계:
+//   - 자체 max-w/px 조합을 걷어내고 공용 Container를 쓴다(우측 마진 오버플로우 원인 제거).
+//   - 좌측 입력은 레이블을 축약하고 2열 그리드로 묶는다. 짧은 값(학년·연락처)은 전체폭을 쓰지 않고
+//     내용 폭에 맞춘다. 문의 내용만 전체폭 textarea.
+//   - 우측은 결제창식 동의 패널(sticky): 수집 안내 요약 + 동의 체크 + 제출 버튼. 동의 전 disabled.
+//   - 연락처는 utils/format.formatPhone으로 010-XXXX-XXXX 고정(숫자 외 입력 자체가 반영되지 않음).
 
 import { useState } from 'react'
 import PageBanner from '../components/layout/PageBanner'
+import Container from '../components/layout/Container'
 import GlassCard from '../components/common/GlassCard'
+import Checkbox from '../components/common/Checkbox'
 import Link from '../components/common/LangLink'
 import { api } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
+import { formatPhone, isValidPhone } from '../utils/format'
 
 const inputCls =
-  'w-full min-w-0 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri placeholder:text-text-meta transition-colors duration-fast ease-out focus:border-border-strong focus:outline-none md:text-body-d'
+  'w-full min-w-0 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri placeholder:text-text-meta transition-colors duration-fast ease-out focus:border-border-purple focus:outline-none md:text-body-d'
 const labelCls = 'text-small-m font-semibold text-text-pri md:text-small-d'
+// X2 Primary 질감(보라 채움 + inset 하이라이트 + 퍼플 글로우)을 submit 버튼에도 동일 적용.
+// 공용 Button은 링크 전용이라 form submit에는 쓸 수 없어 같은 토큰으로 구성한다.
 const submitCls =
-  'inline-flex h-11 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm bg-bg-invert px-24 text-body-m font-semibold text-text-invert transition duration-fast ease-out hover:opacity-90 disabled:cursor-default disabled:opacity-40 md:h-48 md:text-body-d'
+  'inline-flex h-11 w-full cursor-pointer items-center justify-center whitespace-nowrap rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed disabled:cursor-default disabled:bg-bg-panel disabled:text-text-disabled disabled:shadow-none md:h-48 md:text-body-d'
 
-function Field({ label, required = false, children }) {
+function Field({ label, required = false, className = '', children }) {
   return (
-    <div className="flex min-w-0 flex-col gap-8">
+    <div className={`flex min-w-0 flex-col gap-8 ${className}`.trim()}>
       <span className="flex items-baseline gap-8">
         <span className={labelCls}>{label}</span>
         {required && <span className="font-mono text-caption-m text-text-meta">(필수)</span>}
@@ -44,11 +55,18 @@ function Consult() {
   const [error, setError] = useState(null)
 
   const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
+  // 숫자만 남기고 3-4-4로 하이픈을 삽입한다 — 그 외 문자는 상태에 반영되지 않는다
+  const setContact = (event) =>
+    setForm((prev) => ({ ...prev, contact: formatPhone(event.target.value) }))
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    if (!form.name.trim() || !form.contact.trim()) {
-      setError('이름과 연락처를 입력해 주세요.')
+    if (!form.name.trim()) {
+      setError('이름을 입력해 주세요.')
+      return
+    }
+    if (!isValidPhone(form.contact)) {
+      setError('연락처를 010-0000-0000 형식으로 입력해 주세요.')
       return
     }
     if (!agreed) {
@@ -87,9 +105,9 @@ function Consult() {
         nebulaX="68%"
         nebulaY="24%"
       />
-      <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
+      <Container as="section" className="py-section-m lg:py-section-d">
         {done ? (
-          <GlassCard className="flex flex-col items-start gap-24 p-24 md:p-32">
+          <GlassCard className="flex max-w-[760px] flex-col items-start gap-24 p-24 md:p-32">
             <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
               신청 완료
             </h2>
@@ -100,61 +118,71 @@ function Consult() {
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="mx-auto flex min-w-0 max-w-container flex-col gap-32"
+            className="grid min-w-0 gap-40 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-48"
           >
-            <Field label="이름" required>
-              <input
-                type="text"
-                required
-                value={form.name}
-                onChange={set('name')}
-                className={inputCls}
-                autoComplete="name"
-              />
-            </Field>
-            <Field label="학년">
-              <input
-                type="text"
-                value={form.grade}
-                onChange={set('grade')}
-                className={inputCls}
-              />
-            </Field>
-            <Field label="주전공">
-              <input
-                type="text"
-                value={form.mainMajor}
-                onChange={set('mainMajor')}
-                className={inputCls}
-              />
-            </Field>
-            <Field label="복수전공">
-              <input
-                type="text"
-                value={form.doubleMajor}
-                onChange={set('doubleMajor')}
-                className={inputCls}
-              />
-            </Field>
-            <Field label="연락처 (전화 또는 이메일)" required>
-              <input
-                type="text"
-                required
-                value={form.contact}
-                onChange={set('contact')}
-                className={inputCls}
-              />
-            </Field>
-            <Field label="문의 내용">
-              <textarea
-                rows={6}
-                value={form.message}
-                onChange={set('message')}
-                className={`${inputCls} resize-y`}
-              />
-            </Field>
+            {/* 좌: 입력 — 짧은 값은 2열로 묶고, 문의 내용만 전체폭 */}
+            <div className="flex min-w-0 flex-col gap-24">
+              <div className="grid min-w-0 gap-24 md:grid-cols-2">
+                <Field label="이름" required>
+                  <input
+                    type="text"
+                    required
+                    value={form.name}
+                    onChange={set('name')}
+                    className={`${inputCls} md:w-160`}
+                    autoComplete="name"
+                  />
+                </Field>
+                <Field label="학년">
+                  <input
+                    type="text"
+                    value={form.grade}
+                    onChange={set('grade')}
+                    className={`${inputCls} md:w-128`}
+                  />
+                </Field>
+                <Field label="주전공">
+                  <input
+                    type="text"
+                    value={form.mainMajor}
+                    onChange={set('mainMajor')}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="복수전공">
+                  <input
+                    type="text"
+                    value={form.doubleMajor}
+                    onChange={set('doubleMajor')}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="연락처" required>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    required
+                    value={form.contact}
+                    onChange={setContact}
+                    placeholder="010-0000-0000"
+                    className={`${inputCls} md:w-160`}
+                    autoComplete="tel"
+                  />
+                </Field>
+              </div>
 
-            <div className="flex flex-col gap-16 rounded-md border border-border-subtle bg-bg-panel p-16 md:p-24">
+              <Field label="문의">
+                <textarea
+                  rows={8}
+                  value={form.message}
+                  onChange={set('message')}
+                  className={`${inputCls} resize-y`}
+                />
+              </Field>
+            </div>
+
+            {/* 우: 결제창식 동의 패널 — 수집 안내 요약 → 동의 → 제출. 동의 전에는 제출 불가 */}
+            <GlassCard as="aside" className="flex flex-col gap-16 p-24 lg:sticky lg:top-header">
               <p className="text-small-m font-semibold text-text-pri md:text-small-d">
                 개인정보 수집·이용 안내 (상담 신청)
               </p>
@@ -172,35 +200,32 @@ function Consult() {
               </ul>
               <Link
                 to="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-mono text-caption-m text-text-meta underline underline-offset-4 transition-colors duration-fast ease-out hover:text-text-pri"
               >
                 개인정보처리방침 전문 보기
               </Link>
-            </div>
 
-            <label className="flex cursor-pointer items-start gap-12">
-              <input
-                type="checkbox"
-                required
-                checked={agreed}
-                onChange={(event) => setAgreed(event.target.checked)}
-                className="mt-4 h-16 w-16 shrink-0 cursor-pointer accent-bg-invert"
-              />
-              <span className="text-body-m text-text-pri md:text-body-d">
-                상담을 위한 개인정보 수집·이용에 동의합니다.
-              </span>
-            </label>
+              <div className="border-t border-border-subtle pt-16">
+                <Checkbox checked={agreed} onChange={setAgreed}>
+                  상담을 위한 개인정보 수집·이용에 동의합니다.
+                </Checkbox>
+              </div>
 
-            {error && <p className="text-small-m text-state-error md:text-small-d">{error}</p>}
+              {error && (
+                <p role="alert" className="text-small-m text-state-error md:text-small-d">
+                  {error}
+                </p>
+              )}
 
-            <div>
-              <button type="submit" disabled={submitting} className={submitCls}>
+              <button type="submit" disabled={!agreed || submitting} className={submitCls}>
                 {submitting ? '신청 중' : '상담 신청하기'}
               </button>
-            </div>
+            </GlassCard>
           </form>
         )}
-      </section>
+      </Container>
     </>
   )
 }
