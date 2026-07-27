@@ -8,7 +8,7 @@ function GlassCard({ as: Tag = 'div', hover = false, className = '', children, .
     <Tag
       className={`relative rounded-glass border border-glass-line bg-glass-bg shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_8px_24px_-14px_rgba(0,0,0,0.55)] backdrop-blur-glass-mobile md:backdrop-blur-glass ${
         hover
-          ? 'group/glass overflow-hidden transition-[colors,box-shadow] duration-base ease-out hover:border-border-strong hover:bg-glass-strong hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_0_32px_-4px_rgba(139,127,232,0.06),0_0_32px_-4px_rgba(64,180,160,0.06)]'
+          ? 'group/glass overflow-hidden transition-[colors,box-shadow] duration-base ease-out hover:border-border-strong hover:bg-glass-strong hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_0_32px_-4px_rgba(129,95,215,0.06),0_0_32px_-4px_rgba(104,68,196,0.06)]'
           : ''
       } ${className}`}
       {...rest}

@@ -392,3 +392,26 @@
 - [ ] 3) Vercel: 학과 계정을 프로젝트 멤버로 추가. VITE_API_URL을 새 Render URL로 교체 후 재배포. Render의 CLIENT_ORIGIN을 정확한 Vercel 도메인(https, 끝 슬래시 없음)으로
 - [ ] 4) Blob: 당분간 현 계정 유지(BLOB_READ_WRITE_TOKEN 불변). 추후 이전 시 신규 스토어 토큰 발급 + 기존 파일 마이그레이션
 - [ ] 5) 검증: /health 200 → 로그인(DevTools서 쿠키 Secure·SameSite=None 저장 확인) → 어드민 CRUD → 이미지 업로드(Blob) → 공개 목록·상세 → UptimeRobot 모니터를 새 /health URL로 갱신
+
+## PHASE 19 · REBRAND — CI 리브랜딩 전면 적용 (32_REBRAND, 단독 STEP1 → 병렬 W1·W2·W3 → 단독 STEP3)
+유일 색상 기준: docs/CI.md(= 루트 CI.md). 딥 퍼플 블랙(우주) + 보라(지성). CI.md에 없는 색 생성 금지, 순수 검정·청록·옐로우·핑크 금지, Pretendard 단일, 콘텐츠 원문 불변.
+### STEP 1 (단독, 토큰 전면 교체 — 사이트 전체가 토큰 구동식이라 토큰만 바꾸면 전파)
+- [x] tokens.js 색상 전면 리브랜딩(CI 4.2/4.5): 배경 bg.base #100D18·elev #171321·panel/frame #211A31 / 텍스트 pri #F7F5FC·sec #C9C3D5·meta #938BA5·disabled #625A70 / 보라 스케일 purple.primary #815FD7·light #C8B9F2·mid #A286E9·deep #6844C4·deepDark #4B2D99 / 헤어라인 white10%·16%·purple 15% / 포커스 링 #A286E9
+- [x] 버튼·링크·아이콘 토큰 신규(CI 4.5): button(primary #815FD7·hover #A286E9·pressed #6844C4·secondary·ghost)·link(#A286E9→#C8B9F2→#815FD7)·icon(#C9C3D5·active #A286E9·key #815FD7·disabled #938BA5). tailwind `...colors` 자동 노출. 주의: tokens 키가 camelCase라 클래스는 `bg-button-primary`·`text-button-primaryText`·`hover:bg-button-primaryHover`(kebab 스펠링은 미컴파일)
+- [x] 핵심 결정: `bg-bg-invert`/`text-text-invert`가 Primary 버튼·토글 켜짐·선택 채움 쌍이라 #815FD7/#F7F5FC로 매핑 → JSX 변경 없이 CI Primary 즉시 반영
+- [x] 잔존 색 전역 감사(S1-3): 청록(cosmos.accentTeal→accentDeep #6844C4·nebula-teal→nebula-deep 클래스·GlassCard 호버 글로우 rgba(64,180,160)→보라)·#000000(CIAdmin 컬러픽커 폴백→#100D18) 전부 교체. cosmos depth0 #100D18·depth1 #171321, nebula-soft #C8B9F2
+- [x] 빌드 성공(2015 modules). 컴파일 CSS 확인: 옛 Linear 팔레트(#08090A 등) 0회, CI 보라값 정상 방출
+### STEP 2 (병렬 3에이전트, tokens.js 불변 — 소유 계약 무충돌)
+- [x] W1 CI 페이지·로고 에셋: /about/ci 7섹션 CI.md 원문 채움(의미·구성요소·로고가이드 4버전·시그니처·전용색상 12칩·모티브·슬로건, data/ci.js+CI.jsx, 창작 없음). 단색 로고 4종 SVG(logo-light #F7F5FC·purple #815FD7·dark #211A31·deepdark #100D18, 각 3 path 동일 fill, 좌표 불변) + motif.svg(D #C8B9F2·A #A286E9·H #815FD7) → public/ci/. 헤더/GlassDock/Footer 로고 = assets/logo.svg fill #F7F5FC(Light). 파비콘 black→#F7F5FC(구 파비콘은 새 배경서 안 보였음)
+- [x] W2 공개 페이지 검수: 전 공개 페이지·홈 섹션 0 이탈·0 변경(토큰 자동 반영). 강한 보라(#815FD7)는 Primary CTA에만=면적 ≤10%. 본문 보라 0. 히어로 오버레이 bg-bg-base 계열 확인
+- [x] W3 어드민·공용 컴포넌트: AdminLayout 로그아웃 모달 scrim bg-black/60→bg-bg-base/70(순수 검정 제거). Button.jsx primary·FormControls PrimaryButton → 명시 버튼 토큰(hover #A286E9·pressed #6844C4, CI 4.5 정확). Toggle 켜짐 bg-purple-primary(#815FD7). 상태색은 시스템 경고용 유지(브랜드 미승격). 접근성 대비 통과. 편집 UI 비로그인 미렌더 불변
+### STEP 3 (단독 통합)
+- [x] 충돌 확인: tokens.js·tailwind.config.js는 STEP1 이후 불변(에이전트 미수정). 소유 계약대로 파일 무충돌
+- [x] 잔존 0건 확정: #fbbc04·#1c1c1c 0 / #000000·#000 0 / 청록 0 / bg-black scrim 0(추가로 auth/LoginModal.jsx bg-black/60→bg-bg-base/70 교정, W3 스코프 밖이라 통합자 처리)
+- [x] 폰트: index.html Pretendard 단일 로드만(Space Grotesk·IBM Plex·Anton 미로드), tokens.js 폰트 패밀리 Pretendard 단일
+- [x] npm run build 성공. 버튼 토큰 컴파일 확인(rgb(129 95 215)·rgb(162 134 233)·rgb(104 68 196)), 로고 4종 각 3 fill·파비콘·헤더 로고 #F7F5FC 확인
+- [x] 로컬 프리뷰 육안 확인(vite preview): 홈(딥 퍼플 블랙·Light 로고·보라 Primary 버튼)·CI 페이지(4 단색 로고·색상 칩·모티브 전 섹션)·히어로 정상
+- [x] 히어로 영상 주변 처리(W2-4): 영상 미교체, 오버레이 60%→72%로 강화해 딥 퍼플 블랙과 자연스럽게 연결(영상 원본의 CI 외 색 노출 완화)
+- [ ] 커밋·푸시·배포: 커밋·푸시 완료 후 Vercel/Render GitHub 연동 시 자동 배포(미연동이면 대시보드 수동 배포 1회)
+- [!] 실사이트 육안(사용자 수행): 배포 URL은 Vercel 대시보드 도메인(레포에 미기재). 홈·About·CI·전시회·학생 성과·어드민 육안 확인 필요
+- [!] 남은 항목(콘텐츠·에셋, 버그 아님): (1)히어로 영상 hero.mp4 자체가 청록·핑크 3D 렌더 = CI 외 색 → 완전 준수하려면 사용자가 보라 계열 온브랜드 영상으로 교체(리브랜딩 스코프상 영상 교체 금지, 오버레이만 강화) (2)로고 원본 파일(AI/시그니처 이미지)·CI 매뉴얼 PDF는 어드민 업로드 또는 public/ci 교체 대기(현재 시그니처는 "이미지 준비 중" 플레이스홀더) (3)public/ci/README.md는 구 플레이스홀더 파일명 안내 유지(문서, 미갱신)

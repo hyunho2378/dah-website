@@ -289,7 +289,7 @@ function CIAdmin() {
                 <div key={i} className="flex items-center gap-8">
                   <input
                     type="color"
-                    value={/^#[0-9a-fA-F]{6}$/.test(row.hex) ? row.hex : '#000000'}
+                    value={/^#[0-9a-fA-F]{6}$/.test(row.hex) ? row.hex : '#100D18'}
                     onChange={(e) => setRow('colors', i, { hex: e.target.value })}
                     aria-label={`색상 ${i + 1} 선택`}
                     className="h-32 w-40 shrink-0 cursor-pointer rounded-sm border border-border-subtle bg-transparent"

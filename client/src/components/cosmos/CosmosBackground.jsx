@@ -3,7 +3,7 @@ import { cosmos } from '../../styles/tokens'
 
 // CosmosBackground — 우주 톤 배경 (H9, 19_PHASE7 배경 고급화)
 // 1) 생검정 탈피: 상단 depth1 → 하단 depth0 세로 그라데이션(토큰 경유, 하드코딩 없음)
-// 2) 성운 글로우: 좌상 보라 / 우하 청록 / 중앙 상단 보강 — COSMOS-TONE 상한(0.05 내외) 유지
+// 2) 성운 글로우: 좌상 보라 / 우하 딥 퍼플 / 중앙 상단 보강 — 보라 단일(청록 폐기), 상한 0.05 유지
 // 3) 스크롤 패럴랙스: 글로우 레이어가 스크롤의 0.1/0.06배로 미세 이동(rAF, transform만).
 //    prefers-reduced-motion 시 리스너 미부착(정지). blur 미사용 — 성능 상한 무관.
 const PARALLAX_A = 0.1
@@ -48,7 +48,7 @@ function CosmosBackground() {
       />
       <div
         ref={layerBRef}
-        className="pointer-events-none absolute -inset-y-[240px] inset-x-0 bg-nebula-teal [will-change:transform]"
+        className="pointer-events-none absolute -inset-y-[240px] inset-x-0 bg-nebula-deep [will-change:transform]"
       />
       <div className="pointer-events-none absolute inset-0 bg-nebula-soft" />
     </div>

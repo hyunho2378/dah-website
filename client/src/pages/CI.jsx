@@ -33,9 +33,14 @@ function CI() {
   const downloads = Array.isArray(source.downloads) ? source.downloads : []
   const elements = Array.isArray(source.elements) ? source.elements : []
   const logoGuide = Array.isArray(source.logoGuide) ? source.logoGuide : []
+  const logoGuideNote = source.logoGuideNote || ''
   const signatures = Array.isArray(source.signatures) ? source.signatures : []
   const colors = Array.isArray(source.colors) ? source.colors : []
+  const colorsNote = source.colorsNote || ''
   const motif = source.motif || null
+  const motifNote = source.motifNote || ''
+  const slogan = source.slogan || ''
+  const sloganNote = source.sloganNote || ''
 
   // 다운로드 정적 파일 존재 확인 — 부재(404·SPA 폴백 text/html) 시 버튼 비활성("준비 중").
   const downloadUrls = downloads.map((d) => d.url || '').join('|')
@@ -187,18 +192,35 @@ function CI() {
               <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
                 {t('ci.logoGuide')}
               </h2>
+              {logoGuideNote && (
+                <p className="mt-16 max-w-[720px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                  {logoGuideNote}
+                </p>
+              )}
             </Reveal>
             <div className="mt-32 grid grid-cols-1 gap-16 md:mt-48 md:grid-cols-2 md:gap-24">
               {logoGuide.map((logo, i) => (
                 <Reveal key={logo.title || i} delay={staggerDelay(i)}>
                   <div className="flex flex-col gap-12">
-                    <ImageFrame
-                      src={logo.image || undefined}
-                      alt={logo.title || ''}
-                      ratio="16/9"
-                      bg
-                      placeholder={t('ci.imagePending')}
-                    />
+                    {/* 단색 로고는 지정 배경 위에서만 명도 대비가 성립 — 미리보기 배경(logo.bg)은
+                        CI.md 색상값(콘텐츠)이라 인라인 스타일 불가피. 파일은 W1이 생성해 항상 존재 */}
+                    <div
+                      className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-md border border-border-subtle"
+                      style={logo.bg ? { backgroundColor: logo.bg } : undefined}
+                    >
+                      {logo.image ? (
+                        <img
+                          src={logo.image}
+                          alt={logo.title || ''}
+                          loading="lazy"
+                          className="max-h-[52%] w-auto object-contain"
+                        />
+                      ) : (
+                        <span className="px-12 text-center font-mono text-caption-m text-text-meta">
+                          {t('ci.imagePending')}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-small-m text-text-sec md:text-small-d">{logo.title}</p>
                   </div>
                 </Reveal>
@@ -243,6 +265,11 @@ function CI() {
               <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
                 {t('ci.colors')}
               </h2>
+              {colorsNote && (
+                <p className="mt-16 max-w-[720px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                  {colorsNote}
+                </p>
+              )}
             </Reveal>
             <div className="mt-32 grid grid-cols-2 gap-16 md:mt-48 md:grid-cols-4 md:gap-24">
               {colors.map((c, i) => {
@@ -264,6 +291,9 @@ function CI() {
                         <p className="font-mono text-caption-m uppercase text-text-meta">
                           {valid ? c.hex : t('ci.pending')}
                         </p>
+                        {c.use && (
+                          <p className="text-caption-m leading-relaxed text-text-meta">{c.use}</p>
+                        )}
                       </div>
                     </div>
                   </Reveal>
@@ -281,6 +311,11 @@ function CI() {
               <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
                 {t('ci.motif')}
               </h2>
+              {motifNote && (
+                <p className="mt-16 max-w-[720px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                  {motifNote}
+                </p>
+              )}
             </Reveal>
             <div className="mt-32 max-w-[720px] md:mt-48">
               <Reveal>
@@ -291,6 +326,30 @@ function CI() {
                   bg
                   placeholder={t('ci.imagePending')}
                 />
+              </Reveal>
+            </div>
+          </Container>
+        )}
+
+        {/* 07 슬로건 — 대표 슬로건 + 설명 (CI.md 8.1) */}
+        {slogan && (
+          <Container as="section" className="pt-section-m md:pt-section-d">
+            <Reveal>
+              <SectionLabel index="07" text="TAGLINE" />
+              <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
+                {t('ci.slogan')}
+              </h2>
+            </Reveal>
+            <div className="mt-32 max-w-[720px] md:mt-48">
+              <Reveal>
+                <p className="whitespace-pre-line text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
+                  {slogan}
+                </p>
+                {sloganNote && (
+                  <p className="mt-16 text-body-m leading-relaxed text-text-sec md:text-body-d">
+                    {sloganNote}
+                  </p>
+                )}
               </Reveal>
             </div>
           </Container>

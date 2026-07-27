@@ -84,7 +84,7 @@ export function Toggle({ checked = false, onChange, label, disabled = false }) {
       // K1-5 알약형: 트랙·노브 rounded-full. 켜짐 = 트랙 화이트 + 어두운 노브, 꺼짐 = 아웃라인 + 회색 노브.
       // 크기 완전 고정(h-24 w-40, border 두께 상태 무관 1px) — 노브만 translate로 이동, 주변 불변.
       className={`relative inline-flex h-24 w-40 shrink-0 cursor-pointer items-center rounded-full border transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40 ${
-        checked ? 'border-bg-invert bg-bg-invert' : 'border-border-strong bg-transparent'
+        checked ? 'border-purple-primary bg-purple-primary' : 'border-border-strong bg-transparent'
       }`}
     >
       <span
@@ -102,7 +102,7 @@ export function PrimaryButton({ children, type = 'button', ...rest }) {
     <button
       type={type}
       {...rest}
-      className={`${BUTTON_BASE} bg-bg-invert text-text-invert hover:opacity-90 ${rest.className || ''}`.trim()}
+      className={`${BUTTON_BASE} bg-button-primary text-button-primaryText hover:bg-button-primaryHover active:bg-button-primaryPressed ${rest.className || ''}`.trim()}
     >
       {children}
     </button>

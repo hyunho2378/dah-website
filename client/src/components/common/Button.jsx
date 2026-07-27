@@ -9,7 +9,8 @@ const base =
 
 // K2-9: press 시 미세 감광(active) — transition은 base의 duration-fast(motion 토큰) 공유
 const variants = {
-  primary: 'bg-bg-invert text-text-invert hover:opacity-90 active:opacity-80',
+  primary:
+    'bg-button-primary text-button-primaryText hover:bg-button-primaryHover active:bg-button-primaryPressed',
   secondary:
     'border border-glass-line bg-glass-bg text-text-pri hover:border-border-strong hover:bg-glass-strong active:opacity-90',
 }

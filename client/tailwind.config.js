@@ -58,11 +58,11 @@ export default {
       backgroundImage: {
         'glass-highlight': glass.highlight,
         nebula: cosmos.nebula,
-        // COSMOS-TONE 3절: 섹션·전역 배경 성운 글로우(비대칭 배치용). 좌상 보라 / 우하 청록.
+        // 섹션·전역 배경 성운 글로우(비대칭 배치용). 좌상 보라 / 우하 딥 퍼플. (청록 폐기, CI 4.1)
         'nebula-violet': `radial-gradient(ellipse 60% 50% at 15% 0%, ${cosmos.accentViolet}, transparent 70%)`,
-        'nebula-teal': `radial-gradient(ellipse 55% 45% at 85% 100%, ${cosmos.accentTeal}, transparent 70%)`,
-        // P5-4: 별 제거 허전함 보정용 중앙 상단 초저채도 보강 글로우(상한 0.03, 거의 안 보임)
-        'nebula-soft': 'radial-gradient(ellipse 70% 50% at 50% 22%, rgba(200,196,240,0.03), transparent 65%)',
+        'nebula-deep': `radial-gradient(ellipse 55% 45% at 85% 100%, ${cosmos.accentDeep}, transparent 70%)`,
+        // 별 제거 허전함 보정용 중앙 상단 초저채도 보강 글로우(#C8B9F2 Light Purple, 상한 0.03)
+        'nebula-soft': 'radial-gradient(ellipse 70% 50% at 50% 22%, rgba(200,185,242,0.03), transparent 65%)',
       },
       fontFamily: {
         display: typography.family.display,

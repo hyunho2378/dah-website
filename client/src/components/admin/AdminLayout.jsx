@@ -130,7 +130,7 @@ function LogoutConfirm({ onCancel, onConfirm }) {
         aria-label="닫기"
         tabIndex={-1}
         onClick={onCancel}
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-bg-base/70"
       />
       <div
         ref={panelRef}

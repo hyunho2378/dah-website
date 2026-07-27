@@ -155,6 +155,7 @@ export const ko = {
     signatures: '시그니처',
     colors: '전용색상',
     motif: '그래픽모티브',
+    slogan: '슬로건',
     downloads: '다운로드',
     comingSoon: '준비 중',
     imagePending: '이미지 준비 중',

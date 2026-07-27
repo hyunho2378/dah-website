@@ -1,30 +1,67 @@
 // tokens.js — DAH 웹사이트 디자인 토큰 (단일 진실 소스)
 // 모든 색상·타이포·간격은 이 파일만 참조한다. 하드코딩 금지.
+// 32_REBRAND — 색상 전면 리브랜딩. 유일 기준: docs/CI.md(4장 컬러 시스템, 4.5 위계).
+// 딥 퍼플 블랙(우주) + 보라(지성). 순수 검정·청록·옐로우·핑크 금지.
 
 export const colors = {
-  // 배경 (Linear 근흑 계열, 순수 #000 금지)
+  // 배경 (딥 퍼플 블랙, CI 4.2 — 순수 검정 금지)
   bg: {
-    base: '#08090A',      // 페이지 기본 배경
-    elev: '#101113',      // 카드/패널 승격 배경
-    panel: '#16171A',     // 다이어그램 내부, 인풋
-    frame: '#202227',     // C1(P10): 투명 PNG 로고 뒤 중성 배경 (elev보다 밝음, 순백 금지)
-    invert: '#F7F8F8',    // 반전 블록 (사용 최소화)
+    base: '#100D18',      // Deep Purple Black — 메인 웹사이트 배경
+    elev: '#171321',      // Purple Black 2 — 섹션 구분, 카드 배경
+    panel: '#211A31',     // Glass Surface — 유리 패널, 활성 영역, 인풋
+    frame: '#211A31',     // 투명 PNG 로고 뒤 중성 배경(Glass Surface, elev보다 밝음)
+    invert: '#815FD7',    // Primary 강조 면(Primary 버튼·토글 켜짐·선택 상태 채움)
   },
-  // 텍스트 (그레이 3단 위계)
+  // 텍스트 (CI 4.2 — 보라 본문 금지, 위계는 그레이 3단)
   text: {
-    pri: '#F7F8F8',       // 헤드라인, 본문 강조
-    sec: '#8A8F98',       // 본문 보조, 설명
-    meta: '#7C8088',      // 캡션, 날짜, eyebrow 비활성 (WCAG AA 4.5:1+)
-    invert: '#08090A',    // 화이트 필 버튼 위 텍스트
+    pri: '#F7F5FC',       // Text Primary — 제목, 핵심 문장
+    sec: '#C9C3D5',       // Text Secondary — 본문, 설명
+    meta: '#938BA5',      // Text Tertiary — 보조 정보, 메타데이터
+    disabled: '#625A70',  // Text Disabled — 비활성
+    invert: '#F7F5FC',    // Primary 강조 면 위 텍스트(#815FD7 위 라이트)
   },
-  // 보더 (헤어라인 시스템)
+  // 브랜드 보라 스케일 (CI 4.2) — 강조·인터랙션 전용, 넓은 본문 배경 금지
+  purple: {
+    primary: '#815FD7',   // Primary Purple — 대표 로고·버튼·링크·핵심 강조
+    light: '#C8B9F2',     // Light Purple — 하이라이트·그래픽·선택 상태
+    mid: '#A286E9',       // Mid Purple — 보조 강조·인터랙션·링크
+    deep: '#6844C4',      // Deep Purple — 활성/pressed·진한 그래픽
+    deepDark: '#4B2D99',  // Deep Purple Dark — 강한 강조·깊은 그래픽
+  },
+  // 보더 (헤어라인 시스템, CI 4.2)
   border: {
-    subtle: 'rgba(255,255,255,0.08)',  // 기본 카드/구분선
-    strong: 'rgba(255,255,255,0.16)',  // hover, 활성 상태
-    focus: '#F7F8F8',                   // 키보드 포커스 링
-    invert: 'rgba(8,9,10,0.12)',        // H6: 밝은 카드 내부 구분선(다크 텍스트 톤)
+    subtle: 'rgba(255,255,255,0.10)',    // Hairline White 10% — 기본 카드/구분선
+    strong: 'rgba(255,255,255,0.16)',    // hover, 활성 상태(화이트 헤어라인 강조)
+    purple: 'rgba(200,185,242,0.15)',    // Hairline Purple 15% — 약한 보라 경계선
+    focus: '#A286E9',                    // 키보드 포커스 링(CI 4.5 인터랙션 Mid Purple)
+    invert: 'rgba(200,185,242,0.15)',    // 보라 경계선(레거시 키 호환)
   },
-  // 액센트 없음. 모노크롬 원칙. 상태 컬러만 최소 보유.
+  // 강조·링크 위계 (CI 4.5) — 색상만으로 구분하지 말고 별도 인터랙션 병행
+  link: {
+    DEFAULT: '#A286E9',   // 기본 링크
+    hover: '#C8B9F2',     // hover
+    active: '#815FD7',    // 활성
+  },
+  // 아이콘 위계 (CI 4.5) — 아이콘 전체를 보라로 통일하지 않는다
+  icon: {
+    DEFAULT: '#C9C3D5',   // 기본
+    active: '#A286E9',    // 활성
+    key: '#815FD7',       // 핵심
+    disabled: '#938BA5',  // 비활성
+  },
+  // 버튼 위계 (CI 4.5)
+  button: {
+    primary: '#815FD7',        // Primary 배경
+    primaryText: '#F7F5FC',    // Primary 텍스트
+    primaryHover: '#A286E9',   // Primary hover
+    primaryPressed: '#6844C4', // Primary pressed
+    secondaryBorder: '#815FD7',// Secondary 테두리
+    secondaryText: '#C8B9F2',  // Secondary 텍스트
+    secondaryHover: '#815FD7', // Secondary hover(배경/채움)
+    ghostText: '#C8B9F2',      // Ghost 텍스트
+    ghostHover: '#211A31',     // Ghost hover 배경(Glass Surface)
+  },
+  // 상태 컬러 — CI 7.3: 브랜드 승격 금지, 시스템 경고용 최소 사용만.
   state: {
     error: '#FF6369',
     success: '#4CC38A',
@@ -90,17 +127,17 @@ export const glass = {
   radius: 4,           // G4: 글래스 카드도 4px 통일
 };
 
-// v2: 무한한 우주 배경 시스템
+// v2: 무한한 우주 배경 시스템 (CI 4.1 — 딥 퍼플 블랙 우주, 보라 단일 계열)
 export const cosmos = {
-  depth0: '#050607',   // 심우주 (페이지 최하층)
-  depth1: '#08090A',   // 기존 base 유지
+  depth0: '#100D18',   // Deep Purple Black — 페이지 최하층(CI 최심층, 그 이하 없음)
+  depth1: '#171321',   // Purple Black 2 — 상단 그라데이션 층
   nebula: 'radial-gradient(ellipse at var(--x) var(--y), rgba(255,255,255,0.04), transparent 60%)',
-  // COSMOS-TONE 5절: 순백 대신 아주 살짝 보라 섞인 오프화이트(구분 안 될 정도)
-  star: 'rgba(242,242,252,0.9)',
-  // COSMOS-TONE 2절: 히어로 무드 이색조 글로우 — 배경 성운(radial glow)에만 사용.
-  // 텍스트·보더·아이콘 사용 금지(모노크롬 유지). 채도는 거의 안 보일 수준(상한 0.06).
-  accentViolet: 'rgba(139,127,232,0.05)',
-  accentTeal: 'rgba(64,180,160,0.05)',
+  // 순백 대신 아주 살짝 보라 섞인 오프화이트(Text Primary 계열)
+  star: 'rgba(247,245,252,0.9)',
+  // 히어로 무드 성운 글로우 — 배경 radial glow에만 사용. 보라 단일(청록 폐기).
+  // 텍스트·보더·아이콘 사용 금지. 채도는 거의 안 보일 수준(상한 0.05).
+  accentViolet: 'rgba(129,95,215,0.05)',   // #815FD7 Primary Purple 글로우
+  accentDeep: 'rgba(104,68,196,0.05)',     // #6844C4 Deep Purple 글로우(반대편)
 };
 
 export const shadow = {

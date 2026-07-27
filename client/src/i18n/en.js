@@ -151,6 +151,7 @@ export const en = {
     signatures: 'Signature',
     colors: 'Colors',
     motif: 'Graphic Motif',
+    slogan: 'Tagline',
     downloads: 'Downloads',
     comingSoon: 'Coming soon',
     imagePending: 'Image coming soon',

@@ -36,7 +36,9 @@ function HeroBackground() {
       >
         <source src="/videos/hero.mp4" type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-bg-base/60" />
+      {/* 32_REBRAND W2-4: 영상은 교체하지 않고 오버레이만 강화(60→72%) — 딥 퍼플 블랙(#100D18)과
+          자연스럽게 이어지고 CI 외 색(영상 원본)이 과도하게 드러나지 않도록 주변 처리. */}
+      <div className="absolute inset-0 bg-bg-base/[0.72]" />
     </>
   )
 }
