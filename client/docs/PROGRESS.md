@@ -376,3 +376,19 @@
 ## 배포
 - [ ] Vercel 연결, 도메인, vercel.json 리라이트
 - [ ] Lighthouse: 모바일 Performance 90+, A11y 100 목표
+
+## PHASE 18 · 이관 준비 — 계정 이전 안전점검·백업 (MIGRATION_PREP)
+계획: Render=학과 계정 신규 생성 / Neon=학과 조직으로 프로젝트 이전 / Vercel=학과 계정 멤버 추가 / Blob=당분간 현 계정 유지
+### 코드 이관가능성 점검 (완료 — 코드 변경 불필요, .env.example만 정합화)
+- [x] 하드코딩 인프라값 0 확인: 4대 변수(CLIENT_ORIGIN·VITE_API_URL·DATABASE_URL·BLOB_READ_WRITE_TOKEN) 전부 env 경유만(각각 app.js:28·useApi.js:7·db.js·upload.js). 그 외 JWT_SECRET·OWNER_EMAIL·EXPORT_DIR·PORT·NODE_ENV·SMTP*·TELEGRAM*도 전부 process.env. vite.config·index.html 하드코딩 백엔드 없음
+- [x] 잔여 하드코딩 URL은 콘텐츠(인프라 아님): site.js 전시회 링크(26-1-dah-exhibition.vercel.app — 별개 프로젝트, DB site_settings로 CMS 오버라이드 가능)·notices.js 구 Google Sites 링크. upload.js blob.url은 Blob SDK 반환값(동적). → env 분리 대상 아님, 이관과 무관
+- [x] .env.example 정합화: server는 누락분(NODE_ENV·SMTP*·TELEGRAM*) 추가+주석·잘못된 da11 줄 제거, client는 빈 파일→VITE_API_URL 문서화. 이관 시 값만 교체하면 되는 템플릿 완성
+### 백업 (사용자 실행 — 실제 이관 전 필수)
+- [ ] pg_dump 전체 백업: Neon 서버가 PG 18.4라 pg_dump 18 필요(구버전은 server version mismatch로 실패). `pg_dump "$DATABASE_URL" --no-owner --no-privileges -Fc -f dah-neon-$(date +%F).dump` (server/.env의 DATABASE_URL 사용, SSL은 URL의 sslmode=require로 자동)
+- [ ] 어드민 "DB 백업"(owner) 실행 → 콘텐츠 JSON 저장(users·비번해시 제외 = 부분 백업. 완전본은 pg_dump)
+### 이관 순서 (실제 계정 이동은 이 단계 밖 — 코드는 이관 가능 상태 보장 완료)
+- [ ] 1) Neon: 프로젝트를 학과 조직으로 Transfer(데이터 보존됨. 이전 후 DATABASE_URL 호스트가 바뀔 수 있으니 새 연결문자열 확보)
+- [ ] 2) Render: 학과 계정으로 Web Service 신규 생성(repo main, root=server/). 환경변수 재설정(server 목록) — **NODE_ENV=production 필수**(Secure·SameSite=None 쿠키). 새 Render URL 확보
+- [ ] 3) Vercel: 학과 계정을 프로젝트 멤버로 추가. VITE_API_URL을 새 Render URL로 교체 후 재배포. Render의 CLIENT_ORIGIN을 정확한 Vercel 도메인(https, 끝 슬래시 없음)으로
+- [ ] 4) Blob: 당분간 현 계정 유지(BLOB_READ_WRITE_TOKEN 불변). 추후 이전 시 신규 스토어 토큰 발급 + 기존 파일 마이그레이션
+- [ ] 5) 검증: /health 200 → 로그인(DevTools서 쿠키 Secure·SameSite=None 저장 확인) → 어드민 CRUD → 이미지 업로드(Blob) → 공개 목록·상세 → UptimeRobot 모니터를 새 /health URL로 갱신
