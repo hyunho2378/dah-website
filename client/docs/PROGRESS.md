@@ -495,3 +495,7 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
   ② **쿼리스트링 우회(즉시 확인용)**: 링크 뒤에 `?v=2` 같은 값을 붙이면(`https://…/?v=2`) 카카오가 다른 URL로 인식해 새로 크롤링한다. 캐시 초기화 없이 새 미리보기를 바로 확인할 때 쓰고, 공식 배포 링크는 ①로 초기화하는 것이 맞다.
   ※ 초기화 전에 **VITE_SITE_URL 설정 + 재배포**가 먼저 끝나 있어야 한다(그전에 초기화하면 옛 정보가 다시 캐시된다)
 - [!] 사용자 액션: (1) **Vercel에 `VITE_SITE_URL` 환경변수 설정 후 재배포** — 미설정이면 og:image가 상대경로로 남아 카카오가 이미지를 못 읽는다 (2) 배포 완료 후 위 카카오 캐시 초기화 (3) 온브랜드 공유 카드가 필요하면 `client/public/og.png`를 새 CI로 교체하고 index.html의 og:image 경로를 되돌리면 됨
+
+## PHASE 26 · Google Search Console 소유 확인 (38_GSC_VERIFY)
+- [x] index.html `<head>`에 `<meta name="google-site-verification" content="VIO0lYGOjpkD3YDkBO2hWUwztQ21_9zK3DMgqM7OJwo" />` 추가. 검증용 고정 코드라 사용자 지시대로 VITE_SITE_URL과 달리 정적 하드코딩 유지(환경변수 분리 대상 아님)
+- [x] 검증: npm run build 성공, dist/index.html에 태그 값 그대로(변경 없이) 방출 확인. 수정 파일 1개(index.html)
