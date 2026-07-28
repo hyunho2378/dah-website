@@ -83,6 +83,16 @@ export default function useLiquidGlass(selector, options = {}, enabled = true) {
           reveal: 'none',
           ...optionsRef.current,
         })
+        // 34_HEADER_AUDIT 근본원인: vendor(liquidGL.js)가 렌즈 생성자에서 타겟에
+        // pointerEvents:none을 건다(시각은 캔버스가 대신하므로 자신은 숨고 투명해지는
+        // 설계). pointer-events는 상속 속성이라 타겟 안의 실제 인터랙티브 자식(헤더의
+        // 내비 링크·드롭다운·햄버거, CTA의 버튼 등)까지 전부 클릭 불가가 되어버린다.
+        // 캔버스·미러 레이어는 이미 pointer-events:none이라 클릭은 항상 타겟까지
+        // 내려오므로, 타겟만 다시 auto로 되돌리면 시각(캔버스 렌더)은 그대로 두고
+        // 클릭만 복구된다. 생성자가 동기 실행되므로 이 시점엔 이미 none이 적용된 뒤다.
+        document.querySelectorAll(selector).forEach((el) => {
+          el.style.pointerEvents = 'auto'
+        })
       })
       .catch(() => {
         // 로드 실패 = CSS 글래스 유지. 콘솔 오염 없이 조용히 폴백한다.

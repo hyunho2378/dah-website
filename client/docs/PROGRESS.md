@@ -450,3 +450,12 @@
 - [x] 검증: npm run build 성공(2025 modules). DragHandle.jsx·EntriesSheet.jsx 2파일만 수정(surgical)
 - [!] 실기기 확인(사용자): iPhone Safari에서 교수진·멘토단·취업 현황·포트폴리오 어드민 "수정" 탭 진입 확인 / 접수 관리 시트 스크롤 시 하단 잘림 없음
 - [!] 실사이트 육안(사용자, 배포 후): 헤더 버튼 질감·보라 포인트 / 모바일 햄버거 시트 / 전시 피처드·온보딩·접수폼(하이픈·@·과목 카드)·수정 진입 / 접수 시트(정렬·복사·CSV/xls·폴링) / 대시보드 공개토글→메뉴 연동(포트폴리오) / 성과 신규 맨 위+드래그 저장 유지 / 어드민 사이드바 이동 시 스크롤 유지 / 커스텀 Select·DatePicker
+
+## PHASE 22 · 헤더 회귀 진단 (34_HEADER_AUDIT)
+git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이아웃(리브랜딩)은 미변경.
+- [x] 1단계(변경 이력): Header.jsx는 32_REBRAND(5a4df2a)에서는 무변경 — 실제로 헤더를 손댄 건 33_PHASE18(ab42412, GLASS phase)뿐. GlassDock.jsx 삭제, useLiquidGlass.js·useContentVisibility.js·accents.js 신규, nav.js+8줄(포트폴리오 visibilityKey). "리브랜딩 이후"로 체감되는 증상의 실제 원인 커밋은 GLASS phase로 특정
+- [x] [최우선][근본원인 확정] **헤더·전시 CTA 클릭 불가**: public/vendor/liquidgl/liquidGL.js의 렌즈 생성자(1400행)가 타겟 요소에 `pointerEvents:none`을 건다(원본을 투명화하고 캔버스 스냅샷이 시각을 대신하는 설계). pointer-events는 CSS 상속 속성이라 타겟(`.dah-liquid-header`, `.dah-liquid-cta`) 안의 실제 인터랙티브 자식 — 내비 링크·드롭다운 하위 항목·햄버거·설정 아이콘·CTA 버튼 — 전부 클릭 불가가 됨. 캔버스·미러 레이어는 이미 pointer-events:none이라(vendor 75·1883행) 클릭은 항상 타겟까지 내려오는데, 타겟 자신이 none이라 막힘. 헤더는 스크롤 80px 이후 또는 드롭다운 오픈 시(`glassed`), CTA 패널은 페이지 로드 즉시(`hasCta||showSubmit`, 스크롤 무관) 트리거 — 데스크톱·WebGL·코어 4개↑ 환경에서 상시 재현되는 회귀(vendor 코드는 GLASS phase에서 신규 도입, REBRAND 자체와는 무관)
+- [x] 수정: `useLiquidGlass.js`가 `window.liquidGL(...)` 호출(동기 실행, 렌즈 생성자가 이미 pointerEvents:none을 적용한 뒤) 직후 `document.querySelectorAll(selector)`로 타겟을 다시 찾아 `pointerEvents:'auto'`로 되돌림. 캔버스·미러는 pointer-events:none 그대로라 시각(리퀴드글래스 렌더)은 전혀 변경 없이 클릭만 복구. vendor 파일은 미수정(서드파티, 향후 업데이트 호환)
+- [x] 점검(사라짐/안 보임): Header는 App.jsx에 ErrorBoundary·조건부 렌더 없이 상시 마운트, GlassDock 삭제 후 잔존 import 0(빌드 성공으로 재확인), nav.js 데이터 무결(label·labelEn 전부 존재), useContentVisibility 기본값 가드로 크래시 불가, tailwind `icon` 색상 객체가 정상 컴파일되어 `text-icon`/`text-icon-active` 유효 — 이 경로에서 별도의 "사라짐" 버그는 재현되지 않음(위 pointer-events 버그의 체감 효과일 가능성이 높음: 클릭이 안 먹히는 걸 "사라졌다"고 인지)
+- [x] 검증: npm run build 성공(2025 modules). 수정 파일은 useLiquidGlass.js 1개(surgical). 실행 환경에 Chromium/Playwright가 없어 실 브라우저 클릭 재현은 불가했으나, vendor 소스를 직접 추적해 CSS 상속 규칙(pointer-events는 inherited 속성)을 코드에 그대로 적용한 결정론적 근거 — 추측 아님
+- [!] 실기기 확인(사용자, 최우선): 데스크톱 브라우저에서 (1) 페이지를 80px 이상 스크롤한 뒤 헤더 메뉴·드롭다운·햄버거·설정 아이콘 클릭 (2) /programs/exhibitions에서 피처드 전시 CTA("전시 사이트"/"전시회 접수") 버튼 클릭 — 리브랜딩 이후 이 두 시나리오가 안 눌렸다면 이번 수정으로 해소돼야 함. 그 외 "사라짐" 증상이 실기기에서 재현되면(위 pointer-events와 무관한 별도 현상이면) 구체적 재현 조건을 알려주면 추가로 특정
