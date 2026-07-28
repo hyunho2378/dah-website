@@ -132,21 +132,25 @@ function Header() {
   }))
 
   const glassed = scrolled || openIndex !== null
-  // X3: 헤더가 실제로 유리가 된 뒤에만 리퀴드글래스 초기화(투명 상태에서 스냅샷 낭비 방지)
-  useLiquidGlass('.dah-liquid-header', { refraction: 0.01, bevelDepth: 0.06 }, glassed)
-  // X3 표면 3/3 — 모바일 메뉴 시트. 훅이 lg 미만·WebGL 부재를 걸러 CSS 글래스로 폴백한다.
+  // 35_HEADER_HOVER_WHALE: 헤더에서 liquidGL 제거(불변식 = 헤더는 어떤 실패 모드에서도
+  // 사라지지 않는다). vendor는 타겟을 먼저 opacity:0으로 숨기고 html2canvas 스냅샷이
+  // 끝난 뒤에야 되돌리는 순서라, 스냅샷이 느리거나 실패하면 헤더가 통째로 안 보인다.
+  // 스크롤 0에서 메뉴에 호버하면 glassed가 false→true로 바뀌며 매번 이 초기화가 돌아
+  // 웨일에서 "호버 시 헤더 사라짐"으로 재현됐다. 아래 CSS 글래스(bg-glass-bg +
+  // backdrop-blur)만 쓴다 — 모바일·저성능·reduced-motion 사용자가 이미 보던 표면과
+  // 동일하므로 시각 회귀도 없다. liquidGL은 비핵심 표면(전시 CTA)에만 남긴다.
+  // X3 표면 — 모바일 메뉴 시트. 훅이 lg 미만·WebGL 부재를 걸러 CSS 글래스로 폴백한다.
   useLiquidGlass('.dah-liquid-sheet', {}, sheetOpen)
 
   return (
     <>
-      {/* X3: liquidGL 적용 표면 1/3 — 클래스 훅(dah-liquid-header)만 제공하고 실제 적용은
-          useLiquidGlass가 담당(데스크탑·WebGL 가능할 때만). 실패·모바일이면 아래 CSS 글래스가
-          그대로 남아 기능 저하가 없다. */}
+      {/* 35_HEADER_HOVER_WHALE: 헤더 표면은 CSS 글래스 전용(liquidGL 미적용).
+          어떤 브라우저·실패 모드에서도 헤더가 사라지지 않는 것이 최우선 불변식이다. */}
       <header
         ref={headerRef}
         onMouseLeave={close}
         onBlur={onBlur}
-        className={`dah-liquid-header fixed inset-x-0 top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
+        className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-base ease-out [will-change:backdrop-filter] ${
           glassed
             ? 'border-glass-line bg-glass-bg backdrop-blur-glass-mobile md:backdrop-blur-glass'
             : 'border-transparent bg-transparent'

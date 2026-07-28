@@ -65,6 +65,29 @@ export default function useLiquidGlass(selector, options = {}, enabled = true) {
     // 대상이 실제로 마운트된 뒤에만 초기화(선택자 미존재 시 vendor가 경고만 내고 종료)
     if (!document.querySelector(selector)) return undefined
 
+    // vendor가 타겟에 건 인라인 스타일 중 "보이지 않음·클릭 불가"를 만드는 두 가지를
+    // 되돌린다. 생성자는 동기 실행되므로 liquidGL() 반환 직후엔 이미 적용된 뒤다.
+    //
+    // (1) 34_HEADER_AUDIT — pointerEvents:none: vendor는 시각을 캔버스가 대신하므로
+    //     타겟 자신을 숨기고 클릭도 막는 설계다. 그런데 pointer-events는 상속 속성이라
+    //     타겟 안의 실제 인터랙티브 자식(내비 링크·버튼)까지 전부 클릭 불가가 된다.
+    //     캔버스·미러는 이미 pointer-events:none이라 클릭은 항상 타겟까지 내려오므로,
+    //     타겟만 auto로 되돌리면 시각은 그대로 두고 클릭만 복구된다.
+    //
+    // (2) 35_HEADER_HOVER_WHALE — opacity:0: 생성자가 타겟을 즉시 숨기지만 이를 되돌리는
+    //     _reveal()은 renderer.texture가 생긴 뒤에만 호출된다(addLens는 texture가 없으면
+    //     _pendingReveal에 쌓아두고 스냅샷 완료 시 flush). 즉 html2canvas 전체 스냅샷이
+    //     느리면 그동안, 재시도까지 전부 실패하면 영구히 타겟이 보이지 않는다. 우리는
+    //     reveal:'none'으로 쓰므로 opacity:0은 의도된 UI 상태가 아니라 순수 과도기 값이다
+    //     — 인라인 opacity를 지워 "보이지 않는 창"을 없앤다(이후 _reveal()이 1로 세팅해도
+    //     결과는 동일). 이 복구는 성공·실패 경로 모두에서 반드시 실행한다.
+    const restoreTargets = () => {
+      document.querySelectorAll(selector).forEach((el) => {
+        el.style.pointerEvents = 'auto'
+        el.style.opacity = ''
+      })
+    }
+
     Promise.all([loadScript(H2C_SRC), loadScript(LG_SRC)])
       .then(() => {
         if (cancelled || typeof window.liquidGL !== 'function') return
@@ -83,19 +106,12 @@ export default function useLiquidGlass(selector, options = {}, enabled = true) {
           reveal: 'none',
           ...optionsRef.current,
         })
-        // 34_HEADER_AUDIT 근본원인: vendor(liquidGL.js)가 렌즈 생성자에서 타겟에
-        // pointerEvents:none을 건다(시각은 캔버스가 대신하므로 자신은 숨고 투명해지는
-        // 설계). pointer-events는 상속 속성이라 타겟 안의 실제 인터랙티브 자식(헤더의
-        // 내비 링크·드롭다운·햄버거, CTA의 버튼 등)까지 전부 클릭 불가가 되어버린다.
-        // 캔버스·미러 레이어는 이미 pointer-events:none이라 클릭은 항상 타겟까지
-        // 내려오므로, 타겟만 다시 auto로 되돌리면 시각(캔버스 렌더)은 그대로 두고
-        // 클릭만 복구된다. 생성자가 동기 실행되므로 이 시점엔 이미 none이 적용된 뒤다.
-        document.querySelectorAll(selector).forEach((el) => {
-          el.style.pointerEvents = 'auto'
-        })
+        restoreTargets()
       })
       .catch(() => {
-        // 로드 실패 = CSS 글래스 유지. 콘솔 오염 없이 조용히 폴백한다.
+        // 로드·초기화 실패 = CSS 글래스 유지. 콘솔 오염 없이 조용히 폴백한다.
+        // 단 vendor가 예외 직전까지 타겟을 숨겼을 수 있으므로 복구는 반드시 수행한다.
+        restoreTargets()
       })
 
     return () => {
