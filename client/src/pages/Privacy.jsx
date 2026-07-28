@@ -9,7 +9,7 @@ import { site } from '../data/site.js'
 //   - 상담 신청: server/src/routes/consult.js (name, grade, main_major, double_major, contact, message)
 //   - 전시회 접수: server/src/routes/submit.js (entry_type, email, fields, 수정용 비밀번호 해시)
 //   - 관리자 인증: JWT 쿠키(access·refresh) — 로그인 사용자에게만 발급
-//   - 분석 도구: 현재 미사용(GA 도입 시 본 방침 개정 후 시행)
+//   - 분석 도구: Google Analytics(GA4, 39_GA4) — 관리자 로그인 세션은 전송 제외(src/components/Analytics.jsx)
 // 문구를 바꿀 일이 생기면 아래 상수·SECTIONS만 교체한다.
 const ORG = `한림대학교 ${site.nameKr}`
 const ADDRESS = '강원특별자치도 춘천시 한림대학길 1'
@@ -44,7 +44,7 @@ const SECTIONS = [
       '본 사이트는 일반 방문자를 대상으로 하는 광고·행태정보 수집 목적의 쿠키를 사용하지 않습니다.',
       '관리자가 로그인한 경우에 한해 인증 상태 유지를 위한 쿠키(접속 토큰)를 사용하며, 로그아웃하면 즉시 삭제됩니다.',
       '이용자는 브라우저 설정에서 쿠키 저장을 거부할 수 있습니다. 다만 이 경우 관리자 로그인 등 일부 기능이 제한될 수 있습니다.',
-      '본 방침 시행일 현재 본 사이트는 별도의 웹 분석 도구를 운영하고 있지 않습니다. 향후 Google Analytics 등 접속 분석 도구를 도입하는 경우, 수집 항목과 보유 기간을 본 방침에 반영해 사전에 고지한 뒤 적용합니다.',
+      '본 사이트는 방문 통계 파악을 위해 Google Analytics(GA4)를 사용하며, 페이지 조회 등 비식별 이용 통계를 수집합니다. 관리자로 로그인한 상태의 접속은 방문 통계에서 제외됩니다.',
     ],
   },
   {

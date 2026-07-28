@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import { LoginModalProvider } from './context/LoginModalContext'
 import { LangProvider } from './i18n/LangContext'
 import CosmosBackground from './components/cosmos/CosmosBackground'
+import Analytics from './components/Analytics'
 import ScrollToTop from './components/layout/ScrollToTop'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
@@ -106,6 +107,7 @@ function App() {
       <LangProvider>
         <AuthProvider>
           <LoginModalProvider>
+          <Analytics />
           <CosmosBackground />
           <ScrollToTop />
           <Header />

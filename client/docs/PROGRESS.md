@@ -499,3 +499,13 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 ## PHASE 26 · Google Search Console 소유 확인 (38_GSC_VERIFY)
 - [x] index.html `<head>`에 `<meta name="google-site-verification" content="VIO0lYGOjpkD3YDkBO2hWUwztQ21_9zK3DMgqM7OJwo" />` 추가. 검증용 고정 코드라 사용자 지시대로 VITE_SITE_URL과 달리 정적 하드코딩 유지(환경변수 분리 대상 아님)
 - [x] 검증: npm run build 성공, dist/index.html에 태그 값 그대로(변경 없이) 방출 확인. 수정 파일 1개(index.html)
+
+## PHASE 27 · Google Analytics 4 연동 (39_GA4)
+정적 스니펫 금지 원칙 준수: React Router v6 SPA라 config의 자동 page_view는 최초 로드 1회뿐이라, 스크립트는 로드만 하고(`send_page_view:false`) 라우트가 바뀔 때마다 수동으로 `gtag('event','page_view',…)`를 전송하는 구조로 구현.
+- [x] **신규 파일**: `src/utils/analytics.js`(비-React, `format.js`와 동일한 유틸 컨벤션) — `GA_ID = import.meta.env.VITE_GA_ID`, `loadGtag()`(GA_ID 없으면 즉시 return·스크립트 미주입, 있으면 gtag.js 삽입 + `gtag('config', GA_ID, {send_page_view:false})`), `sendPageview(path)`(GA_ID·`window.gtag` 존재 확인 후 `page_view` 이벤트 전송, page_path·page_location·page_title 포함)
+- [x] **신규 파일**: `src/components/Analytics.jsx` — `useLocation()`으로 라우트(pathname+search) 감지, 마운트 시 1회 `loadGtag()`, 이후 라우트가 바뀔 때마다 `sendPageview()`. **관리자 세션 제외**: `useAuth()`의 `user`(로그인 상태)·`loading`(인증 확인 중) 중 하나라도 참이면 전송을 건너뜀 — 최초 로드도 인증 확인이 끝난 뒤에만 pageview가 나가므로 새로고침 시점에 어드민이어도 새지 않음. App.jsx에 `<Analytics />` 1줄 추가(AuthProvider·BrowserRouter 하위)
+- [x] **환경변수화**: 측정 ID 하드코딩 없음(코드에는 `VITE_GA_ID` 참조만). `client/.env.example`에 문서화 — **로컬 `.env`에는 절대 채우지 말 것**(로컬 개발 오염 방지) 명시, Vercel 배포 환경변수에만 설정
+- [x] **개인정보처리방침 갱신**: Privacy.jsx "쿠키와 접속 분석 도구" 절의 "향후 GA 도입 시…" 문구를 실제 사용 사실 2문장으로 교체 — "Google Analytics(GA4)를 사용하며 페이지 조회 등 비식별 이용 통계를 수집" + "관리자로 로그인한 상태의 접속은 방문 통계에서 제외". 파일 상단 데이터 수집 항목 주석도 동기화
+- [x] 검증(빌드 2회, 산출물 grep으로 확인): ① `VITE_GA_ID` 미설정 → 번들에 gtag·googletagmanager·dataLayer 문자열 **0건**(빌더가 `import.meta.env.VITE_GA_ID`를 `undefined`로 정적 치환 → 죽은 코드로 완전 제거, 로컬 개발 환경에 GA 코드 자체가 안 실림) ② `VITE_GA_ID=G-6EQFGM5SMX` → `googletagmanager.com/gtag/js?id=${변수}` 템플릿·`send_page_view`·`page_view`·측정 ID 문자열 그대로 방출 확인. npm run build 성공, 신규 파일 lint 경고 0건
+- [!] **Vercel 환경변수 설정 필요(배포 후 GA 작동을 위한 필수 사용자 액션)**: Vercel 프로젝트 > Settings > Environment Variables에 `VITE_GA_ID` = `G-6EQFGM5SMX` 추가 후 **재배포**(Vite는 빌드 시점에 값을 인라인하므로 값 추가만으로는 반영 안 되고 재빌드가 필요). 로컬 `client/.env`에는 설정하지 말 것(로컬 개발 트래픽이 실제 통계에 섞이는 것을 방지)
+- [!] 사용자 액션: (1) 위 Vercel 환경변수 설정+재배포 (2) 배포 후 GA4 실시간 보고서에서 페이지 이동 시 pageview가 잡히는지, 관리자 로그인 상태에서는 안 잡히는지 확인
