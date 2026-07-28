@@ -258,8 +258,10 @@ function EntriesSheet() {
       'application/vnd.ms-excel;charset=utf-8'
     )
 
+  // iOS Safari 동적 툴바 대응: 100vh는 주소창·툴바 접힘/펼침에 따라 값이 바뀌어
+  // 레이아웃이 흔들린다 — 뷰포트 실측값을 반영하는 100dvh로 대체
   return (
-    <div className="min-h-screen bg-[#F7F5FC] text-[#211A31]">
+    <div className="min-h-[100dvh] bg-[#F7F5FC] text-[#211A31]">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-16 px-16 py-24 md:px-24">
         {/* 헤더 */}
         <div className="flex flex-wrap items-end justify-between gap-16">
@@ -336,7 +338,7 @@ function EntriesSheet() {
 
         {/* 시트 */}
         {visibleRows.length > 0 && (
-          <div className="max-h-[calc(100vh-260px)] overflow-auto rounded-sm border border-[rgba(33,26,49,0.15)] bg-[#FFFFFF]">
+          <div className="max-h-[calc(100dvh-260px)] overflow-auto rounded-sm border border-[rgba(33,26,49,0.15)] bg-[#FFFFFF]">
             <table className="w-full border-collapse text-small-m">
               <thead className="sticky top-0 z-10">
                 <tr>

@@ -440,4 +440,13 @@
 - [ ] 커밋·푸시·배포: 커밋·푸시 후 Vercel(client)·Render(server) 자동/수동 배포. **server 배포 필요**(submit lookup·settings subjects·admin sort API 신규)
 - [!] 조율 필요(사용자 판단): (1)**접수 수정 비밀번호 최소길이 서버 6→4 완화**(Y2) — 클라 안내·공용 isValidPassword가 4자라 기존 6자 서버와 불일치(클라 통과 후 400)했던 것 해소. 보안상 6 유지 원하면 format.js·안내문구를 6으로 올려야 함 (2)/consult 연락처는 전화 전용(formatPhone)인데 미변경 원문 안내에 "전화 또는 이메일" 표기 잔존 — 이메일 경로 원하면 POST /consult 서버 계약 확장 필요 (3)접수 온보딩 "접수 대상" 문구("…수강생·개인 또는 팀")는 원문 부재로 Y2 임시 작성 → 확정본 필요
 - [!] liquidGL 성능 특성: 데스크탑·WebGL에서만 동작(모바일·저성능은 CSS 글래스). html2canvas 스냅샷이 페이지 첫 스크롤 시 일시 비용(수백ms, 1회). 과하면 useLiquidGlass 옵션 resolution 하향 또는 헤더 표면만 비활성 가능 — 기능 저하 없이 CSS 폴백
+
+## PHASE 21 · iOS Safari — 어드민 상세 진입 실패 수정
+- [x] [최우선][근본원인 확정] 교수진·멘토단·취업 현황·포트폴리오(EntityCrud 기반, `orderable` 기본값 true) 목록에서 행이 항상(정렬모드 아닐 때도) `draggable="true"`였음(DragHandle.jsx useDragSort). iOS Safari(WebKit)는 HTML5 Drag&Drop을 애초에 지원 안 하면서도, `draggable=true`가 걸린 요소는 터치를 드래그 후보로 판정해 그 안의 "수정" 버튼 등 자식 인터랙티브 요소의 합성 click 이벤트를 통째로 삼킨다 — 데스크톱(마우스)은 무관해 정상, iOS Safari(터치)만 상세(수정) 진입이 막힘. 서버 콜드스타트·쿠키와 무관(순수 클라이언트 이벤트 버그)이라 "서버는 항상 깨어있음" 조건과도 정합
+- [x] 수정: `useDragSort`(공용, PostList·EntityCrud 공유)의 `rowProps`가 `window.matchMedia('(pointer: coarse)')`로 터치를 감지하면 `draggable`·drag 핸들러를 아예 안 건다(빈 객체 반환). 터치에서 드래그 재정렬은 원래도 동작하지 않았으므로(HTML5 DnD 미지원) 기능 손실 없이 탭만 복구. 데스크톱 동작 100% 불변
+- [x] 점검 1(쿠키): middleware/auth.js 확인 — 프로덕션 SameSite=None + Secure + httpOnly 이미 적용(직전 PHASE서 수정 완료). Partitioned는 third-party iframe(CHIPS) 시나리오용이라 이 구조(SPA→fetch credentials:'include', iframe 미사용)엔 해당 없고, Safari도 CHIPS 미지원이라 추가해도 무의미 — 변경 없음. 증상("상세만 안 열림", 목록·로그인은 정상)도 쿠키 실패 패턴(전면 401)과 불일치해 원인에서 제외
+- [x] 점검 2(클릭 핸들러): 전 코드베이스 onMouseDown/onMouseEnter/onMouseOver 전수 검색 — 어드민 영역 0건(홈 ProgramShowcase·헤더 메가메뉴의 onMouseEnter는 공개 페이지 데스크톱 호버 보조용, 클릭 대체 아님). PostList·Dashboard의 상세 진입은 전부 react-router Link(onClick 기반) — 정상
+- [x] 점검 3(100vh): 전수 검색 결과 3건 — AdminLayout.jsx 사이드바는 `lg:` 프리픽스(데스크톱 전용, 모바일 미적용이라 무관·미수정). EntriesSheet.jsx(접수 관리 시트, 전체화면 라우트) 2건은 모바일에도 적용돼 iOS 동적 툴바로 레이아웃이 흔들릴 수 있어 100dvh로 교체(`min-h-screen`→`min-h-[100dvh]`, `calc(100vh-260px)`→`calc(100dvh-260px)`). 상세 진입 실패의 원인은 아니었으나(레이아웃 흔들림이지 "안 열림"은 아님) 지시대로 선제 교정
+- [x] 검증: npm run build 성공(2025 modules). DragHandle.jsx·EntriesSheet.jsx 2파일만 수정(surgical)
+- [!] 실기기 확인(사용자): iPhone Safari에서 교수진·멘토단·취업 현황·포트폴리오 어드민 "수정" 탭 진입 확인 / 접수 관리 시트 스크롤 시 하단 잘림 없음
 - [!] 실사이트 육안(사용자, 배포 후): 헤더 버튼 질감·보라 포인트 / 모바일 햄버거 시트 / 전시 피처드·온보딩·접수폼(하이픈·@·과목 카드)·수정 진입 / 접수 시트(정렬·복사·CSV/xls·폴링) / 대시보드 공개토글→메뉴 연동(포트폴리오) / 성과 신규 맨 위+드래그 저장 유지 / 어드민 사이드바 이동 시 스크롤 유지 / 커스텀 Select·DatePicker
