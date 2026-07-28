@@ -7,7 +7,6 @@ import { useLang } from '../../i18n/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLoginModal } from '../../context/LoginModalContext'
 import { useApi } from '../../hooks/useApi'
-import useLiquidGlass from '../../hooks/useLiquidGlass'
 import useContentVisibility from '../../hooks/useContentVisibility'
 import { cosmos } from '../../styles/tokens'
 import Container from './Container'
@@ -132,15 +131,12 @@ function Header() {
   }))
 
   const glassed = scrolled || openIndex !== null
-  // 35_HEADER_HOVER_WHALE: 헤더에서 liquidGL 제거(불변식 = 헤더는 어떤 실패 모드에서도
-  // 사라지지 않는다). vendor는 타겟을 먼저 opacity:0으로 숨기고 html2canvas 스냅샷이
-  // 끝난 뒤에야 되돌리는 순서라, 스냅샷이 느리거나 실패하면 헤더가 통째로 안 보인다.
-  // 스크롤 0에서 메뉴에 호버하면 glassed가 false→true로 바뀌며 매번 이 초기화가 돌아
-  // 웨일에서 "호버 시 헤더 사라짐"으로 재현됐다. 아래 CSS 글래스(bg-glass-bg +
-  // backdrop-blur)만 쓴다 — 모바일·저성능·reduced-motion 사용자가 이미 보던 표면과
-  // 동일하므로 시각 회귀도 없다. liquidGL은 비핵심 표면(전시 CTA)에만 남긴다.
-  // X3 표면 — 모바일 메뉴 시트. 훅이 lg 미만·WebGL 부재를 걸러 CSS 글래스로 폴백한다.
-  useLiquidGlass('.dah-liquid-sheet', {}, sheetOpen)
+  // 35_HEADER_HOVER_WHALE: 헤더 바·모바일 시트 모두 liquidGL 미적용(불변식 = 헤더는 어떤
+  // 실패 모드에서도 사라지지 않는다). vendor는 타겟을 먼저 opacity:0으로 숨기고 html2canvas
+  // 스냅샷이 끝난 뒤에야 되돌리는 순서라, 스냅샷이 느리거나 실패하면 통째로 안 보인다.
+  // 두 표면 다 CSS 글래스(bg-glass-bg + backdrop-blur + hairline)만 쓴다 — 모바일·저성능·
+  // reduced-motion 사용자가 이미 보던 표면과 동일하므로 시각 회귀도 없다.
+  // liquidGL은 비핵심 표면(전시 CTA)에만 남긴다.
 
   return (
     <>
@@ -237,19 +233,25 @@ function Header() {
           })}
         </nav>
 
+        {/* 36_MOBILE_HEADER: lg 미만 헤더 바는 [로고][햄버거] 2개로 고정한다.
+            접수 버튼·KR/EN 토글·설정 아이콘은 전부 lg 이상에서만 렌더하고,
+            모바일에서는 아래 시트 안으로 옮겼다 — 로그인·접수 노출 조합과 무관하게
+            바에 들어가는 요소 수가 변하지 않으므로 겹침·넘침이 구조적으로 불가능하다. */}
         <div onMouseEnter={close} className="flex shrink-0 items-center gap-16">
-          {/* H10: 접수 기간 중 헤더 접수 버튼 (button_mode=header) */}
+          {/* H10: 접수 기간 중 헤더 접수 버튼 (button_mode=header) — 데스크탑 전용 */}
           {showSubmit && submitMode === 'header' && (
             <Link
               to="/submit"
-              className="inline-flex h-32 items-center gap-8 rounded-sm bg-bg-invert px-16 text-small-m font-semibold text-text-invert transition-opacity duration-fast ease-out hover:opacity-90 md:text-small-d"
+              className="hidden h-32 items-center gap-8 rounded-sm bg-bg-invert px-16 text-small-m font-semibold text-text-invert transition-opacity duration-fast ease-out hover:opacity-90 md:text-small-d lg:inline-flex"
             >
               <CalendarCheck size={16} aria-hidden="true" />
               {t('actions.submitExhibition')}
             </Link>
           )}
-          {/* Y1-2: KR/EN 토글은 모든 뷰포트에 노출 */}
-          <LangToggle />
+          {/* KR/EN 토글은 데스크탑 유틸만 — lg 미만은 시트 상단에 노출 */}
+          <span className="hidden lg:block">
+            <LangToggle />
+          </span>
           <span aria-hidden="true" className="hidden h-16 w-px bg-border-subtle lg:block" />
           {/* G14: 로그인 상태는 관리 아이콘 버튼 하나로만 — 역할은 호버 툴팁(title). 텍스트 뱃지 금지 */}
           {user ? (
@@ -258,7 +260,7 @@ function Header() {
               title={`${user.role} ${t('actions.admin')}`}
               aria-label={`${user.role} ${t('actions.admin')}`}
               /* H7.5: 아이콘 시각 여백(7px)을 상쇄해 Container 우측선에 정렬 */
-              className="flex h-32 w-32 items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri lg:-mr-8"
+              className="hidden h-32 w-32 items-center justify-center rounded-sm text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri lg:-mr-8 lg:flex"
             >
               <Settings size={18} aria-hidden="true" />
             </Link>
@@ -308,8 +310,40 @@ function Header() {
             role="dialog"
             aria-modal="true"
             aria-label={t('aria.mobileMenu')}
-            className="dah-liquid-sheet absolute inset-x-0 top-0 max-h-full overflow-y-auto border-b border-glass-line bg-glass-bg pb-[env(safe-area-inset-bottom)] shadow-glass backdrop-blur-glass-mobile"
+            className="absolute inset-x-0 top-0 max-h-full overflow-y-auto border-b border-glass-line bg-glass-bg pb-[env(safe-area-inset-bottom)] shadow-glass backdrop-blur-glass-mobile"
           >
+            {/* (a) 상단 유틸 — KR/EN 토글 + (관리자만) 설정. 헤더 바에서 여기로 이동 */}
+            <div className="flex items-center justify-between gap-16 border-b border-border-subtle px-gutter-m py-12 md:px-gutter-t">
+              <LangToggle />
+              {user && (
+                <Link
+                  to="/admin"
+                  onClick={closeSheet}
+                  aria-label={`${user.role} ${t('actions.admin')}`}
+                  className="inline-flex h-32 shrink-0 items-center gap-8 rounded-sm px-12 text-small-m text-text-sec transition-colors duration-fast ease-out hover:bg-glass-strong hover:text-text-pri"
+                >
+                  <Settings size={18} aria-hidden="true" />
+                  {t('actions.admin')}
+                </Link>
+              )}
+            </div>
+
+            {/* (b) 전시회 접수 CTA — 접수 노출 스위치(show_button)가 켜진 동안만.
+                Button.jsx primary와 동일한 토큰 조합(보라 채움 + 글로우)으로 크게 강조 */}
+            {showSubmit && (
+              <div className="border-b border-border-subtle px-gutter-m py-16 md:px-gutter-t">
+                <Link
+                  to="/submit"
+                  onClick={closeSheet}
+                  className="flex h-48 w-full cursor-pointer items-center justify-center gap-8 rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed"
+                >
+                  <CalendarCheck size={18} aria-hidden="true" />
+                  {t('actions.submitExhibition')}
+                </Link>
+              </div>
+            )}
+
+            {/* (c) 최상위 내비게이션 아코디언 */}
             <nav aria-label={t('aria.mobileMenu')}>
               <ul>
                 {visibleNav.map((item) => {
