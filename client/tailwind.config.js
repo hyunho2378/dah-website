@@ -103,6 +103,9 @@ export default {
         'btn-hover': shadow.btnPrimaryHover,
         glass: shadow.glassPanel,
         'glass-hover': shadow.glassPanelHover,
+        // A4(36_ACCENT_POLISH): 카드 공용 글로우 (기본 잔광 / hover 상승)
+        'glow-card': shadow.glowCard,
+        'glow-card-hover': shadow.glowCardHover,
       },
       transitionTimingFunction: {
         out: motion.ease,

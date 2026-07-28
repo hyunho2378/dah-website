@@ -3,12 +3,17 @@
 // hover(옵션): bg-glass-strong + border 강화 + highlight 스윕 1회. 그림자·scale 금지.
 // 성능 규칙(11_DESIGN_V2 2절): backdrop-filter 동시 활성 최대 3개(Header/GlassDock/카드 1계층).
 // 글래스 안에 글래스 중첩 금지, 스크롤 컨테이너 내부 글래스 남발 금지.
-function GlassCard({ as: Tag = 'div', hover = false, className = '', children, ...rest }) {
+// A4(36_ACCENT_POLISH) glow: 히어로 Primary 버튼 질감(화이트 하이라이트 inset + 퍼플 글로우)을
+//   카드로 확장하는 공용 스위치. 기본은 거의 안 보이는 잔광이고 hover에서만 글로우가 오른다
+//   (상시 발광 금지 — 과하면 산만해진다). 배경은 그대로 두고 표면 질감만 바꾼다.
+function GlassCard({ as: Tag = 'div', hover = false, glow = false, className = '', children, ...rest }) {
+  const base = glow ? 'shadow-glow-card' : 'shadow-glass'
+  const hoverShadow = glow ? 'hover:shadow-glow-card-hover' : 'hover:shadow-glass-hover'
   return (
     <Tag
-      className={`relative rounded-glass border border-glass-line bg-glass-bg shadow-glass backdrop-blur-glass-mobile md:backdrop-blur-glass ${
+      className={`relative rounded-glass border border-glass-line bg-glass-bg ${base} backdrop-blur-glass-mobile md:backdrop-blur-glass ${
         hover
-          ? 'group/glass overflow-hidden transition-[colors,box-shadow] duration-base ease-out hover:border-border-purple hover:bg-glass-strong hover:shadow-glass-hover'
+          ? `group/glass overflow-hidden transition-[colors,box-shadow] duration-base ease-out hover:border-border-purple hover:bg-glass-strong ${hoverShadow}`
           : ''
       } ${className}`}
       {...rest}

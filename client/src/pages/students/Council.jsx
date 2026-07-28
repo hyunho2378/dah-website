@@ -22,26 +22,52 @@ function majorsEn(majors) {
   return majors.replace(/^디지털인문예술( ?전공)?/, 'Digital Arts & Humanities')
 }
 
-// Y1-4(X1 포인트): 기수 타이틀 안의 연도(2026)·기수 표기(제1대)·기수명(LUCID·CUBE 등)만
-// purple.light로 끊어 읽힌다. 원문 문자열은 자르거나 바꾸지 않고 표시만 분리하며,
-// 국문 조직어(운영위원회·학생회)와 EN 일반 명사는 text.pri를 유지한다.
+// A2(36_ACCENT_POLISH) 기수 타이틀 포인트 정밀화 — "2026 제1대 운영위원회 LUCID"에서
+//   연도(2026)      → text.ter 톤다운(보라 아님). 정보 위계상 가장 낮다.
+//   제1대의 숫자 1  → purple.mid. "제"·"대"·"운영위원회"는 text.pri 유지(서수 숫자만 포인트).
+//   기수명(LUCID)   → purple.light. 고유명만 강조.
+// 원문 문자열은 자르거나 바꾸지 않고 표시만 분리한다(사용자 원문 불변).
 // g 플래그 없음: split은 g 없이도 전체를 분해하고, test는 lastIndex 상태가 남지 않는다.
-const PROPER_RE = /(^\d{4}|제\s?\d+대|\b[A-Z]{2,}\b)/
+const TITLE_SPLIT_RE = /(^\d{4}|제\s?\d+대|\b[A-Z]{2,}\b)/
+const YEAR_RE = /^\d{4}$/
+const ORDINAL_RE = /^(제\s?)(\d+)(대)$/
+const PROPER_RE = /^[A-Z]{2,}$/
 
 function TitleWithAccents({ text }) {
   return String(text ?? '')
-    .split(PROPER_RE)
+    .split(TITLE_SPLIT_RE)
     .filter((part) => part !== '')
-    .map((part, i) =>
-      PROPER_RE.test(part) ? (
-        // eslint-disable-next-line react/no-array-index-key
-        <Accent key={`${part}-${i}`} kind="proper">
-          {part}
-        </Accent>
-      ) : (
-        part
-      )
-    )
+    .map((part, i) => {
+      // eslint-disable-next-line react/no-array-index-key
+      const key = `${part}-${i}`
+      if (YEAR_RE.test(part)) {
+        return (
+          <span key={key} className="text-text-meta">
+            {part}
+          </span>
+        )
+      }
+      const ordinal = ORDINAL_RE.exec(part)
+      if (ordinal) {
+        const [, prefix, digits, suffix] = ordinal
+        return (
+          <span key={key}>
+            {prefix}
+            {/* 서수 숫자 = 순번 인덱스라 ACCENT.index(purple.mid)와 같은 용처 */}
+            <Accent kind="index">{digits}</Accent>
+            {suffix}
+          </span>
+        )
+      }
+      if (PROPER_RE.test(part)) {
+        return (
+          <Accent key={key} kind="proper">
+            {part}
+          </Accent>
+        )
+      }
+      return part
+    })
 }
 
 // J6: 연속한 같은 부서(role)를 한 행으로 묶는다 — 원문 순서 보존. T1: 부서 EN(roleEn)도 함께

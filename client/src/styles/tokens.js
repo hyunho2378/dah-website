@@ -33,6 +33,9 @@ export const colors = {
     subtle: 'rgba(255,255,255,0.10)',    // Hairline White 10% — 기본 카드/구분선
     strong: 'rgba(255,255,255,0.16)',    // hover, 활성 상태(화이트 헤어라인 강조)
     purple: 'rgba(200,185,242,0.15)',    // Hairline Purple 15% — 약한 보라 경계선
+    // A5(36_ACCENT_POLISH): 트랙 카드 hover에서 보라 헤어라인이 "진해지는" 단계.
+    // CI 4.2 Hairline Purple과 같은 #C8B9F2를 불투명도만 올린 값(색+불투명도 방식).
+    purpleStrong: 'rgba(200,185,242,0.34)',
     focus: '#A286E9',                    // 키보드 포커스 링(CI 4.5 인터랙션 Mid Purple)
     invert: 'rgba(200,185,242,0.15)',    // 보라 경계선(레거시 키 호환)
   },
@@ -151,6 +154,13 @@ export const shadow = {
   // X3 글래스 위계 — 상단 1px 화이트 하이라이트 + 내부 은은한 깊이
   glassPanel: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 32px -16px rgba(16,13,24,0.80)',
   glassPanelHover: 'inset 0 1px 0 rgba(255,255,255,0.16), 0 12px 40px -16px rgba(16,13,24,0.90)',
+  // A4(36_ACCENT_POLISH) 카드 공용 글로우 — 히어로 Primary 버튼(btnPrimary)의 질감
+  // (상단 화이트 하이라이트 inset + 퍼플 글로우)을 카드에 확장한 것.
+  // 절제 규칙: 기본은 "상시 발광"이 아니라 거의 안 보이는 잔광(0.14), hover에서만 상승(0.40).
+  // 버튼(0.35→0.50)보다 한 단계 낮게 잡아 카드가 CTA보다 강해지지 않게 한다.
+  // 색은 #815FD7 Primary Purple rgb(129,95,215) 하나만 사용(CI 4.2).
+  glowCard: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 20px -10px rgba(129,95,215,0.14)',
+  glowCardHover: 'inset 0 1px 0 rgba(255,255,255,0.16), 0 10px 32px -12px rgba(129,95,215,0.40)',
 };
 
 export const motion = {

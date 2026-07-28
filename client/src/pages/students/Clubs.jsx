@@ -69,7 +69,7 @@ function ClubCard({ item, sorting }) {
   // Y3-5: 카드 클릭 = 동아리 상세 진입(외부 사이트 직행 폐기 — 사이트 링크는 상세의 버튼).
   // 중첩 앵커 금지 — EditPencil(내부 링크)은 카드 링크 밖에 둔다. 정렬 모드에선 링크 비활성.
   return (
-    <GlassCard hover className="flex h-full flex-col p-20 md:p-24">
+    <GlassCard hover glow className="flex h-full flex-col p-20 md:p-24">
       {sorting && (
         <div className="mb-8 flex justify-center">
           <DragHandle />

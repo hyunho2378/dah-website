@@ -29,7 +29,15 @@ function TracksSection() {
         <div className="mt-64 grid gap-24 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))]">
           {tracks.map((track, i) => (
             <Reveal key={track.id} delay={i < 6 ? i * motion.stagger : 0}>
-              <GlassCard hover className="flex h-full flex-col p-24 md:p-32">
+              {/* A5(36_ACCENT_POLISH): 공용 글로우(A4) + 보라 헤어라인 보더.
+                  기본은 hairline.purple(#C8B9F2 15%), hover에서 진해진다(34%).
+                  `!` 필수: GlassCard가 base에 border-glass-line, hover에 border-border-purple을
+                  이미 걸고 있고 둘 다 동일 특정성이라 CSS 파일 순서(glass-line이 뒤)로 밀린다. */}
+              <GlassCard
+                hover
+                glow
+                className="flex h-full flex-col !border-border-purple p-24 transition-colors duration-base ease-out hover:!border-border-purpleStrong md:p-32"
+              >
                 <p className="font-mono text-label-m uppercase tracking-label text-text-meta lg:text-label-d">
                   {track.no}
                 </p>

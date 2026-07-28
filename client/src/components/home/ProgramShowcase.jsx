@@ -35,7 +35,10 @@ function DetailPanel({ category, items, t }) {
   // Y1-1(33_PHASE18): 좌측 리스트가 이미 같은 번호를 노출하므로 패널 상단 인덱스 숫자는 삭제.
   // 제목이 패널 최상단에 오면서 좌측 첫 항목과 같은 높이에서 읽힌다.
   return (
-    <div className="relative flex h-full flex-col rounded-glass border border-glass-line bg-bg-elev p-24 backdrop-blur-glass-mobile md:p-32 md:backdrop-blur-glass">
+    // A4(36_ACCENT_POLISH): 공용 글로우 적용. 이 패널은 GlassCard가 아니라 자체 표면이라
+    // 같은 토큰 클래스(shadow-glow-card)를 직접 붙여 다른 카드들과 질감을 통일한다.
+    // 마스터-디테일 패널은 hover로 전환되는 구조라 기본 잔광만 두고 hover 상승은 생략한다.
+    <div className="relative flex h-full flex-col rounded-glass border border-glass-line bg-bg-elev p-24 shadow-glow-card backdrop-blur-glass-mobile md:p-32 md:backdrop-blur-glass">
       <h3 className="text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
         {t(`programs.${category.key}.label`)}
       </h3>

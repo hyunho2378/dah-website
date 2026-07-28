@@ -159,7 +159,7 @@ function PosterCard({ item }) {
   return (
     <Link to={`/programs/exhibitions/${item.id}`} className="group block h-full">
       {/* H2: 포스터 축소 원복 — 여백은 그리드 간격+소패딩(p-12)으로만, 포스터는 크게(2:3) */}
-      <GlassCard hover className="flex h-full flex-col gap-12 p-12">
+      <GlassCard hover glow className="flex h-full flex-col gap-12 p-12">
         <ImageFrame
           src={item.poster_url}
           alt={`${item.title} 포스터`}

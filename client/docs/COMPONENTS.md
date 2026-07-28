@@ -45,6 +45,21 @@
 ### Divider.jsx
 - border.subtle 1px 수평선. 컨테이너 폭
 
+### 로고·파비콘 색상 규칙 (A1, 36_ACCENT_POLISH — CI.md 3.2·3.3 확정)
+
+사이트 전역의 **기본 로고는 항상 Light 단색 `#F7F5FC`** 이다. 딥 퍼플 블랙 배경(#100D18·#171321·#211A31)에서 CI.md 3.3이 정한 1순위이며, 헤더·시그니처·**파비콘**이 여기에 해당한다.
+
+| 위치 | 버전 | 값 |
+|---|---|---|
+| 파비콘(public/favicon.svg) | Light | #F7F5FC |
+| 헤더 로고(assets/logo.svg) | Light | #F7F5FC |
+| GlassDock·푸터 로고 | Light | #F7F5FC |
+| CI 페이지 시연(/about/ci) | 4종 전부 | Light·Purple·Dark·Deep Dark |
+
+- 연보라(#C8B9F2)·Mid(#A286E9)는 **공식 로고 색으로 사용 금지**(CI.md 3.3·7.3). 그래픽 모티브에서만 허용.
+- Purple 로고(#815FD7)는 대형 히어로·브랜드 강조 등 **명도 대비가 충분한 특정 위치에서만 예외적으로** 쓴다. 기본값으로 승격하지 않는다.
+- 로고는 단색만 — 조각별 다른 색·그라디언트·외곽선·투명도 임의 조정 금지(CI.md 3.1·7.3).
+
 ## 2. 레이아웃 (layout/)
 
 ### Header.jsx

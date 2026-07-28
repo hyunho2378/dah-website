@@ -18,7 +18,7 @@ function ShowcaseCard({ item }) {
 
   return (
     <Link to={`/showcase/${item.id}`} className="group block h-full">
-      <GlassCard hover className="flex h-full flex-col gap-16 p-24 md:p-32">
+      <GlassCard hover glow className="flex h-full flex-col gap-16 p-24 md:p-32">
         {/* M3-3: 카드 메인 이미지 16:9 (사진 → object-cover로 꽉 채움) — 카드 최상단 지배 요소 */}
         <ImageFrame
           src={item.main_img || undefined}

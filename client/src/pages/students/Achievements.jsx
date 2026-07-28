@@ -67,7 +67,9 @@ function highlightNames(text, names) {
   )
   return text.split(pattern).map((part, i) =>
     names.includes(part) ? (
-      <strong key={i} className="font-bold text-text-pri">
+      // A3(36_ACCENT_POLISH): 수상자 이름 강조를 화이트 → purple.primary(#815FD7)로.
+      // 국문·영문 동일 적용. 본문 나머지는 text.sec 유지(CI 4.4 보라 본문 금지 — 이름 단위 포인트만).
+      <strong key={i} className="font-bold text-purple-primary">
         {part}
       </strong>
     ) : (
