@@ -7,6 +7,7 @@ import {
   motion,
   glass,
   cosmos,
+  reading,
 } from './src/styles/tokens.js'
 
 const px = (n) => `${n}px`
@@ -50,6 +51,9 @@ export default {
         glass: { bg: glass.bg, strong: glass.bgStrong, line: glass.border },
         // v2 우주 배경: bg-cosmos-depth0 / bg-cosmos-depth1 / text-cosmos-star
         cosmos: { depth0: cosmos.depth0, depth1: cosmos.depth1, star: cosmos.star },
+        // G4(37_SHEET_ROADMAP) 밝은 읽기 표면: bg-reading-bg / text-reading-text /
+        // text-reading-accent / border-reading-hairline 등. 다크 사이트 내 예외 표면 전용.
+        reading,
       },
       backdropBlur: {
         glass: glass.blur,

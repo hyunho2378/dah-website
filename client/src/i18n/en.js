@@ -97,6 +97,8 @@ export const en = {
   },
   common: {
     koreanOnly: 'Korean only',
+    noOfferings: 'No course offerings',
+    currentSemester: 'Current semester',
     empty: 'No entries yet',
     offline: 'Awaiting live sync',
     loading: 'Loading',
@@ -207,6 +209,45 @@ export const en = {
       contest: 'Contest Call',
       lecture: 'Lecture Call',
     },
+  },
+  // H2-5(37_SHEET_ROADMAP): consultation request form — labels, notices, consent, errors.
+  // Register: formal university-department English for prospective international applicants.
+  consult: {
+    title: 'Consultation Request',
+    breadcrumbHome: 'Home',
+    langLabel: 'Language',
+    doneTitle: 'Request Received',
+    doneBody:
+      'Your consultation request has been received. A member of our staff will review it and contact you shortly.',
+    required: '(required)',
+    name: 'Name',
+    grade: 'Year of Study',
+    mainMajor: 'Primary Major',
+    doubleMajor: 'Double Major',
+    email: 'Email',
+    contact: 'Phone',
+    message: 'Inquiry',
+    emailPlaceholder: 'example@hallym.ac.kr',
+    contactPlaceholder: '010-0000-0000',
+    privacyTitle: 'Collection and Use of Personal Information (Consultation Request)',
+    privacyItems:
+      'Items collected: name, year of study, primary major, double major, email, contact (telephone or email), and the content of the inquiry',
+    privacyPurpose:
+      'Purpose of use: responding to inquiries regarding the double major and the curriculum',
+    privacyRetention:
+      'Retention and use period: destroyed without delay once the consultation is concluded, except where retention is required by applicable law',
+    privacyRefusal:
+      'Right to refuse: you may decline to give consent. Please note that a consultation request cannot be processed without consent.',
+    privacyLink: 'View the full Privacy Policy',
+    agree:
+      'I consent to the collection and use of my personal information for the purpose of this consultation.',
+    submit: 'Submit Request',
+    submitting: 'Submitting',
+    errorName: 'Please enter your name.',
+    errorEmail: 'Please check the email format (for example, example@hallym.ac.kr).',
+    errorContact: 'Please enter your phone number in the format 010-0000-0000.',
+    errorAgree: 'Please consent to the collection and use of personal information.',
+    errorSubmit: 'The request could not be submitted. Please try again shortly.',
   },
   footer: {
     copyright: '© 2026 Digital Arts and Humanities. All rights reserved.',

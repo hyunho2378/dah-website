@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import { LoginModalProvider } from './context/LoginModalContext'
 import { LangProvider } from './i18n/LangContext'
 import CosmosBackground from './components/cosmos/CosmosBackground'
+import { ToastProvider } from './components/common/Toast'
 import Analytics from './components/Analytics'
 import ScrollToTop from './components/layout/ScrollToTop'
 import Header from './components/layout/Header'
@@ -99,6 +100,9 @@ const PUBLIC_ROUTES = [
   { path: '/resources/:id', element: <ResourceDetail /> },
   { path: '/privacy', element: <Privacy /> },
   { path: '/terms', element: <Terms /> },
+  // H2-5(37_SHEET_ROADMAP): 상담 신청이 영문 지원 대상이 되어 /en 미러에 포함한다.
+  // (이전에는 국문 전용 standalone 라우트였다 — localizeTo 제외 목록에서도 함께 해제)
+  { path: '/consult', element: <Consult /> },
 ]
 
 function App() {
@@ -107,6 +111,8 @@ function App() {
       <LangProvider>
         <AuthProvider>
           <LoginModalProvider>
+          {/* G2(37_SHEET_ROADMAP): 논-시프트 토스트 — 어드민 시트 포함 전 라우트에서 useToast() 사용 */}
+          <ToastProvider>
           <Analytics />
           <CosmosBackground />
           <ScrollToTop />
@@ -126,11 +132,10 @@ function App() {
                 />
               ))}
 
-              {/* 제출·접수·상담 플로우 (국문만, 폼 문안 원문 보존) */}
+              {/* 제출·접수 플로우 (국문만, 폼 문안 원문 보존) — 상담은 위 PUBLIC_ROUTES로 이동 */}
               <Route path="/showcase/submit" element={<ShowcaseSubmit />} />
               <Route path="/submit" element={<ExhibitSubmit />} />
               <Route path="/submit/edit" element={<ExhibitEdit />} />
-              <Route path="/consult" element={<Consult />} />
 
               {/* 관리 (지연 로드, 라우트별 RequireRole은 AdminRoutes 내부) */}
               <Route
@@ -160,6 +165,7 @@ function App() {
           </main>
           <Footer />
           <LoginModal />
+          </ToastProvider>
           </LoginModalProvider>
         </AuthProvider>
       </LangProvider>

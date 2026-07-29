@@ -1,8 +1,10 @@
 // src/routes/adminExtra.js — 8절 계약 외 확장 (13_CMS_SPEC.md 6절 어드민 대시보드)
 // 사용자 관리(owner): GET/POST /admin/users, PUT /admin/users/:id(이름·롤 변경, 비밀번호 리셋 플래그),
 //                     DELETE /admin/users/:id. 온보딩은 12_BACKEND 3절: 등록 시 must_set_pw=TRUE.
-// 접수 현황(admin+): GET /admin/exhibition/entries — exhibition_entries 목록 (pw_hash 제외).
+// 접수 현황(admin+): GET /admin/exhibition/entries — exhibition_entries 목록 (pw_hash 제외),
+//                    POST /admin/exhibition/entries/:id/reset-password — 수정용 비밀번호 1234 초기화.
 import { Router } from 'express'
+import bcrypt from 'bcrypt'
 import { query } from '../db.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
 import { wrap } from './content.js'
@@ -116,6 +118,32 @@ router.get(
       [ps, (p - 1) * ps]
     )
     res.json({ items: rows, total: countRes.rows[0]?.total ?? 0, page: p, pageSize: ps })
+  })
+)
+
+// H1-7(37_SHEET_ROADMAP): 접수 수정용 비밀번호를 1234로 초기화 (admin·owner만).
+// 권한은 서버가 최종 판단한다 — 클라이언트 렌더 여부와 무관하게 requireRole('admin')로 재검증.
+// 저장은 submit.js와 동일한 bcrypt(salt rounds 10). 이력은 pw_reset_at·pw_reset_by에 남긴다
+// (컬럼은 scripts/migrate-h1-pwreset.mjs로 선행 추가).
+// updated_at은 접수자 본인의 수정 시각이므로 건드리지 않는다.
+const RESET_PASSWORD = '1234'
+
+router.post(
+  '/admin/exhibition/entries/:id/reset-password',
+  requireAuth,
+  requireRole('admin'),
+  wrap(async (req, res) => {
+    const id = parseInt(req.params.id, 10)
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' })
+    const hash = await bcrypt.hash(RESET_PASSWORD, 10)
+    const { rows } = await query(
+      `UPDATE exhibition_entries
+       SET pw_hash = $1, pw_reset_at = now(), pw_reset_by = $2
+       WHERE id = $3 RETURNING id, pw_reset_at, pw_reset_by`,
+      [hash, req.user.email || String(req.user.id), id]
+    )
+    if (!rows[0]) return res.status(404).json({ error: 'not found' })
+    res.json({ ok: true, ...rows[0] })
   })
 )
 

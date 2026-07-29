@@ -47,8 +47,9 @@ export function localizeTo(lang, to) {
     to === '/en' ||
     to.startsWith('/en/') ||
     to.startsWith('/admin') ||
-    to.startsWith('/submit') ||
-    to.startsWith('/consult')
+    to.startsWith('/submit')
+    // H2-5(37_SHEET_ROADMAP) 통합: /consult는 영문 지원 대상이 되어 제외 목록에서 뺐다.
+    // 이제 /en/consult 미러 라우트(App.jsx PUBLIC_ROUTES)가 있어 헤더 언어 토글이 정상 동작한다.
   )
     return to
   return to === '/' ? '/en' : `/en${to}`

@@ -88,6 +88,32 @@ export function resolveSubjects(settingsRes) {
   return out
 }
 
+/**
+ * H2-2 회차 — 어드민 전시회 설정(site_settings.exhibitionOrdinal)에 저장한 값.
+ * GET /settings/public이 exhibition.ordinal · settings.exhibitionOrdinal 두 경로로 내려준다.
+ * @param {object} settingsRes GET /settings/public 응답 전체
+ * @returns {number|null} 양의 정수 회차. 지정 전이면 null.
+ */
+export function resolveOrdinal(settingsRes) {
+  const raw =
+    settingsRes?.exhibition?.ordinal ?? settingsRes?.settings?.exhibitionOrdinal ?? null
+  const n = Number(raw)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
+
+/**
+ * H2-4 현재 접수 대상 학기 — 접수 폼의 과목 목록 기본값이 된다.
+ * @param {object} settingsRes GET /settings/public 응답 전체
+ * @returns {string} '1' 또는 '2' (미지정이면 '1')
+ */
+export function resolveCurrentSemester(settingsRes) {
+  const raw =
+    settingsRes?.exhibition?.current_semester ??
+    settingsRes?.settings?.exhibitionSemester ??
+    1
+  return Number(raw) === 2 ? '2' : '1'
+}
+
 /** 과목 카드 부제 — '1' → '1학기'. 이미 '학기'가 들어간 라벨은 그대로 둔다. */
 export function semesterDesc(semester) {
   if (!semester) return undefined

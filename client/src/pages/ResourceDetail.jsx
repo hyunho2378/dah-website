@@ -1,6 +1,8 @@
 // /resources/:id — 자료실 상세 (N1-1, 23_PHASE11)
-// NewsDetail 다크 회귀 구조 재사용: 타이틀 블록(다크 표면) + 첨부 줄(파일명·미리보기·다운로드)
-// + 리치 본문(RichBody) + 이미지 갤러리. 자료실은 정적 폴백이 없어 itemOf만 사용.
+// NewsDetail과 동일 구조: 타이틀 블록 + 첨부 줄(파일명·미리보기·다운로드) + 리치 본문 + 갤러리.
+// 자료실은 정적 폴백이 없어 itemOf만 사용.
+// H3-5(37_SHEET_ROADMAP): 공지 상세와 일관되게 문서 블록만 G4 밝은 읽기 표면(tokens.reading.*),
+// 배너·목록 버튼·공유 등 사이트 크롬은 다크 유지.
 import { useParams } from 'react-router-dom'
 import { Download, ExternalLink, Paperclip } from 'lucide-react'
 import PageBanner from '../components/layout/PageBanner'
@@ -13,29 +15,23 @@ import { useApi, itemOf } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 
-// 첨부 줄 — 파일명 + 미리보기(새 탭) + 다운로드 (NewsDetail과 동일한 다크 토큰)
+// 첨부 줄 — 파일명 + 미리보기(새 탭) + 다운로드 (NewsDetail과 동일한 밝은 읽기 표면 토큰)
+const ATTACH_LINK =
+  'inline-flex items-center gap-4 rounded-sm border border-reading-hairline bg-reading-surface px-12 py-4 text-caption-m text-reading-accent transition-colors duration-fast ease-out hover:border-reading-accent hover:text-reading-accentStrong'
+
 function AttachmentRow({ file, t }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-12 border-t border-border-subtle py-12">
-      <span className="inline-flex min-w-0 items-center gap-8 text-small-m text-text-pri md:text-small-d">
-        <Paperclip size={16} aria-hidden="true" className="shrink-0 text-text-sec" />
+    <div className="flex min-w-0 flex-wrap items-center gap-12 border-t border-reading-hairline py-12">
+      <span className="inline-flex min-w-0 items-center gap-8 text-small-m text-reading-textStrong md:text-small-d">
+        <Paperclip size={16} aria-hidden="true" className="shrink-0 text-reading-textMeta" />
         <span className="truncate">{file.name || file.url.split('/').pop()}</span>
       </span>
       <span className="flex shrink-0 items-center gap-8">
-        <a
-          href={file.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-4 rounded-sm border border-border-subtle px-12 py-4 text-caption-m text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
-        >
+        <a href={file.url} target="_blank" rel="noopener noreferrer" className={ATTACH_LINK}>
           <ExternalLink size={12} aria-hidden="true" />
           {t('news.preview')}
         </a>
-        <a
-          href={file.url}
-          download
-          className="inline-flex items-center gap-4 rounded-sm border border-border-subtle px-12 py-4 text-caption-m text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
-        >
+        <a href={file.url} download className={ATTACH_LINK}>
           <Download size={12} aria-hidden="true" />
           {t('news.download')}
         </a>
@@ -92,65 +88,67 @@ function ResourceDetail() {
               <EditPencil type="resource" to={`/admin/posts/resource/${id}/edit`} />
             </div>
 
-            {/* 타이틀 블록 — 다크 표면 카드(제목 + 등록일·태그 + 첨부 줄) */}
-            <header className="rounded-md border border-border-subtle bg-bg-elev p-24 md:p-40">
-              <h1 className="text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
-                {title}
-              </h1>
-              <div className="mt-16 flex flex-wrap items-center gap-12 text-small-m text-text-sec md:text-small-d">
-                {date && (
-                  <time dateTime={date}>
-                    {t('news.registered')} {date}
-                  </time>
-                )}
-                {tag && (
-                  <span className="inline-flex items-center rounded-sm border border-border-subtle px-8 py-2 text-caption-m">
-                    {tag}
-                  </span>
-                )}
-              </div>
-              {attachments.length > 0 && (
-                <div className="mt-20">
-                  {attachments.map((file) => (
-                    <AttachmentRow key={file.url} file={file} t={t} />
-                  ))}
+            {/* H3-5: 문서 블록 = G4 밝은 읽기 표면(제목 + 등록일·태그 + 첨부 + 본문 + 갤러리) */}
+            <div className="rounded-md bg-reading-bg p-24 md:p-40">
+              <header className="border-b border-reading-hairline pb-24">
+                <h1 className="text-h1-m font-bold leading-snug text-reading-textStrong md:text-h1-d">
+                  {title}
+                </h1>
+                <div className="mt-16 flex flex-wrap items-center gap-12 text-small-m text-reading-textMeta md:text-small-d">
+                  {date && (
+                    <time dateTime={date}>
+                      {t('news.registered')} {date}
+                    </time>
+                  )}
+                  {tag && (
+                    <span className="inline-flex items-center rounded-sm border border-reading-hairline bg-reading-surface px-8 py-2 text-caption-m text-reading-accent">
+                      {tag}
+                    </span>
+                  )}
                 </div>
+                {attachments.length > 0 && (
+                  <div className="mt-20">
+                    {attachments.map((file) => (
+                      <AttachmentRow key={file.url} file={file} t={t} />
+                    ))}
+                  </div>
+                )}
+              </header>
+
+              {/* 본문 — 밝은 표면 대비(reading.text 15.0:1) */}
+              {body ? (
+                <div className="pt-32">
+                  <RichBody body={body} tone="light" />
+                </div>
+              ) : (
+                <p className="pt-32 text-body-l-m leading-relaxed text-reading-textMeta md:text-body-l-d">
+                  {t('news.resourceNoBody')}
+                </p>
               )}
-            </header>
 
-            {/* 본문 — 배경 그대로 + 타이틀 블록과의 사이 헤어라인, text-pri·행간 1.8 */}
-            {body ? (
-              <div className="border-t border-border-subtle pt-32">
-                <RichBody body={body} className="rich-bright" />
-              </div>
-            ) : (
-              <p className="border-t border-border-subtle pt-32 text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
-                {t('news.resourceNoBody')}
-              </p>
-            )}
-
-            {/* 이미지 갤러리 — 본문 아래 그리드, 원본은 새 탭 */}
-            {gallery.length > 0 && (
-              <ul className="grid grid-cols-2 gap-12 md:grid-cols-3 md:gap-16">
-                {gallery.map((url, i) => (
-                  <li key={url} className="min-w-0">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group block overflow-hidden rounded-md border border-border-subtle bg-bg-elev"
-                    >
-                      <img
-                        src={url}
-                        alt={`${title} 이미지 ${i + 1}`}
-                        loading="lazy"
-                        className="aspect-[4/3] w-full object-cover transition-opacity duration-fast ease-out group-hover:opacity-90"
-                      />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
+              {/* 이미지 갤러리 — 본문 아래 그리드, 원본은 새 탭 */}
+              {gallery.length > 0 && (
+                <ul className="mt-32 grid grid-cols-2 gap-12 md:grid-cols-3 md:gap-16">
+                  {gallery.map((url, i) => (
+                    <li key={url} className="min-w-0">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block overflow-hidden rounded-md border border-reading-hairline bg-reading-surface"
+                      >
+                        <img
+                          src={url}
+                          alt={`${title} 이미지 ${i + 1}`}
+                          loading="lazy"
+                          className="aspect-[4/3] w-full object-cover transition-opacity duration-fast ease-out group-hover:opacity-90"
+                        />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
             <footer className="flex flex-wrap items-center justify-between gap-16 border-t border-border-subtle pt-32">
               <Button variant="secondary" href="/resources">

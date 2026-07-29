@@ -81,7 +81,10 @@ function ConsultationsAdmin() {
                   {String(item.created_at).slice(0, 16).replace('T', ' ')}
                 </span>
               </div>
-              <p className="font-mono text-small-m text-text-sec">{item.contact}</p>
+              {/* H2-5(37_SHEET_ROADMAP) 통합: 이메일이 필수 수집 항목이 되어 연락처와 함께 노출 */}
+              <p className="font-mono text-small-m text-text-sec">
+                {[item.contact, item.email].filter(Boolean).join(' · ')}
+              </p>
               {item.message && (
                 <p className="whitespace-pre-wrap text-body-m leading-relaxed text-text-sec">
                   {item.message}

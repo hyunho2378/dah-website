@@ -1,5 +1,5 @@
 // /consult — 상담 신청 (Phase 9 K1-9, 비로그인 공개)
-// POST /consult {name, grade, mainMajor, doubleMajor, contact, message, agreed}. 제출 성공 시 완료 안내로 교체.
+// POST /consult {name, grade, mainMajor, doubleMajor, email, contact, message, agreed}. 제출 성공 시 완료 안내로 교체.
 // 폼 안내 문안은 사용자 제공 원문 그대로(변경 금지). 개인정보처리방침 전문 보기만 내부 /privacy 링크.
 //
 // Y1-7(33_PHASE18) 재설계:
@@ -8,6 +8,12 @@
 //     내용 폭에 맞춘다. 문의 내용만 전체폭 textarea.
 //   - 우측은 결제창식 동의 패널(sticky): 수집 안내 요약 + 동의 체크 + 제출 버튼. 동의 전 disabled.
 //   - 연락처는 utils/format.formatPhone으로 010-XXXX-XXXX 고정(숫자 외 입력 자체가 반영되지 않음).
+//
+// H2-5(37_SHEET_ROADMAP):
+//   - 이메일 단독 필수 필드 추가(@ 형식 검증). 수집 항목 안내에도 반영.
+//   - 해외 지원자 대응으로 페이지 전체를 국·영문 지원한다. 문구는 i18n(ko/en).consult에서 읽는다.
+//     통합(STEP 3)에서 /consult를 PUBLIC_ROUTES로 옮겨 /en/consult 미러를 만들고 localizeTo
+//     제외 목록에서도 뺐다. 언어 전환은 다른 공개 페이지와 동일하게 헤더 토글이 담당한다.
 
 import { useState } from 'react'
 import PageBanner from '../components/layout/PageBanner'
@@ -17,7 +23,10 @@ import Checkbox from '../components/common/Checkbox'
 import Link from '../components/common/LangLink'
 import { api } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
-import { formatPhone, isValidPhone } from '../utils/format'
+import { useLang } from '../i18n/LangContext'
+import { ko } from '../i18n/ko'
+import { en } from '../i18n/en'
+import { formatPhone, isValidEmail, isValidPhone } from '../utils/format'
 
 const inputCls =
   'w-full min-w-0 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri placeholder:text-text-meta transition-colors duration-fast ease-out focus:border-border-purple focus:outline-none md:text-body-d'
@@ -27,12 +36,14 @@ const labelCls = 'text-small-m font-semibold text-text-pri md:text-small-d'
 const submitCls =
   'inline-flex h-11 w-full cursor-pointer items-center justify-center whitespace-nowrap rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed disabled:cursor-default disabled:bg-bg-panel disabled:text-text-disabled disabled:shadow-none md:h-48 md:text-body-d'
 
-function Field({ label, required = false, className = '', children }) {
+function Field({ label, required = false, requiredLabel, className = '', children }) {
   return (
     <div className={`flex min-w-0 flex-col gap-8 ${className}`.trim()}>
       <span className="flex items-baseline gap-8">
         <span className={labelCls}>{label}</span>
-        {required && <span className="font-mono text-caption-m text-text-meta">(필수)</span>}
+        {required && (
+          <span className="font-mono text-caption-m text-text-meta">{requiredLabel}</span>
+        )}
       </span>
       {children}
     </div>
@@ -40,19 +51,26 @@ function Field({ label, required = false, className = '', children }) {
 }
 
 function Consult() {
-  useTitle('상담 신청')
+  // 통합(STEP 3): /en/consult 미러 라우트가 생겨 헤더 언어 토글이 이 페이지에서도 동작한다.
+  // 페이지 내 별도 토글은 헤더와 중복이라 제거하고, 라우트 언어를 단일 진실로 쓴다.
+  const { lang } = useLang()
+  const c = lang === 'en' ? en.consult : ko.consult
+  useTitle(c.title)
+
   const [form, setForm] = useState({
     name: '',
     grade: '',
     mainMajor: '',
     doubleMajor: '',
+    email: '',
     contact: '',
     message: '',
   })
   const [agreed, setAgreed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
-  const [error, setError] = useState(null)
+  // 에러는 문구가 아니라 사전 키로 들고 있는다 — 언어를 바꿔도 표시 문구가 따라 바뀐다
+  const [errorKey, setErrorKey] = useState(null)
 
   const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
   // 숫자만 남기고 3-4-4로 하이픈을 삽입한다 — 그 외 문자는 상태에 반영되지 않는다
@@ -62,32 +80,37 @@ function Consult() {
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (!form.name.trim()) {
-      setError('이름을 입력해 주세요.')
+      setErrorKey('errorName')
+      return
+    }
+    if (!isValidEmail(form.email)) {
+      setErrorKey('errorEmail')
       return
     }
     if (!isValidPhone(form.contact)) {
-      setError('연락처를 010-0000-0000 형식으로 입력해 주세요.')
+      setErrorKey('errorContact')
       return
     }
     if (!agreed) {
-      setError('개인정보 수집·이용에 동의해 주세요.')
+      setErrorKey('errorAgree')
       return
     }
     setSubmitting(true)
-    setError(null)
+    setErrorKey(null)
     try {
       await api.post('/consult', {
         name: form.name.trim(),
         grade: form.grade.trim() || null,
         mainMajor: form.mainMajor.trim() || null,
         doubleMajor: form.doubleMajor.trim() || null,
+        email: form.email.trim(),
         contact: form.contact.trim(),
         message: form.message.trim() || null,
         agreed: true,
       })
       setDone(true)
     } catch {
-      setError('신청에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      setErrorKey('errorSubmit')
     } finally {
       setSubmitting(false)
     }
@@ -96,11 +119,11 @@ function Consult() {
   return (
     <>
       <PageBanner
-        titleKo="상담 신청"
+        titleKo={c.title}
         titleEn="CONSULTATION"
         breadcrumb={[
-          { label: '홈', to: '/' },
-          { label: '상담 신청', to: '/consult' },
+          { label: c.breadcrumbHome, to: '/' },
+          { label: c.title, to: '/consult' },
         ]}
         nebulaX="68%"
         nebulaY="24%"
@@ -109,10 +132,10 @@ function Consult() {
         {done ? (
           <GlassCard className="flex max-w-[760px] flex-col items-start gap-24 p-24 md:p-32">
             <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
-              신청 완료
+              {c.doneTitle}
             </h2>
             <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
-              상담 신청이 접수되었습니다. 담당자가 확인 후 연락드리겠습니다.
+              {c.doneBody}
             </p>
           </GlassCard>
         ) : (
@@ -123,7 +146,7 @@ function Consult() {
             {/* 좌: 입력 — 짧은 값은 2열로 묶고, 문의 내용만 전체폭 */}
             <div className="flex min-w-0 flex-col gap-24">
               <div className="grid min-w-0 gap-24 md:grid-cols-2">
-                <Field label="이름" required>
+                <Field label={c.name} required requiredLabel={c.required}>
                   <input
                     type="text"
                     required
@@ -133,7 +156,7 @@ function Consult() {
                     autoComplete="name"
                   />
                 </Field>
-                <Field label="학년">
+                <Field label={c.grade}>
                   <input
                     type="text"
                     value={form.grade}
@@ -141,7 +164,7 @@ function Consult() {
                     className={`${inputCls} md:w-128`}
                   />
                 </Field>
-                <Field label="주전공">
+                <Field label={c.mainMajor}>
                   <input
                     type="text"
                     value={form.mainMajor}
@@ -149,7 +172,7 @@ function Consult() {
                     className={inputCls}
                   />
                 </Field>
-                <Field label="복수전공">
+                <Field label={c.doubleMajor}>
                   <input
                     type="text"
                     value={form.doubleMajor}
@@ -157,21 +180,33 @@ function Consult() {
                     className={inputCls}
                   />
                 </Field>
-                <Field label="연락처" required>
+                {/* H2-5: 이메일 필수 — 회신 경로 확보 */}
+                <Field label={c.email} required requiredLabel={c.required}>
+                  <input
+                    type="email"
+                    required
+                    value={form.email}
+                    onChange={set('email')}
+                    placeholder={c.emailPlaceholder}
+                    className={inputCls}
+                    autoComplete="email"
+                  />
+                </Field>
+                <Field label={c.contact} required requiredLabel={c.required}>
                   <input
                     type="tel"
                     inputMode="numeric"
                     required
                     value={form.contact}
                     onChange={setContact}
-                    placeholder="010-0000-0000"
+                    placeholder={c.contactPlaceholder}
                     className={`${inputCls} md:w-160`}
                     autoComplete="tel"
                   />
                 </Field>
               </div>
 
-              <Field label="문의">
+              <Field label={c.message}>
                 <textarea
                   rows={8}
                   value={form.message}
@@ -184,19 +219,13 @@ function Consult() {
             {/* 우: 결제창식 동의 패널 — 수집 안내 요약 → 동의 → 제출. 동의 전에는 제출 불가 */}
             <GlassCard as="aside" className="flex flex-col gap-16 p-24 lg:sticky lg:top-header">
               <p className="text-small-m font-semibold text-text-pri md:text-small-d">
-                개인정보 수집·이용 안내 (상담 신청)
+                {c.privacyTitle}
               </p>
               <ul className="flex flex-col gap-8 text-small-m leading-relaxed text-text-sec md:text-small-d">
-                <li>수집 항목: 이름, 학년, 주전공, 복수전공, 연락처(전화 또는 이메일), 문의 내용</li>
-                <li>이용 목적: 복수전공·교육과정 상담 응대</li>
-                <li>
-                  보유·이용 기간: 상담 종료 후 지체 없이 파기(관계 법령에 따른 보관 의무가 있는
-                  경우 제외)
-                </li>
-                <li>
-                  동의 거부 권리: 동의를 거부할 수 있으며, 이 경우 상담 신청이 제한될 수
-                  있습니다.
-                </li>
+                <li>{c.privacyItems}</li>
+                <li>{c.privacyPurpose}</li>
+                <li>{c.privacyRetention}</li>
+                <li>{c.privacyRefusal}</li>
               </ul>
               <Link
                 to="/privacy"
@@ -204,23 +233,23 @@ function Consult() {
                 rel="noopener noreferrer"
                 className="font-mono text-caption-m text-text-meta underline underline-offset-4 transition-colors duration-fast ease-out hover:text-text-pri"
               >
-                개인정보처리방침 전문 보기
+                {c.privacyLink}
               </Link>
 
               <div className="border-t border-border-subtle pt-16">
                 <Checkbox checked={agreed} onChange={setAgreed}>
-                  상담을 위한 개인정보 수집·이용에 동의합니다.
+                  {c.agree}
                 </Checkbox>
               </div>
 
-              {error && (
+              {errorKey && (
                 <p role="alert" className="text-small-m text-state-error md:text-small-d">
-                  {error}
+                  {c[errorKey]}
                 </p>
               )}
 
               <button type="submit" disabled={!agreed || submitting} className={submitCls}>
-                {submitting ? '신청 중' : '상담 신청하기'}
+                {submitting ? c.submitting : c.submit}
               </button>
             </GlassCard>
           </form>

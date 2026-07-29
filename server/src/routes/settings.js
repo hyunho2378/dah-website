@@ -22,6 +22,20 @@ export function normalizeSubjects(value) {
     .filter((s) => s.name !== '')
 }
 
+// H2-2(37_SHEET_ROADMAP): 전시회 회차(ordinal). site_settings.exhibitionOrdinal에 저장한다.
+// full_title("제N회 디지털인문예술전공 프로젝트 전시회") 조합은 클라이언트
+// data/exhibitionTitle.js가 담당하므로 서버는 회차 숫자만 보관한다. 양의 정수 외에는 null.
+export function normalizeOrdinal(value) {
+  const n = Number(value)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
+
+// H2-4(37_SHEET_ROADMAP): 현재 접수 대상 학기(1|2). site_settings.exhibitionSemester.
+// 접수 폼이 이 학기의 과목을 기본으로 노출한다. 잘못된 값은 1학기로 되돌린다.
+export function normalizeSemester(value) {
+  return Number(value) === 2 ? 2 : 1
+}
+
 // Y3-3(33_PHASE18): 콘텐츠 유형별 공개/비공개.
 // site_settings.contentVisibility에 저장하고 GET /settings/public이 기본값과 병합해 내려준다.
 // 포트폴리오는 기본 비공개 — 공개로 전환하면 공개 메뉴("학생 활동 > 포트폴리오")가 나타난다.
@@ -52,7 +66,7 @@ export function normalizeVisibility(value) {
   return next
 }
 
-function computeExhibitionState(row, subjects = []) {
+function computeExhibitionState(row, subjects = [], ordinal = null, currentSemester = 1) {
   if (!row) return null
   const now = new Date()
   const isSubmitPeriod =
@@ -72,6 +86,10 @@ function computeExhibitionState(row, subjects = []) {
     // Y3-1: 접수 폼(Y2-4-8)이 읽는 과목 목록. settings.exhibitionSubjects와 동일 값이며
     // 접수 플로우가 exhibition 블록 하나만 보고 렌더할 수 있도록 여기에도 실어 보낸다.
     subjects,
+    // H2-2·H2-4: 접수 안내/접수 폼이 읽는 회차와 현재 접수 대상 학기.
+    // 값의 원본은 site_settings지만, 접수 플로우가 exhibition 블록 하나만 보고 렌더하도록 함께 싣는다.
+    ordinal,
+    current_semester: currentSemester,
     is_submit_period: isSubmitPeriod,
     is_edit_period: isEditPeriod,
     // J3: 노출 여부는 오직 설정 스위치가 결정 — 기간 검증은 제출 시점 서버(403)에서만
@@ -88,9 +106,16 @@ router.get(
     ])
     const settings = Object.fromEntries(settingsRes.rows.map((r) => [r.key, r.value]))
     const subjects = normalizeSubjects(settings.exhibitionSubjects)
+    const ordinal = normalizeOrdinal(settings.exhibitionOrdinal)
+    const semester = normalizeSemester(settings.exhibitionSemester)
     settings.exhibitionSubjects = subjects
+    settings.exhibitionOrdinal = ordinal
+    settings.exhibitionSemester = semester
     settings.contentVisibility = normalizeVisibility(settings.contentVisibility)
-    res.json({ settings, exhibition: computeExhibitionState(exRes.rows[0], subjects) })
+    res.json({
+      settings,
+      exhibition: computeExhibitionState(exRes.rows[0], subjects, ordinal, semester),
+    })
   })
 )
 
@@ -104,13 +129,17 @@ router.put(
 
     if (settings && typeof settings === 'object' && !Array.isArray(settings)) {
       for (const [key, raw] of Object.entries(settings)) {
-        // Y3-1·Y3-3: 과목 목록·공개 설정은 저장 시점에 정규화(허용 키·타입만 통과)
+        // Y3-1·Y3-3·H2-2·H2-4: 과목·공개·회차·학기는 저장 시점에 정규화(허용 키·타입만 통과)
         const value =
           key === 'exhibitionSubjects'
             ? normalizeSubjects(raw)
             : key === 'contentVisibility'
               ? normalizeVisibility(raw)
-              : raw
+              : key === 'exhibitionOrdinal'
+                ? normalizeOrdinal(raw)
+                : key === 'exhibitionSemester'
+                  ? normalizeSemester(raw)
+                  : raw
         const { rows } = await query(
           `INSERT INTO site_settings (key, value) VALUES ($1, $2)
            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value

@@ -71,6 +71,26 @@ export const colors = {
   },
 };
 
+// G4(37_SHEET_ROADMAP) 밝은 읽기 표면(Reading Surface).
+// 사이트 전역은 다크 유지. 긴 글을 읽는 화면(공지·자료실 상세 본문, 접수 시트)에만
+// 예외로 적용하는 표면이다. 값은 전부 CI.md HEX —
+//   배경군: CI 3.3 "밝은 회색·흰색 배경(#FFFFFF, #F7F5FC, #F2F0F6)"
+//   본문·제목: CI 3.2 Dark #211A31 / Deep Dark #100D18
+//   강조·링크: CI 4.2 Deep Purple #6844C4 (밝은 배경에서 연보라는 대비 부족이라 금지)
+//   헤어라인: #211A31 15% (CI 4.2 "색+불투명도" 방식)
+// 대비(검증 완료): text 15.0:1 · meta 6.0:1 · accent 6.0:1 — 전부 4.5:1 이상.
+export const reading = {
+  bg: '#F7F5FC',                      // 표면 바탕
+  surface: '#FFFFFF',                 // 표·카드 내부(바탕 위 한 단계)
+  subtle: '#F2F0F6',                  // 표 헤더행·구분 영역
+  text: '#211A31',                    // 본문
+  textStrong: '#100D18',              // 제목
+  textMeta: '#625A70',                // 메타·캡션
+  accent: '#6844C4',                  // 링크·강조
+  accentStrong: '#4B2D99',            // hover·활성
+  hairline: 'rgba(33,26,49,0.15)',    // 경계선
+};
+
 export const typography = {
   family: {
     // F1(16_PHASE4): 폰트 전면 통일 — Pretendard 단일화 (Space Grotesk·IBM Plex Mono·Anton 폐기)

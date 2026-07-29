@@ -45,6 +45,42 @@
 ### Divider.jsx
 - border.subtle 1px 수평선. 컨테이너 폭
 
+### 다크 사이트 내 밝은 읽기 표면 (G4, 37_SHEET_ROADMAP)
+
+사이트 전역은 **다크 테마를 유지**한다. 아래 두 용도에 한해 밝은 표면을 **예외로 명시 적용**한다.
+1. 긴 글을 읽는 화면의 **본문 영역**(공지 상세, 자료실 상세)
+2. **접수 현황 시트**(표 밀도가 높고 오래 들여다보는 화면)
+
+헤더·푸터 등 사이트 크롬은 항상 다크. 밝은 표면은 본문/시트 블록에만 국한한다.
+
+토큰은 `tokens.reading.*` → tailwind `bg-reading-bg`·`text-reading-text` 등으로만 쓴다(HEX 하드코딩 금지).
+
+| 토큰 | 값 | 용도 | 근거 |
+|---|---|---|---|
+| reading.bg | #F7F5FC | 표면 바탕 | CI 3.3 밝은 배경군 |
+| reading.surface | #FFFFFF | 표·카드 내부 | CI 3.3 |
+| reading.subtle | #F2F0F6 | 표 헤더행·구분 | CI 3.3 |
+| reading.text | #211A31 | 본문 | CI 3.2 Dark |
+| reading.textStrong | #100D18 | 제목 | CI 3.2 Deep Dark |
+| reading.textMeta | #625A70 | 메타·캡션 | CI 4.2 |
+| reading.accent | #6844C4 | 링크·강조 | CI 4.2 Deep Purple |
+| reading.accentStrong | #4B2D99 | hover·활성 | CI 4.2 |
+| reading.hairline | #211A31 15% | 경계선 | CI 4.2 색+불투명도 |
+
+- **밝은 배경에서 연보라(#C8B9F2)·Mid(#A286E9) 사용 금지** — 대비 부족. 강조는 Deep #6844C4 계열만.
+- 대비 검증: text 15.0:1 · meta 6.0:1 · accent 6.0:1 (전부 WCAG AA 4.5:1 이상).
+- 이 표면 위의 로고는 Dark/Deep Dark 버전을 쓴다(CI 3.3, 아래 로고 규칙 참조).
+
+### 시트·표 공용 컴포넌트 (G1~G3, 37_SHEET_ROADMAP)
+
+| 컴포넌트 | 용도 | 계약 |
+|---|---|---|
+| `common/ColumnFilter` | 표 헤더 필터·정렬(구글 시트식) | `selected`가 `null`이면 전체, `Set`이면 그 값만. 패널은 body 포털+fixed라 **표 레이아웃 불변** |
+| `common/Toast` | 논-시프트 알림 | `<ToastProvider>`는 App에 이미 배선됨. 사용은 `const toast = useToast(); toast('복사했습니다')`. fixed 오버레이라 **문서 흐름 공간 0** |
+| `common/SegmentControl` | 값 전환 | `mode="segment"`(전부 노출·하나 활성, 어드민) / `mode="single"`(현재 값만 노출 후 목록 선택, 접수폼). 네이티브 select 금지 |
+
+z 위계: 헤더 50 < 모달 100 < 드롭다운 패널 110 < 토스트 120.
+
 ### 로고·파비콘 색상 규칙 (A1, 36_ACCENT_POLISH — CI.md 3.2·3.3 확정)
 
 사이트 전역의 **기본 로고는 항상 Light 단색 `#F7F5FC`** 이다. 딥 퍼플 블랙 배경(#100D18·#171321·#211A31)에서 CI.md 3.3이 정한 1순위이며, 헤더·시그니처·**파비콘**이 여기에 해당한다.

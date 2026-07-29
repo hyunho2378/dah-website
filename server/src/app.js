@@ -15,6 +15,7 @@ import exportRoutes from './routes/export.js'
 import adminExtraRoutes from './routes/adminExtra.js'
 import tagsRoutes from './routes/tags.js'
 import consultRoutes from './routes/consult.js'
+import offeringsRoutes from './routes/offerings.js'
 
 export function createApp(options = {}) {
   if ('db' in options) setDb(options.db)
@@ -59,6 +60,7 @@ export function createApp(options = {}) {
   app.use(adminExtraRoutes) // /admin/users, /admin/exhibition/entries (13_CMS 6절)
   app.use(tagsRoutes) // GET /tags, POST /admin/tags, DELETE /admin/tags/:name (Phase 9 K1-1)
   app.use(consultRoutes) // POST /consult, GET /admin/consultations (Phase 9 K1-9)
+  app.use(offeringsRoutes) // GET /offerings, /offerings/semesters, /admin/offerings (H3-3)
 
   app.use((req, res) => res.status(404).json({ error: 'not found' }))
 

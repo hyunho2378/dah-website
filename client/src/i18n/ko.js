@@ -100,6 +100,8 @@ export const ko = {
   },
   common: {
     koreanOnly: 'Korean only',
+    noOfferings: '개설 정보 없음',
+    currentSemester: '현재 학기',
     empty: '등록된 항목이 없습니다',
     offline: '실시간 동기화를 기다리는 중',
     loading: '불러오는 중',
@@ -211,6 +213,43 @@ export const ko = {
       contest: '공모전모집',
       lecture: '특강모집',
     },
+  },
+  // H2-5(37_SHEET_ROADMAP): 상담 신청 폼 전체 라벨·안내·동의·에러.
+  // 접수·어드민 플로우는 국문 전용 원칙이지만 상담만 해외 지원자 대응으로 영문을 지원한다.
+  // 안내 문구는 사용자 제공 원문 — 수집 항목에 이메일을 더한 것 외에는 그대로 둔다.
+  consult: {
+    title: '상담 신청',
+    breadcrumbHome: '홈',
+    langLabel: '언어',
+    doneTitle: '신청 완료',
+    doneBody: '상담 신청이 접수되었습니다. 담당자가 확인 후 연락드리겠습니다.',
+    required: '(필수)',
+    name: '이름',
+    grade: '학년',
+    mainMajor: '주전공',
+    doubleMajor: '복수전공',
+    email: '이메일',
+    contact: '연락처',
+    message: '문의',
+    emailPlaceholder: 'example@hallym.ac.kr',
+    contactPlaceholder: '010-0000-0000',
+    privacyTitle: '개인정보 수집·이용 안내 (상담 신청)',
+    privacyItems:
+      '수집 항목: 이름, 학년, 주전공, 복수전공, 이메일, 연락처(전화 또는 이메일), 문의 내용',
+    privacyPurpose: '이용 목적: 복수전공·교육과정 상담 응대',
+    privacyRetention:
+      '보유·이용 기간: 상담 종료 후 지체 없이 파기(관계 법령에 따른 보관 의무가 있는 경우 제외)',
+    privacyRefusal:
+      '동의 거부 권리: 동의를 거부할 수 있으며, 이 경우 상담 신청이 제한될 수 있습니다.',
+    privacyLink: '개인정보처리방침 전문 보기',
+    agree: '상담을 위한 개인정보 수집·이용에 동의합니다.',
+    submit: '상담 신청하기',
+    submitting: '신청 중',
+    errorName: '이름을 입력해 주세요.',
+    errorEmail: '이메일 형식을 확인해 주세요 (예: example@hallym.ac.kr)',
+    errorContact: '연락처를 010-0000-0000 형식으로 입력해 주세요.',
+    errorAgree: '개인정보 수집·이용에 동의해 주세요.',
+    errorSubmit: '신청에 실패했습니다. 잠시 후 다시 시도해 주세요.',
   },
   footer: {
     copyright: '© 2026 디지털인문예술전공. All rights reserved.',

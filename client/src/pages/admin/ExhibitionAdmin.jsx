@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react'
 import { ExternalLink, Plus, Trash2 } from 'lucide-react'
 import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import SegmentControl from '../../components/common/SegmentControl'
+import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 import {
   EmptyNote,
   ErrorText,
@@ -68,6 +70,13 @@ function ExhibitionAdmin() {
   const [subjectSaved, setSubjectSaved] = useState(false)
   const [subjectError, setSubjectError] = useState(null)
 
+  // H2-2·H2-4: 회차(ordinal) + 현재 접수 대상 학기. 접수 안내·접수 폼이 이 값을 읽는다.
+  const [ordinal, setOrdinal] = useState('')
+  const [semester, setSemester] = useState(1)
+  const [roundBusy, setRoundBusy] = useState(false)
+  const [roundSaved, setRoundSaved] = useState(false)
+  const [roundError, setRoundError] = useState(null)
+
   const exhibition = settings.data?.exhibition
 
   useEffect(() => {
@@ -87,6 +96,9 @@ function ExhibitionAdmin() {
         ? remote.map((s) => ({ name: s?.name || '', semester: Number(s?.semester) === 2 ? 2 : 1 }))
         : []
     )
+    const remoteOrdinal = Number(settings.data.settings?.exhibitionOrdinal)
+    setOrdinal(Number.isInteger(remoteOrdinal) && remoteOrdinal > 0 ? String(remoteOrdinal) : '')
+    setSemester(Number(settings.data.settings?.exhibitionSemester) === 2 ? 2 : 1)
     setHydrated(true)
   }, [hydrated, settings.data, exhibition])
 
@@ -101,6 +113,32 @@ function ExhibitionAdmin() {
   const removeSubject = (index) => {
     setSubjectSaved(false)
     setSubjects((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // H2-2·H2-4: 회차·학기 저장. 회차를 비우면 null로 지워 회차 없는 문구로 되돌린다.
+  const saveRound = async (e) => {
+    e.preventDefault()
+    const n = Number(ordinal)
+    if (ordinal.trim() !== '' && !(Number.isInteger(n) && n > 0)) {
+      setRoundError('회차는 1 이상의 정수로 입력해 주세요')
+      return
+    }
+    setRoundBusy(true)
+    setRoundError(null)
+    try {
+      await api.put('/admin/settings', {
+        settings: {
+          exhibitionOrdinal: ordinal.trim() === '' ? null : n,
+          exhibitionSemester: semester,
+        },
+      })
+      setRoundSaved(true)
+      settings.refetch()
+    } catch (err) {
+      setRoundError(err.hint ? `${err.message} (${err.hint})` : err.message)
+    } finally {
+      setRoundBusy(false)
+    }
   }
 
   const saveButton = async (e) => {
@@ -250,6 +288,62 @@ function ExhibitionAdmin() {
         <div>
           <PrimaryButton type="submit" disabled={buttonBusy || !hydrated}>
             {buttonBusy ? '저장 중' : '노출 설정 저장'}
+          </PrimaryButton>
+        </div>
+      </form>
+
+      {/* H2-2·H2-4: 회차·접수 대상 학기 — 접수 안내 제목과 접수 폼 과목 기본 학기가 이 값을 읽는다 */}
+      <form onSubmit={saveRound} className={PANEL}>
+        <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">회차·접수 대상 학기</h3>
+        <p className="text-small-m text-text-sec">
+          회차를 지정하면 접수 안내·접수 폼 제목이 「제N회 디지털인문예술전공 프로젝트 전시회」로
+          표시됩니다. 접수 대상 학기의 과목이 접수 폼에 기본으로 나타납니다.
+        </p>
+        <div className="flex flex-wrap items-start gap-24">
+          <div className="w-160">
+            <Field
+              label="회차"
+              hint={
+                exhibitionFullTitle(ordinal) ||
+                '비워 두면 회차 없이 「디지털인문예술전공 프로젝트 전시회」로 표시됩니다'
+              }
+            >
+              <Input
+                value={ordinal}
+                onChange={(e) => {
+                  setRoundSaved(false)
+                  setOrdinal(e.target.value.replace(/\D/g, ''))
+                }}
+                inputMode="numeric"
+                placeholder="18"
+                aria-label="전시회 회차"
+              />
+            </Field>
+          </div>
+          <div className="flex min-w-0 flex-col gap-8">
+            <span className="font-mono text-label-m uppercase tracking-label text-text-meta">
+              접수 대상 학기
+            </span>
+            <SegmentControl
+              mode="segment"
+              options={[
+                { value: 1, label: '1학기' },
+                { value: 2, label: '2학기' },
+              ]}
+              value={semester}
+              onChange={(v) => {
+                setRoundSaved(false)
+                setSemester(v)
+              }}
+              aria-label="현재 접수 대상 학기"
+            />
+          </div>
+        </div>
+        <ErrorText>{roundError}</ErrorText>
+        {roundSaved && <p className="font-mono text-caption-m text-text-meta">저장 완료</p>}
+        <div>
+          <PrimaryButton type="submit" disabled={roundBusy || !hydrated}>
+            {roundBusy ? '저장 중' : '회차·학기 저장'}
           </PrimaryButton>
         </div>
       </form>

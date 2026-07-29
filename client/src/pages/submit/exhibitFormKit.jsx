@@ -1,8 +1,10 @@
 // 전시회 접수 폼 공용 컴포넌트 (12_BACKEND 5절) — ExhibitSubmit·ExhibitEdit 전용
 // 상수·헬퍼는 exhibitFormShared.js(비 JSX 모듈) — 이 파일은 컴포넌트만 export.
+import { useState } from 'react'
 import { Lock, X } from 'lucide-react'
 import GlassCard from '../../components/common/GlassCard'
 import RadioCards from '../../components/common/RadioCards'
+import SegmentControl from '../../components/common/SegmentControl'
 import { ACCENT } from '../../styles/accents'
 import { formatPhone } from '../../utils/format'
 import { formatKst, inputCls, labelCls, semesterDesc } from './exhibitFormShared'
@@ -90,8 +92,35 @@ export function PhoneInput({ value, onChange, ...rest }) {
 /**
  * 과목 선택(Y2-4-8) — 어드민이 등록한 과목을 카드형 라디오로 고른다(네이티브 셀렉트 금지).
  * Y3의 과목 관리가 아직 비어 있으면 목록이 없으므로 자유 입력으로 폴백해 접수를 막지 않는다.
+ *
+ * H2-3: 1·2학기 과목을 한 번에 늘어놓지 않는다. G3 SegmentControl(mode="single")로
+ * 현재 학기 하나만 알약으로 노출하고, 눌러 전환하면 그 학기 과목만 카드로 나타난다.
+ * 기본값은 어드민이 지정한 현재 학기(defaultSemester). 학기가 하나뿐이면 전환기를 숨긴다.
  */
-export function SubjectField({ subjects, value, onChange }) {
+export function SubjectField({ subjects, value, onChange, defaultSemester }) {
+  const semesters = [
+    ...new Set(subjects.filter((s) => s.semester).map((s) => String(s.semester))),
+  ].sort()
+  const fallback = semesters.includes(String(defaultSemester))
+    ? String(defaultSemester)
+    : (semesters[0] ?? '')
+  const [picked, setPicked] = useState('')
+  // 과목 목록은 설정 응답을 기다렸다 도착한다. state를 effect로 맞추지 않고
+  // "고른 값이 아직 유효하지 않으면 기본값" 으로 파생시켜 도착 순서에 영향받지 않게 한다.
+  const semester = semesters.includes(picked) ? picked : fallback
+  const hasSwitcher = semesters.length > 1
+  const visible = hasSwitcher
+    ? subjects.filter((s) => String(s.semester) === semester)
+    : subjects
+
+  const changeSemester = (next) => {
+    setPicked(next)
+    // 학기를 바꾸면 이전 학기에서 고른 과목은 목록에 없다 — 선택을 비운다
+    if (value && !subjects.some((s) => s.value === value && String(s.semester) === next)) {
+      onChange('')
+    }
+  }
+
   if (subjects.length === 0) {
     return (
       <Field label="과목" required hint="출품작이 제작된 수강 과목명">
@@ -108,16 +137,34 @@ export function SubjectField({ subjects, value, onChange }) {
   }
   return (
     <Field as="div" label="과목" required hint="출품작이 제작된 수강 과목을 선택해 주세요">
-      <RadioCards
-        name="course"
-        value={value}
-        onChange={onChange}
-        options={subjects.map((s) => ({
-          value: s.value,
-          label: s.label,
-          desc: semesterDesc(s.semester),
-        }))}
-      />
+      {hasSwitcher && (
+        <div className="flex flex-wrap items-center gap-12">
+          <span className="text-small-m text-text-meta md:text-small-d">학기</span>
+          <SegmentControl
+            mode="single"
+            options={semesters.map((s) => ({ value: s, label: semesterDesc(s) }))}
+            value={semester}
+            onChange={changeSemester}
+            aria-label="접수 대상 학기 선택"
+          />
+        </div>
+      )}
+      {visible.length === 0 ? (
+        <p className="text-small-m text-text-meta md:text-small-d">
+          {semesterDesc(semester)}에 등록된 과목이 없습니다
+        </p>
+      ) : (
+        <RadioCards
+          name="course"
+          value={value}
+          onChange={onChange}
+          options={visible.map((s) => ({
+            value: s.value,
+            label: s.label,
+            desc: hasSwitcher ? undefined : semesterDesc(s.semester),
+          }))}
+        />
+      )}
     </Field>
   )
 }

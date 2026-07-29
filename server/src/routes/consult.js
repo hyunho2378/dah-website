@@ -1,4 +1,6 @@
 // src/routes/consult.js — 상담 신청 (Phase 9 K1-9)
+// H2-5(37_SHEET_ROADMAP): 이메일 필수 필드 추가. consultations.email 컬럼은
+//   scripts/migrate-h2-consult-email.mjs가 추가한다(배포 전 실행 필요).
 // POST /consult (공개, rate limit): DB 저장은 항상. 알림 2계열은 env 있을 때만 —
 //   (a) Nodemailer SMTP: SMTP_HOST·SMTP_USER·SMTP_PASS·CONSULT_NOTIFY_TO 전부 있으면 발송
 //   (b) 텔레그램: TELEGRAM_BOT_TOKEN·TELEGRAM_CHAT_ID 있으면 sendMessage
@@ -19,6 +21,7 @@ function summaryText(item) {
     `학년: ${item.grade || '-'}`,
     `주전공: ${item.main_major || '-'}`,
     `복수전공: ${item.double_major || '-'}`,
+    `이메일: ${item.email || '-'}`,
     `연락처: ${item.contact}`,
     `문의 내용: ${item.message || '-'}`,
     `일시: ${item.created_at}`,
@@ -67,14 +70,18 @@ router.post(
     const mainMajor = String(body.mainMajor || '').trim() || null
     const doubleMajor = String(body.doubleMajor || '').trim() || null
     const message = String(body.message || '').trim() || null
+    // H2-5: 이메일 필수 — 해외 지원자 회신 경로. 형식 검증은 클라이언트와 동일 규칙(로컬@도메인.TLD).
+    const email = String(body.email || '').trim()
     if (!name || !contact) return res.status(400).json({ error: 'name and contact are required' })
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return res.status(400).json({ error: 'a valid email is required' })
     if (body.agreed !== true) return res.status(400).json({ error: 'agreement is required' })
 
     const { rows } = await query(
-      `INSERT INTO consultations (name, grade, main_major, double_major, contact, message, agreed)
-       VALUES ($1, $2, $3, $4, $5, $6, TRUE)
-       RETURNING id, name, grade, main_major, double_major, contact, message, agreed, is_read, created_at`,
-      [name, grade, mainMajor, doubleMajor, contact, message]
+      `INSERT INTO consultations (name, grade, main_major, double_major, email, contact, message, agreed)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)
+       RETURNING id, name, grade, main_major, double_major, email, contact, message, agreed, is_read, created_at`,
+      [name, grade, mainMajor, doubleMajor, email, contact, message]
     )
     const item = rows[0]
 
@@ -95,7 +102,7 @@ router.get(
     const ps = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 50))
     const countRes = await query('SELECT COUNT(*)::int AS total FROM consultations', [])
     const { rows } = await query(
-      `SELECT id, name, grade, main_major, double_major, contact, message, agreed, is_read, created_at
+      `SELECT id, name, grade, main_major, double_major, email, contact, message, agreed, is_read, created_at
        FROM consultations ORDER BY created_at DESC, id DESC LIMIT $1 OFFSET $2`,
       [ps, (p - 1) * ps]
     )
@@ -112,7 +119,7 @@ router.put(
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' })
     const { rows } = await query(
       `UPDATE consultations SET is_read = NOT is_read WHERE id = $1
-       RETURNING id, name, grade, main_major, double_major, contact, message, agreed, is_read, created_at`,
+       RETURNING id, name, grade, main_major, double_major, email, contact, message, agreed, is_read, created_at`,
       [id]
     )
     if (!rows[0]) return res.status(404).json({ error: 'not found' })

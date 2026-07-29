@@ -169,7 +169,10 @@ CREATE TABLE IF NOT EXISTS exhibition_entries (
   pw_hash        TEXT NOT NULL,
   images         JSONB,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- H1-7(37_SHEET_ROADMAP): 수정용 비밀번호 초기화 이력(누가·언제). admin+만 실행 가능.
+  pw_reset_at    TIMESTAMPTZ,
+  pw_reset_by    TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_exhibition_entries_email ON exhibition_entries (email);
 
@@ -201,6 +204,12 @@ CREATE TABLE IF NOT EXISTS consultations (
   company    TEXT,
   name       TEXT NOT NULL,
   contact    TEXT NOT NULL,
+  -- H2-5(37_SHEET_ROADMAP): 이메일 필수 수집(해외 지원자 대응)
+  email      TEXT,
+  -- S3-1(28_PHASE14): 상담 폼 필드. migrate-phase16에만 있고 schema.sql에 누락돼 있던 것을 함께 정리.
+  grade         TEXT,
+  main_major    TEXT,
+  double_major  TEXT,
   message    TEXT,
   agreed     BOOLEAN NOT NULL,
   is_read    BOOLEAN NOT NULL DEFAULT FALSE,
@@ -270,3 +279,18 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO ci (id, body)
 VALUES (1, NULL)
 ON CONFLICT (id) DO NOTHING;
+
+-- 학기별 개설 과목 (H3-3, 37_SHEET_ROADMAP)
+-- curriculum(과목 마스터)은 그대로 두고, (연도, 학기, 과목) 조합만 여기에 쌓는다.
+CREATE TABLE IF NOT EXISTS semester_offerings (
+  id            SERIAL PRIMARY KEY,
+  year          INTEGER NOT NULL,
+  term          INTEGER NOT NULL CHECK (term IN (1, 2)),
+  curriculum_id INTEGER NOT NULL REFERENCES curriculum(id) ON DELETE CASCADE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+-- 같은 학기에 같은 과목 중복 등록 방지 (POST /admin/offerings의 ON CONFLICT가 이 인덱스를 쓴다)
+CREATE UNIQUE INDEX IF NOT EXISTS semester_offerings_unique_idx
+  ON semester_offerings (year, term, curriculum_id);
+CREATE INDEX IF NOT EXISTS semester_offerings_semester_idx
+  ON semester_offerings (year DESC, term DESC);

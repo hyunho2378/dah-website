@@ -1,23 +1,30 @@
-// EntriesSheet.jsx — 전시회 접수 관리 시트 (Y3-2, 33_PHASE18. admin+)
+// EntriesSheet.jsx — 전시회 접수 관리 시트 (Y3-2, 33_PHASE18 → H1, 37_SHEET_ROADMAP. admin+)
 // 어드민 "접수 현황 열기" → 새 탭 /admin/exhibition-entries/sheet. AdminLayout 밖 형제 라우트라
 // 사이드바 없이 전체 폭을 쓴다.
 //
-// 디자인 예외: 이 페이지만 라이트 시트 스타일을 허용한다(33_PHASE18 Y3-2).
-// 사용 색은 전부 CI.md HEX — 배경 #FFFFFF·#F7F5FC·#F2F0F6(3.3 밝은 배경), 텍스트 #211A31·#100D18,
-// 보조 텍스트 #625A70, 강조·선택 #815FD7·#C8B9F2. 새 색을 만들지 않는다.
-// 그리드 선은 CI에 없는 색을 만들지 않기 위해 #211A31(Glass Surface) 15% 헤어라인으로 만든다 —
-// CI 4.2가 헤어라인을 "색 + 불투명도"로 정의하는 방식(Hairline White #FFFFFF 10%)과 동일하다.
-// 다크 토큰 클래스와 섞이면 대비가 깨지므로 이 파일 안에서는 임의 값 클래스로 명시한다.
+// 표면: G4 밝은 읽기 표면(tokens.reading) — bg-reading-* / text-reading-* / border-reading-*.
+// 사이트 전역 다크 테마의 명시적 예외이며, 색은 전부 CI.md HEX를 토큰 경유로만 쓴다(HEX 하드코딩 금지).
 //
-// 기능: 과목 탭 필터 · 검색 · 컬럼 정렬 · 헤더 고정 · 행 스트라이프 · 셀/행 복사 ·
-//       CSV·엑셀 내려받기 · 수동/자동(20초) 새로고침 + 마지막 갱신 시각.
+// 레이아웃 불변 계약(37 절대원칙 4): 컬럼 폭은 colgroup + table-layout:fixed로 고정하고,
+// 넘치는 폭은 페이지가 아니라 표 래퍼 내부 가로 스크롤로 격리한다. 필터 패널(포털)·토스트(fixed)·
+// 행 확장(행 높이만 변화) 어느 동작에서도 컬럼 폭과 표 위치는 움직이지 않는다.
+//
+// 기능: 컬럼 헤더 필터·정렬(G1) · 검색 · 헤더/좌측 고정 · 행 확장(아코디언) · 셀/행 복사(G2 토스트) ·
+//       CSV·엑셀 내려받기 · 수동 새로고침 + 20초 자동 새로고침(상시) · 하단 시트 탭 ·
+//       접수자 정보 탭에서 admin+ 비밀번호 초기화(서버가 권한 재검증).
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Copy, Download, RefreshCw } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { ChevronDown, ChevronRight, Copy, Download, KeyRound, RefreshCw } from 'lucide-react'
+import ColumnFilter from '../../components/common/ColumnFilter'
+import { useToast } from '../../components/common/Toast'
+import { useAuth } from '../../context/AuthContext'
 import { api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 
 const POLL_MS = 20000
+const CONTROL_WIDTH = 72
+const DEFAULT_WIDTH = 180
 
 // fields(jsonb) 키 → 화면 라벨. 접수 폼 스키마가 자유 구조라 미등록 키는 원문 키를 그대로 쓴다.
 const FIELD_LABELS = {
@@ -31,6 +38,7 @@ const FIELD_LABELS = {
   phone: '연락처',
   contact: '연락처',
   team: '팀명',
+  team_name: '팀명',
   members: '팀원',
   work_title: '작품명',
   title: '작품명',
@@ -39,11 +47,50 @@ const FIELD_LABELS = {
   note: '비고',
 }
 
-// 접수 행에서 과목을 읽는다 — 폼 스키마 후보 키를 순서대로 확인
-function subjectOf(entry) {
-  const f = entry?.fields || {}
-  const raw = f.subject ?? f.course ?? f['과목'] ?? ''
-  return String(raw || '').trim()
+// H1-4: 컬럼 순서 — 작품명이 작품 설명보다 반드시 왼쪽에 온다. 목록에 없는 키는 첫 등장 순서대로 뒤에.
+const FIELD_ORDER = [
+  'name',
+  'student_no',
+  'student_id',
+  'major',
+  'majors',
+  'team_name',
+  'team',
+  'members',
+  'phone',
+  'contact',
+  'subject',
+  'course',
+  'work_title',
+  'title',
+  'work_desc',
+  'description',
+  'note',
+]
+
+// 컬럼 폭(px) — table-layout:fixed의 기준. 필터·복사·행확장에도 이 값은 변하지 않는다.
+const COLUMN_WIDTH = {
+  id: 72,
+  created_at: 150,
+  updated_at: 150,
+  semester_label: 110,
+  entry_type: 88,
+  email: 220,
+  'fields.name': 120,
+  'fields.student_no': 120,
+  'fields.student_id': 120,
+  'fields.major': 150,
+  'fields.majors': 150,
+  'fields.team_name': 150,
+  'fields.members': 260,
+  'fields.phone': 140,
+  'fields.contact': 140,
+  'fields.subject': 200,
+  'fields.course': 200,
+  'fields.work_title': 220,
+  'fields.title': 220,
+  'fields.work_desc': 300,
+  'fields.description': 300,
 }
 
 function cellText(value) {
@@ -59,6 +106,31 @@ function formatDateTime(value) {
   if (Number.isNaN(d.getTime())) return String(value)
   const pad = (n) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function fieldOrderIndex(key) {
+  const i = FIELD_ORDER.indexOf(key)
+  return i < 0 ? FIELD_ORDER.length : i
+}
+
+// ── 접수자 인적사항 추출 (H1-6) ──────────────────────────────
+// 개인 접수는 fields.name/major/student_no, 팀 접수는 fields.members[]에 인적사항이 들어온다.
+function membersOf(row) {
+  const m = row?.fields?.members
+  return Array.isArray(m) ? m : []
+}
+
+function personField(row, key) {
+  const solo = cellText(row?.fields?.[key]).trim()
+  if (solo) return solo
+  const list = membersOf(row)
+    .map((m) => cellText(m?.[key]).trim())
+    .filter(Boolean)
+  return list.join(', ')
+}
+
+function personName(row) {
+  return personField(row, 'name') || cellText(row?.fields?.team_name)
 }
 
 // ── 내려받기 ────────────────────────────────────────────────
@@ -105,35 +177,98 @@ function download(content, filename, mime) {
   URL.revokeObjectURL(url)
 }
 
+// ── 비밀번호 초기화 확인 모달 (H1-7) ─────────────────────────
+// window.confirm 금지 — 사이트 글래스 모달 패턴(AdminLayout 로그아웃 확인과 동일: 백드롭·ESC).
+function ResetConfirm({ name, busy, onCancel, onConfirm }) {
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onCancel()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [onCancel])
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-gutter-m">
+      <button
+        type="button"
+        aria-label="닫기"
+        tabIndex={-1}
+        onClick={onCancel}
+        className="absolute inset-0 bg-bg-base/70"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pw-reset-title"
+        className="relative w-full max-w-sm rounded-glass border border-glass-line bg-cosmos-depth1/[0.96] p-32 backdrop-blur-glass"
+      >
+        <h2 id="pw-reset-title" className="text-h3-m font-bold text-text-pri md:text-h3-d">
+          비밀번호 초기화
+        </h2>
+        <p className="mt-12 text-body-m text-text-sec md:text-body-d">
+          {name}님의 접수 비밀번호를 1234로 초기화합니다.
+        </p>
+        <div className="mt-24 flex justify-end gap-8">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex h-40 cursor-pointer items-center justify-center rounded-sm border border-border-subtle px-16 text-small-m font-semibold text-text-pri transition duration-fast ease-out hover:border-border-strong"
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={busy}
+            className="inline-flex h-40 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-16 text-small-m font-semibold text-button-primaryText transition duration-fast ease-out hover:bg-button-primaryHover disabled:cursor-default disabled:opacity-60"
+          >
+            {busy ? '초기화 중' : '초기화'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 // ── 페이지 ──────────────────────────────────────────────────
 const BTN =
-  'inline-flex h-40 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm border border-[rgba(33,26,49,0.15)] bg-[#FFFFFF] px-16 text-small-m font-semibold text-[#211A31] transition duration-fast ease-out hover:border-[#815FD7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#815FD7]'
+  'inline-flex h-40 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm border border-reading-hairline bg-reading-surface px-16 text-small-m font-semibold text-reading-text transition duration-fast ease-out hover:border-reading-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-reading-accent'
+
+const SHEETS = [
+  { value: 'entries', label: '접수 현황' },
+  { value: 'people', label: '접수자 정보' },
+]
 
 function EntriesSheet() {
   useTitle('접수 관리 시트')
+  const toast = useToast()
+  const { hasRole } = useAuth()
+  const canReset = hasRole('admin')
 
   const [rows, setRows] = useState([])
-  const [subjectOptions, setSubjectOptions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [updatedAt, setUpdatedAt] = useState(null)
-  const [auto, setAuto] = useState(false)
   const [q, setQ] = useState('')
-  const [tab, setTab] = useState('__all__')
-  const [sort, setSort] = useState({ key: 'created_at', dir: 'desc' })
+  const [sheet, setSheet] = useState('entries')
+  const [filters, setFilters] = useState({})
+  const [sort, setSort] = useState(null)
   const [selected, setSelected] = useState(null)
-  const [notice, setNotice] = useState('')
-  const noticeTimer = useRef(null)
+  const [expanded, setExpanded] = useState(() => new Set())
+  const [pwTarget, setPwTarget] = useState(null)
+  const [pwBusy, setPwBusy] = useState(false)
 
   const load = useCallback(async () => {
     try {
-      const [entriesRes, settingsRes] = await Promise.all([
-        api.get('/admin/exhibition/entries', { page: 1, pageSize: 500 }),
-        api.get('/settings/public').catch(() => null),
-      ])
-      setRows(entriesRes?.items || [])
-      const list = settingsRes?.settings?.exhibitionSubjects
-      setSubjectOptions(Array.isArray(list) ? list : [])
+      const res = await api.get('/admin/exhibition/entries', { page: 1, pageSize: 500 })
+      setRows(res?.items || [])
       setError(null)
       setUpdatedAt(new Date())
     } catch (err) {
@@ -147,31 +282,23 @@ function EntriesSheet() {
     load()
   }, [load])
 
+  // H1-2: 자동 새로고침은 토글 없이 항상 켜진 상태(20초 폴링)
   useEffect(() => {
-    if (!auto) return undefined
     const timer = setInterval(load, POLL_MS)
     return () => clearInterval(timer)
-  }, [auto, load])
-
-  useEffect(() => () => clearTimeout(noticeTimer.current), [])
-
-  const flash = (message) => {
-    setNotice(message)
-    clearTimeout(noticeTimer.current)
-    noticeTimer.current = setTimeout(() => setNotice(''), 1600)
-  }
+  }, [load])
 
   const copyText = async (text, message) => {
     try {
       await navigator.clipboard.writeText(text)
-      flash(message)
+      toast(message)
     } catch {
-      flash('복사에 실패했습니다')
+      toast('복사에 실패했습니다')
     }
   }
 
-  // 컬럼 — 고정 컬럼 + fields(jsonb)에 실제로 등장한 키(첫 등장 순서 유지)
-  const columns = useMemo(() => {
+  // 접수 현황 컬럼 — 고정 컬럼 + fields(jsonb) 실제 키(FIELD_ORDER 순서). 이미지 컬럼은 H1-4로 삭제.
+  const entryColumns = useMemo(() => {
     const dynamic = []
     const seen = new Set()
     for (const row of rows) {
@@ -183,9 +310,11 @@ function EntriesSheet() {
           key: `fields.${key}`,
           label: FIELD_LABELS[key] || key,
           get: (r) => cellText(r.fields?.[key]),
+          order: fieldOrderIndex(key),
         })
       }
     }
+    dynamic.sort((a, b) => a.order - b.order)
     return [
       { key: 'id', label: '번호', get: (r) => String(r.id) },
       { key: 'created_at', label: '접수일시', get: (r) => formatDateTime(r.created_at) },
@@ -194,36 +323,69 @@ function EntriesSheet() {
       { key: 'entry_type', label: '유형', get: (r) => (r.entry_type === 'team' ? '팀' : '개인') },
       { key: 'email', label: '이메일', get: (r) => cellText(r.email) },
       ...dynamic,
-      {
-        key: 'images',
-        label: '이미지',
-        get: (r) => String(Array.isArray(r.images) ? r.images.length : 0),
-      },
     ]
   }, [rows])
 
-  // 탭 — 관리자가 등록한 과목(1·2학기) + 데이터에 실제로 존재하는 과목
-  const tabs = useMemo(() => {
-    const names = []
-    const push = (n) => {
-      const v = String(n || '').trim()
-      if (v && !names.includes(v)) names.push(v)
+  // 접수자 정보 컬럼 (H1-6) — 인적사항만. 작품 정보 제외, 원본 데이터는 그대로 두고 뷰만 분리한다.
+  const peopleColumns = useMemo(() => {
+    const base = [
+      { key: 'id', label: '번호', get: (r) => String(r.id) },
+      { key: 'created_at', label: '접수일', get: (r) => formatDateTime(r.created_at) },
+      { key: 'entry_type', label: '참가 유형', get: (r) => (r.entry_type === 'team' ? '팀' : '개인') },
+      { key: 'person_name', label: '이름', get: personName },
+      { key: 'person_major', label: '소속', get: (r) => personField(r, 'major') },
+      { key: 'person_no', label: '학번', get: (r) => personField(r, 'student_no') },
+      { key: 'email', label: '이메일', get: (r) => cellText(r.email) },
+      { key: 'phone', label: '연락처', get: (r) => cellText(r.fields?.phone) },
+    ]
+    // 비로그인·manager에는 초기화 UI 자체를 렌더하지 않는다(서버도 admin+ 재검증)
+    if (!canReset) return base
+    return [
+      ...base,
+      {
+        key: 'pw_reset',
+        label: '비밀번호',
+        action: true,
+        get: () => '',
+      },
+    ]
+  }, [canReset])
+
+  const columns = sheet === 'people' ? peopleColumns : entryColumns
+  const dataColumns = useMemo(() => columns.filter((c) => !c.action), [columns])
+
+  const columnWidth = useCallback(
+    (col) => (col.action ? 150 : COLUMN_WIDTH[col.key] || DEFAULT_WIDTH),
+    []
+  )
+  const tableWidth = useMemo(
+    () => columns.reduce((sum, col) => sum + columnWidth(col), CONTROL_WIDTH),
+    [columns, columnWidth]
+  )
+
+  // 필터 후보값 — 그 컬럼의 고유값(구글 시트 방식)
+  const filterValues = useMemo(() => {
+    const map = {}
+    for (const col of dataColumns) {
+      const set = new Set()
+      for (const row of rows) set.add(col.get(row))
+      map[col.key] = [...set].sort((a, b) => a.localeCompare(b, 'ko'))
     }
-    subjectOptions.forEach((s) => push(s?.name))
-    rows.forEach((r) => push(subjectOf(r)))
-    return names
-  }, [subjectOptions, rows])
+    return map
+  }, [dataColumns, rows])
 
   const visibleRows = useMemo(() => {
     const keyword = q.trim().toLowerCase()
     let list = rows
-    if (tab !== '__all__') list = list.filter((r) => subjectOf(r) === tab)
-    if (keyword) {
-      list = list.filter((r) =>
-        columns.some((c) => c.get(r).toLowerCase().includes(keyword))
-      )
+    for (const col of dataColumns) {
+      const picked = filters[col.key]
+      if (picked instanceof Set) list = list.filter((r) => picked.has(col.get(r)))
     }
-    const col = columns.find((c) => c.key === sort.key)
+    if (keyword) {
+      list = list.filter((r) => dataColumns.some((c) => c.get(r).toLowerCase().includes(keyword)))
+    }
+    if (!sort) return list
+    const col = dataColumns.find((c) => c.key === sort.key)
     if (!col) return list
     const dir = sort.dir === 'asc' ? 1 : -1
     return [...list].sort((a, b) => {
@@ -236,39 +398,65 @@ function EntriesSheet() {
       }
       return av.localeCompare(bv, 'ko') * dir
     })
-  }, [rows, columns, q, tab, sort])
+  }, [rows, dataColumns, filters, q, sort])
 
-  const toggleSort = (key) => {
-    setSort((prev) =>
-      prev.key === key ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }
-    )
+  const toggleExpanded = (id) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
   const copyRow = (row) => {
-    copyText(columns.map((c) => c.get(row)).join('\t'), '행을 복사했습니다')
+    copyText(dataColumns.map((c) => c.get(row)).join('\t'), '행을 복사했습니다')
   }
 
+  const sheetLabel = SHEETS.find((s) => s.value === sheet)?.label || '접수 현황'
   const stamp = new Date().toISOString().slice(0, 10)
   const exportCsv = () =>
-    download(toCsv(columns, visibleRows), `접수현황-${stamp}.csv`, 'text/csv;charset=utf-8')
+    download(
+      toCsv(dataColumns, visibleRows),
+      `${sheetLabel}-${stamp}.csv`,
+      'text/csv;charset=utf-8'
+    )
   const exportExcel = () =>
     download(
-      toSpreadsheetML(columns, visibleRows),
-      `접수현황-${stamp}.xls`,
+      toSpreadsheetML(dataColumns, visibleRows, sheetLabel),
+      `${sheetLabel}-${stamp}.xls`,
       'application/vnd.ms-excel;charset=utf-8'
     )
+
+  const closeReset = useCallback(() => setPwTarget(null), [])
+
+  const confirmReset = async () => {
+    if (!pwTarget) return
+    setPwBusy(true)
+    try {
+      await api.post(`/admin/exhibition/entries/${pwTarget.id}/reset-password`)
+      toast(`${pwTarget.name}님의 접수 비밀번호를 1234로 초기화했습니다`)
+      setPwTarget(null)
+    } catch (err) {
+      toast(err.message || '비밀번호 초기화에 실패했습니다')
+    } finally {
+      setPwBusy(false)
+    }
+  }
 
   // iOS Safari 동적 툴바 대응: 100vh는 주소창·툴바 접힘/펼침에 따라 값이 바뀌어
   // 레이아웃이 흔들린다 — 뷰포트 실측값을 반영하는 100dvh로 대체
   return (
-    <div className="min-h-[100dvh] bg-[#F7F5FC] text-[#211A31]">
-      <div className="mx-auto flex max-w-[1600px] flex-col gap-16 px-16 py-24 md:px-24">
+    <div className="min-h-[100dvh] bg-reading-bg text-reading-text">
+      <div className="mx-auto flex w-full min-w-0 max-w-container-wide flex-col gap-16 px-gutter-m py-24 md:px-gutter-t lg:px-gutter-d">
         {/* 헤더 */}
         <div className="flex flex-wrap items-end justify-between gap-16">
           <div className="flex min-w-0 flex-col gap-4">
-            <h1 className="text-h2-m font-bold text-[#100D18] md:text-h2-d">접수 관리 시트</h1>
-            <p className="font-mono text-caption-m text-[#625A70]">
-              총 {rows.length}건 · 표시 {visibleRows.length}건
+            <h1 className="text-h2-m font-bold text-reading-textStrong md:text-h2-d">
+              접수 관리 시트
+            </h1>
+            <p className="font-mono text-caption-m text-reading-textMeta">
+              총 {rows.length}건 · 표시 {visibleRows.length}건 · 20초마다 자동 새로고침
               {updatedAt ? ` · 마지막 갱신 ${formatDateTime(updatedAt)}` : ''}
             </p>
           </div>
@@ -276,16 +464,6 @@ function EntriesSheet() {
             <button type="button" onClick={load} className={BTN}>
               <RefreshCw size={16} aria-hidden="true" />
               새로고침
-            </button>
-            {/* 자동 새로고침 스위치 (20초 폴링) */}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={auto}
-              onClick={() => setAuto((v) => !v)}
-              className={`${BTN} ${auto ? 'border-[#815FD7] bg-[#815FD7] text-[#F7F5FC] hover:border-[#6844C4]' : ''}`}
-            >
-              자동 새로고침 {auto ? '켜짐' : '꺼짐'}
             </button>
             <button type="button" onClick={exportCsv} className={BTN}>
               <Download size={16} aria-hidden="true" />
@@ -295,125 +473,190 @@ function EntriesSheet() {
               <Download size={16} aria-hidden="true" />
               엑셀
             </button>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="검색어"
+              aria-label="검색어"
+              className="h-40 w-full max-w-xs rounded-sm border border-reading-hairline bg-reading-surface px-12 text-small-m text-reading-text outline-none transition duration-fast ease-out placeholder:text-reading-textMeta focus:border-reading-accent"
+            />
           </div>
         </div>
 
-        {/* 탭 + 검색 */}
-        <div className="flex flex-wrap items-center justify-between gap-12">
-          <div className="flex min-w-0 flex-wrap items-center gap-4">
-            {[{ value: '__all__', label: '전체' }, ...tabs.map((n) => ({ value: n, label: n }))].map(
-              (item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setTab(item.value)}
-                  aria-pressed={tab === item.value}
-                  className={`cursor-pointer rounded-t-sm border-b-2 px-16 py-8 text-small-m font-semibold transition duration-fast ease-out ${
-                    tab === item.value
-                      ? 'border-[#815FD7] text-[#100D18]'
-                      : 'border-transparent text-[#625A70] hover:text-[#211A31]'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              )
-            )}
-          </div>
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="검색어"
-            aria-label="검색어"
-            className="h-40 w-full max-w-xs rounded-sm border border-[rgba(33,26,49,0.15)] bg-[#FFFFFF] px-12 text-small-m text-[#211A31] outline-none transition duration-fast ease-out placeholder:text-[#625A70] focus:border-[#815FD7]"
-          />
-        </div>
-
-        {notice && <p className="font-mono text-caption-m text-[#4B2D99]">{notice}</p>}
-        {error && <p className="font-mono text-caption-m text-[#815FD7]">{error}</p>}
-        {loading && <p className="font-mono text-caption-m text-[#625A70]">불러오는 중</p>}
+        {error && <p className="font-mono text-caption-m text-reading-accent">{error}</p>}
+        {loading && <p className="font-mono text-caption-m text-reading-textMeta">불러오는 중</p>}
         {!loading && !error && visibleRows.length === 0 && (
-          <p className="font-mono text-caption-m text-[#625A70]">표시할 접수 내역이 없습니다</p>
+          <p className="font-mono text-caption-m text-reading-textMeta">
+            표시할 접수 내역이 없습니다
+          </p>
         )}
 
-        {/* 시트 */}
+        {/* 시트 — 가로 넘침은 이 래퍼 내부 스크롤로 격리(페이지 가로 스크롤 0) */}
         {visibleRows.length > 0 && (
-          <div className="max-h-[calc(100dvh-260px)] overflow-auto rounded-sm border border-[rgba(33,26,49,0.15)] bg-[#FFFFFF]">
-            <table className="w-full border-collapse text-small-m">
+          <div className="max-h-[70dvh] w-full min-w-0 overflow-auto rounded-sm border border-reading-hairline bg-reading-surface">
+            {/* colgroup 폭 합계를 최소폭으로 잡아 컬럼 폭을 고정한다. 래퍼가 더 넓으면
+                남는 폭만 비례 분배되고(뷰포트 변화), 필터·복사·행확장에는 반응하지 않는다. */}
+            <table
+              className="w-full table-fixed border-collapse text-small-m"
+              style={{ minWidth: tableWidth }}
+            >
+              <colgroup>
+                <col style={{ width: CONTROL_WIDTH }} />
+                {columns.map((col) => (
+                  <col key={col.key} style={{ width: columnWidth(col) }} />
+                ))}
+              </colgroup>
               <thead className="sticky top-0 z-10">
                 <tr>
-                  <th className="sticky left-0 z-20 border-b border-r border-[rgba(33,26,49,0.15)] bg-[#F2F0F6] px-8 py-8 text-left font-semibold text-[#625A70]">
-                    복사
+                  <th
+                    scope="col"
+                    className="sticky left-0 z-20 border-b border-r border-reading-hairline bg-reading-subtle px-8 py-8 text-left font-semibold text-reading-textMeta"
+                  >
+                    행
                   </th>
                   {columns.map((col) => (
                     <th
                       key={col.key}
                       scope="col"
-                      className="border-b border-r border-[rgba(33,26,49,0.15)] bg-[#F2F0F6] p-0 text-left"
+                      className="border-b border-r border-reading-hairline bg-reading-subtle px-12 py-8 text-left"
                     >
-                      <button
-                        type="button"
-                        onClick={() => toggleSort(col.key)}
-                        className="flex w-full cursor-pointer items-center gap-4 whitespace-nowrap px-12 py-8 text-left font-semibold text-[#211A31] transition duration-fast ease-out hover:bg-[#C8B9F2]"
-                      >
-                        {col.label}
-                        <span aria-hidden="true" className="font-mono text-caption-m text-[#625A70]">
-                          {sort.key === col.key ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                      <span className="flex items-center justify-between gap-4">
+                        <span className="min-w-0 truncate font-semibold text-reading-text">
+                          {col.label}
                         </span>
-                      </button>
+                        {!col.action && (
+                          <ColumnFilter
+                            label={col.label}
+                            values={filterValues[col.key] || []}
+                            selected={filters[col.key] ?? null}
+                            onChange={(next) =>
+                              setFilters((prev) => ({ ...prev, [col.key]: next }))
+                            }
+                            sort={sort?.key === col.key ? sort.dir : null}
+                            onSortChange={(dir) => setSort(dir ? { key: col.key, dir } : null)}
+                          />
+                        )}
+                      </span>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {visibleRows.map((row, index) => (
-                  <tr key={row.id} className={index % 2 === 1 ? 'bg-[#F7F5FC]' : 'bg-[#FFFFFF]'}>
-                    <td className="sticky left-0 z-[1] border-b border-r border-[rgba(33,26,49,0.15)] bg-inherit px-8 py-4 align-top">
-                      <button
-                        type="button"
-                        onClick={() => copyRow(row)}
-                        aria-label={`${row.id}번 행 복사`}
-                        className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-sm text-[#625A70] transition duration-fast ease-out hover:bg-[#C8B9F2] hover:text-[#100D18]"
-                      >
-                        <Copy size={14} />
-                      </button>
-                    </td>
-                    {columns.map((col) => {
-                      const value = col.get(row)
-                      const cellId = `${row.id}:${col.key}`
-                      return (
-                        <td
-                          key={col.key}
-                          className="border-b border-r border-[rgba(33,26,49,0.15)] p-0 align-top"
-                        >
+                {visibleRows.map((row, index) => {
+                  const open = expanded.has(row.id)
+                  return (
+                    <tr key={row.id} className={index % 2 === 1 ? 'bg-reading-bg' : 'bg-reading-surface'}>
+                      <td className="sticky left-0 z-[1] border-b border-r border-reading-hairline bg-inherit px-8 py-4 align-top">
+                        <span className="flex items-center gap-4">
                           <button
                             type="button"
-                            onClick={() => {
-                              setSelected(cellId)
-                              copyText(value, '셀을 복사했습니다')
-                            }}
-                            title={value}
-                            className={`block w-full cursor-cell whitespace-pre-wrap break-words px-12 py-8 text-left text-[#211A31] transition duration-fast ease-out hover:bg-[#F2F0F6] ${
-                              selected === cellId ? 'outline outline-2 outline-offset-[-2px] outline-[#815FD7]' : ''
-                            }`}
+                            onClick={() => toggleExpanded(row.id)}
+                            aria-expanded={open}
+                            aria-label={`${row.id}번 행 ${open ? '접기' : '펼치기'}`}
+                            className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-sm text-reading-textMeta transition-colors duration-fast ease-out hover:bg-reading-subtle hover:text-reading-textStrong"
                           >
-                            {value}
+                            {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                           </button>
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
+                          <button
+                            type="button"
+                            onClick={() => copyRow(row)}
+                            aria-label={`${row.id}번 행 복사`}
+                            className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-sm text-reading-textMeta transition-colors duration-fast ease-out hover:bg-reading-subtle hover:text-reading-textStrong"
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </span>
+                      </td>
+                      {columns.map((col) => {
+                        if (col.action) {
+                          return (
+                            <td
+                              key={col.key}
+                              className="border-b border-r border-reading-hairline px-12 py-4 align-top"
+                            >
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPwTarget({ id: row.id, name: personName(row) || '접수자' })
+                                }
+                                className="inline-flex h-24 cursor-pointer items-center gap-4 rounded-sm border border-reading-hairline px-8 text-caption-m font-semibold text-reading-accent transition-colors duration-fast ease-out hover:bg-reading-subtle"
+                              >
+                                <KeyRound size={12} aria-hidden="true" />
+                                초기화
+                              </button>
+                            </td>
+                          )
+                        }
+                        const value = col.get(row)
+                        const cellId = `${row.id}:${col.key}`
+                        return (
+                          <td
+                            key={col.key}
+                            className="border-b border-r border-reading-hairline p-0 align-top"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelected(cellId)
+                                copyText(value, '셀을 복사했습니다')
+                              }}
+                              title={value}
+                              className={`block w-full cursor-cell px-12 py-8 text-left text-reading-text transition-colors duration-fast ease-out hover:bg-reading-subtle ${
+                                open ? 'whitespace-pre-wrap break-words' : 'truncate'
+                              } ${
+                                selected === cellId
+                                  ? 'outline outline-2 outline-offset-[-2px] outline-reading-accent'
+                                  : ''
+                              }`}
+                            >
+                              {value}
+                            </button>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         )}
 
-        <p className="font-mono text-caption-m text-[#625A70]">
-          셀을 누르면 값이, 왼쪽 복사 아이콘을 누르면 행 전체가 클립보드에 복사됩니다. 내려받기는
-          현재 탭·검색 결과 기준입니다.
+        {/* 하단 시트 탭 (H1-6) */}
+        <div className="flex items-center gap-4 border-t border-reading-hairline pt-8">
+          {SHEETS.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => setSheet(item.value)}
+              aria-pressed={sheet === item.value}
+              className={`cursor-pointer rounded-b-sm border-b-2 px-16 py-8 text-small-m font-semibold transition-colors duration-fast ease-out ${
+                sheet === item.value
+                  ? 'border-reading-accent bg-reading-surface text-reading-textStrong'
+                  : 'border-transparent text-reading-textMeta hover:text-reading-text'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="font-mono text-caption-m text-reading-textMeta">
+          셀을 누르면 값이, 복사 아이콘을 누르면 행 전체가 클립보드에 복사됩니다. 화살표를 누르면 그
+          행의 전체 내용이 펼쳐집니다. 컬럼 헤더의 필터 아이콘으로 값 선택·정렬을 하고, 내려받기는
+          현재 시트·필터·검색 결과 기준입니다.
         </p>
       </div>
+
+      {pwTarget && (
+        <ResetConfirm
+          name={pwTarget.name}
+          busy={pwBusy}
+          onCancel={closeReset}
+          onConfirm={confirmReset}
+        />
+      )}
     </div>
   )
 }

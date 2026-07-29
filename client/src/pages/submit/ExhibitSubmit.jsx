@@ -16,7 +16,7 @@ import { ACCENT } from '../../styles/accents'
 import { api, useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useAuth } from '../../context/AuthContext'
-import { exhibitionFullTitle } from '../../data/exhibitionTitle'
+import { EXHIBITION_SUFFIX, exhibitionFullTitle } from '../../data/exhibitionTitle'
 import { isValidEmail, isValidPassword, isValidPhone } from '../../utils/format'
 import {
   Field,
@@ -34,6 +34,8 @@ import {
   inputCls,
   labelCls,
   formatKst,
+  resolveCurrentSemester,
+  resolveOrdinal,
   resolveSubjects,
   submitErrorMessage,
 } from './exhibitFormShared'
@@ -115,13 +117,18 @@ function ExhibitSubmit() {
   const exhibition = settingsRes?.exhibition ?? null
   // Y2-4-8: 과목 목록은 어드민(Y3-1)이 등록한 값 — 아직 없으면 빈 배열 → 자유 입력 폴백
   const subjects = resolveSubjects(settingsRes)
-  // 온보딩에 표시할 전시회명 — 상단 고정(피처드) 전시의 풀네임, 없으면 최신 항목
+  // H2-4: 과목 목록의 기본 학기 — 어드민이 전시회 설정에서 지정한 현재 접수 대상 학기
+  const currentSemester = resolveCurrentSemester(settingsRes)
+  // H2-2: 회차는 어드민 전시회 설정(settings)이 1순위. 지정 전에는 상단 고정(피처드) 전시의
+  //   회차로 폴백하고, 그것도 없으면 회차 없는 고정 문구를 쓴다(하드코딩 금지).
   const exhibitionItems = exhibitionsRes?.items ?? []
   const currentExhibition =
     exhibitionItems.find((it) => it?.is_featured) ?? exhibitionItems[0] ?? null
-  const exhibitionName = currentExhibition
-    ? exhibitionFullTitle(currentExhibition.ordinal) || currentExhibition.title
-    : '디지털인문예술전공 프로젝트 전시회'
+  const exhibitionName =
+    exhibitionFullTitle(resolveOrdinal(settingsRes)) ||
+    (currentExhibition
+      ? exhibitionFullTitle(currentExhibition.ordinal) || currentExhibition.title
+      : EXHIBITION_SUFFIX)
 
   // H10.3: 어드민 전용 미리보기 — manager+ 로그인 상태에서 /submit?preview=1 이면 기간 검증 우회
   //   (실제 제출은 서버가 기간 밖 403으로 차단 — 화면 테스트 용도)
@@ -247,21 +254,44 @@ function ExhibitSubmit() {
   return (
     <>
       <Banner />
-      <Container as="section" className="py-section-m lg:py-section-d">
+      {/* H2-1: 온보딩은 상단 여백을 줄여 첫 화면에 핵심 안내와 시작 버튼이 함께 들어오게 한다 */}
+      <Container
+        as="section"
+        className={
+          step === 'intro'
+            ? 'pb-section-m pt-32 lg:pb-section-d lg:pt-48'
+            : 'py-section-m lg:py-section-d'
+        }
+      >
         {step === 'intro' && (
-          <div className="flex min-w-0 flex-col gap-32">
-            <header className="flex min-w-0 flex-col gap-12">
+          <div className="flex min-w-0 flex-col gap-24">
+            <header className="flex min-w-0 flex-col gap-8">
               <p className="font-mono text-caption-m uppercase tracking-label text-text-meta md:text-caption-d">
                 접수 안내
               </p>
-              <h2 className="min-w-0 text-display-l-m font-extrabold leading-tight tracking-display text-text-pri md:text-display-l-d">
+              {/* H2-1: 스케일 한 단계 하향(displayL → h1) */}
+              <h2 className="min-w-0 text-h1-m font-bold leading-tight tracking-display text-text-pri md:text-h1-d">
                 {exhibitionName}
               </h2>
-              <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
+              <p className="text-body-m leading-relaxed text-text-sec md:text-body-d">
                 접수 대상 <span className={ACCENT.proper}>디지털인문예술전공 수강생</span> · 개인
                 또는 팀 단위로 출품합니다.
               </p>
             </header>
+
+            {/* H2-1: 시작 버튼을 절차·유의사항보다 앞에 둬 첫 화면에서 바로 접수를 시작할 수 있게 한다 */}
+            <div className="flex flex-wrap items-center gap-16">
+              <button
+                type="button"
+                onClick={() => setStep('form')}
+                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed md:h-48 md:text-body-d"
+              >
+                접수 시작하기
+              </button>
+              <Button variant="secondary" href="/submit/edit">
+                접수 내역 확인·수정
+              </Button>
+            </div>
 
             <ScheduleHighlight exhibition={exhibition} />
 
@@ -303,19 +333,6 @@ function ExhibitSubmit() {
                 </ul>
               </Panel>
             </div>
-
-            <div className="flex flex-wrap items-center gap-16">
-              <button
-                type="button"
-                onClick={() => setStep('form')}
-                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed md:h-48 md:text-body-d"
-              >
-                접수 시작하기
-              </button>
-              <Button variant="secondary" href="/submit/edit">
-                접수 내역 확인·수정
-              </Button>
-            </div>
           </div>
         )}
 
@@ -349,9 +366,15 @@ function ExhibitSubmit() {
             <GlassCard className="p-24 md:p-40">
               <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-32">
                 <div className="flex flex-wrap items-baseline justify-between gap-16">
-                  <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
-                    접수 폼
-                  </h2>
+                  <div className="flex min-w-0 flex-col gap-4">
+                    <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
+                      접수 폼
+                    </h2>
+                    {/* H2-2: 회차는 어드민 설정값 — 화면 하드코딩 금지 */}
+                    <p className="min-w-0 text-small-m text-text-meta md:text-small-d">
+                      {exhibitionName}
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setStep('intro')}
@@ -459,6 +482,7 @@ function ExhibitSubmit() {
                   subjects={subjects}
                   value={form.course}
                   onChange={setValue('course')}
+                  defaultSemester={currentSemester}
                 />
 
                 <Field label="작품명" required hint={WORK_TITLE_HINT}>

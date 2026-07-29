@@ -1,8 +1,11 @@
+import { useMemo, useState } from 'react'
 import PageBanner from '../components/layout/PageBanner'
 import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
+import SegmentControl from '../components/common/SegmentControl'
 import { EditPencil } from '../components/content/EditControls'
+import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
 import { tracks } from '../data/tracks'
@@ -179,6 +182,132 @@ function buildDiagramLayout(lanes, items, lang) {
   return { W, H: y, colW, axisH, lanes: laneBoxes }
 }
 
+// ── H3-4(37_SHEET_ROADMAP) 학기별 개설 과목 ──────────────────────────────
+// 어드민이 semester_offerings에 저장한 (연도, 학기, 과목)을 읽어 그 학기 개설 과목만 보여준다.
+// 서버 track 값(common|design|ai|culture) → 공개 표시명 i18n 키
+const TRACK_I18N = {
+  common: 'tracks.common',
+  design: 'tracks.track-1',
+  ai: 'tracks.track-2',
+  culture: 'tracks.track-3',
+}
+
+const semKey = (s) => `${s.year}-${s.term}`
+
+/**
+ * "현재 학기"는 어드민 설정(GET /settings/public)이 제공한다. 아직 키·형태가 확정되지
+ * 않아 객체({year,term|semester})·문자열('2026-2')·학기 숫자(1|2)를 모두 받아들이고,
+ * 값이 없거나 해석할 수 없으면 가장 최근 개설 학기로 폴백한다(없으면 null).
+ */
+function readCurrentSemester(settings, semesters) {
+  const fallback = semesters[0] ?? null
+  const raw = settings?.currentSemester ?? settings?.exhibitionSemester ?? null
+  if (raw === null || raw === undefined) return fallback
+
+  if (typeof raw === 'object' && !Array.isArray(raw)) {
+    const year = Number(raw.year)
+    const term = Number(raw.term ?? raw.semester)
+    if (Number.isInteger(year) && (term === 1 || term === 2)) return { year, term }
+    if (term === 1 || term === 2) {
+      return semesters.find((s) => s.term === term) ?? { year: new Date().getFullYear(), term }
+    }
+    return fallback
+  }
+
+  const matched = String(raw).match(/(\d{4})\D+([12])/)
+  if (matched) return { year: Number(matched[1]), term: Number(matched[2]) }
+
+  const term = Number(raw)
+  if (term === 1 || term === 2) {
+    return semesters.find((s) => s.term === term) ?? { year: new Date().getFullYear(), term }
+  }
+  return fallback
+}
+
+function OfferingBoard({ lang, t }) {
+  const { data: semData } = useApi('/offerings/semesters')
+  const { data: settingsData } = useApi('/settings/public')
+  const [picked, setPicked] = useState(null)
+
+  const semesters = useMemo(
+    () =>
+      (semData?.items || [])
+        .map((s) => ({ year: Number(s.year), term: Number(s.term) }))
+        .filter((s) => Number.isInteger(s.year) && (s.term === 1 || s.term === 2)),
+    [semData]
+  )
+  const current = useMemo(
+    () => readCurrentSemester(settingsData?.settings, semesters),
+    [settingsData, semesters]
+  )
+
+  // 선택 목록 = 개설 이력 있는 학기 + 현재 학기(개설 정보가 아직 없어도 선택 가능)
+  const options = useMemo(() => {
+    const map = new Map()
+    for (const s of [...(current ? [current] : []), ...semesters]) map.set(semKey(s), s)
+    return [...map.values()].sort((a, b) => b.year - a.year || b.term - a.term)
+  }, [current, semesters])
+
+  const active = options.find((s) => semKey(s) === picked) ?? options[0] ?? null
+  const isCurrent = Boolean(active && current && semKey(active) === semKey(current))
+
+  const { data: offData } = useApi(active ? '/offerings' : null, {
+    params: active ? { year: active.year, term: active.term } : undefined,
+  })
+  const items = offData?.items || []
+
+  const semLabel = (s) => `${s.year} ${t(s.term === 2 ? 'curriculum.sem2' : 'curriculum.sem1')}`
+
+  return (
+    <div className="mt-40 md:mt-56">
+      <div className="flex flex-wrap items-center gap-12">
+        {options.length > 0 && (
+          <SegmentControl
+            mode="single"
+            options={options.map((s) => ({ value: semKey(s), label: semLabel(s) }))}
+            value={active ? semKey(active) : ''}
+            onChange={setPicked}
+            aria-label={t('meta.semester')}
+          />
+        )}
+        {isCurrent && (
+          <span className="inline-flex items-center rounded-sm border border-border-purple px-12 py-4 font-mono text-caption-m text-purple-light">
+            {t('common.currentSemester')}
+          </span>
+        )}
+      </div>
+
+      {items.length > 0 ? (
+        // 현재 학기 개설 과목만 프라이머리 잔광(A4 glow-card) — hover에서만 한 단계 상승
+        <ul className="mt-24 grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((o) => (
+            <li
+              key={o.id}
+              className={`min-w-0 rounded-md border p-16 transition-shadow duration-base ease-out ${
+                isCurrent
+                  ? 'border-border-purple shadow-glow-card hover:shadow-glow-card-hover'
+                  : 'border-border-subtle'
+              }`}
+            >
+              <p className="break-keep text-body-m text-text-pri md:text-body-d">
+                {lang === 'en' && o.name_en ? o.name_en : o.name_ko}
+              </p>
+              <p className="mt-8 font-mono text-caption-m text-text-meta">
+                {o.grade}
+                {t('curriculum.gradeSuffix')}
+                {TRACK_I18N[o.track] ? ` · ${t(TRACK_I18N[o.track])}` : ''}
+                {o.credit ? ` · ${o.credit}` : ''}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-24 font-mono text-caption-m text-text-meta">{t('common.noOfferings')}</p>
+      )}
+    </div>
+  )
+}
+
 function Curriculum() {
   const { lang, t } = useLang()
   useTitle(t('titles.curriculum'))
@@ -220,6 +349,9 @@ function Curriculum() {
                 <EditPencil type="curriculum" to="/admin/curriculum" />
               </div>
             </Reveal>
+
+            {/* H3-4: 연도·학기를 골라 그 학기 실제 개설 과목 보기 (개설 정보 없으면 안내 1줄) */}
+            <OfferingBoard lang={lang} t={t} />
 
             <div className="mt-48 hidden md:mt-64 md:block">
               <svg
