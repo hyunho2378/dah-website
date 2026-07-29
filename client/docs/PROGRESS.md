@@ -577,3 +577,22 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [x] 검증(소스 파싱 하네스로 시나리오 전수): 포트폴리오 공개 전환 → 메뉴 등장 ✅ / 공지사항·자료실 비공개 → 최상위 제거 ✅ / 학과 행사 3종 전부 비공개 → 그룹째 제거 ✅ / 전시회만 비공개 → 그룹은 남고 항목만 제거 ✅ / 라우트 매핑(`/news/12`→notice, `/en/students/clubs`→club, `/about`→제어 대상 아님) ✅ / 홈 섹션 숨김 ✅ / 사이트맵 제외(단, `/students/careers`는 careers가 공개면 유지) ✅. build 성공, lint 경고 0
 - [!] 해석 note: 요구의 "사이드바"는 **공개 사이트의 모바일 내비 시트**로 해석해 헤더와 함께 처리했다. **어드민 사이드바는 일부러 필터하지 않았다** — 관리자는 비공개 콘텐츠를 관리할 수 있어야 하고(요구 4), 사이드바에서까지 지우면 비공개로 돌린 콘텐츠에 아예 못 들어간다
 - [!] 이번 턴 작업 중 작업 트리가 외부에서 hard reset·clean 돼 편집분과 신규 파일이 전부 소실되는 일이 있었다. 전량 재적용 후 **즉시 커밋**으로 보호했다(4cf2423 · 8637364)
+
+## PHASE 32 · UI 수정 배치 (38_UI_FIX_BATCH)
+### PHASE A — 정찰·기반 (단독)
+- [x] **A-1 라이브 실측**(https://dah-hallym.vercel.app, 추측 아님 — 전부 getBoundingClientRect/getComputedStyle 실측)
+  - **사이트 표준 마진**: `Container.jsx` = `max-w-[1200px] · px-gutter-m(16)/md:gutter-t(24)/lg:gutter-d(32) · 2xl:max-w-container(1280)`. vw1280에서 컨테이너 박스 left 32.5px + padding 32 → **콘텐츠 좌측선 64.5px**. vw1425에서 콘텐츠 좌 104.5 / 우측 끝 1320.5. 전 페이지가 이 한 컴포넌트만 쓴다(예외: 접수 시트)
+  - **섹션 수직 패딩**: 실측 `padding-top/bottom = 150.25px`(vw1280). 토큰 `spacing.section` 96→160 유동 보간값. 섹션 사이 실효 간격은 그 2배인 **≈300px**
+  - **섹션 헤드라인 아래**: 홈 섹션 헤드라인→다음 블록 24~40px(과다 아님). 과다 지점은 **PageBanner**(`pb-40 pt-48 md:pb-64 md:pt-80`) 뒤에 곧바로 py-section(150px)이 붙어 **제목 아래 실효 214px**가 되는 서브페이지 상단이다
+  - **전시회 featured 타이틀**: `text-display-xl-m md:text-display-xl-d` → vw1440에서 **64px**. 같은 화면 페이지 H1은 36px — 카드 제목이 페이지 제목의 1.78배로 위계 역전
+  - **헤더 우측 클러스터**: `flex shrink-0 items-center gap-16` 단일 gap. 자료실 right=836 / 전시회 접수 CTA left=1024 → **자료실↔CTA 188px**, **CTA↔KR·EN 16px**. 즉 CTA가 토글에 붙어 있고 자료실과는 멀다
+  - **접수 시트**: `max-w-container-wide`(1440) — 사이트 표준(1200/1280)과 다른 상한. 툴바 순서가 `[새로고침][CSV][엑셀][검색어]`로 **검색어가 우측 끝**이라 요구(검색 좌·버튼 우)와 정반대
+  - **필터 소멸 버그 원인 특정**(재현·코드 1:1): `EntriesSheet.jsx:496`의 `{visibleRows.length > 0 && (…표 전체…)}`. 컬럼 필터에서 "전체 해제"(`ColumnFilter.jsx:184` → `onChange(new Set())`)를 하면 visibleRows가 0이 되어 **표·thead·ColumnFilter가 통째로 언마운트** → 필터 드롭다운 자체가 사라져 되돌릴 방법이 없다. ColumnFilter는 무결(포털·fixed) — 수정 대상 아님
+- [x] **A-2 기반 확정**(공용 파일은 이 페이즈에서만 수정)
+  - 표준 마진 = 위 Container 값으로 확정. 단 접수 시트는 RESPONSIVE.md "작업 중심(대시보드·관리 화면)은 전체 너비를 쓰되 데이터 테이블은 화면을 채운다" + 4K 요구 1(좌우 여백이 콘텐츠 너비보다 크면 안 됨)에 따라 **폭 상한이 아니라 gutter 값(16/24/32)을 표준으로 준수**한다. 툴바·표가 그 gutter 선에 1px 오차 없이 정렬되는 것이 합격 기준
+  - 섹션 간격 표준: `spacing.section` **96→80(mobile) / 160→128(desktop)** 로 소폭 축소(-17%·-20%). 37개 호출부가 전부 `py-section-m lg:py-section-d`라 **토큰 1곳 수정이 곧 전 페이지 적용** — 실제 적용은 PHASE C 단독
+  - 헤드라인 아래 표준: PageBanner `pb-40 pt-48 md:pb-64 md:pt-80` → `pb-32 pt-40 md:pb-40 md:pt-64`. 적용은 PHASE C
+  - **신규 토큰 1개**: `colors.state.semesterActive = rgba(129,95,215,0.16)`. #815FD7 단일 색 + 불투명도(CI 4.2). depth0 위 합성 ≈#221A37 = bg.panel과 같은 밝기대라 "한 단계 밝아짐"은 보이되 과하지 않다. tailwind는 `...colors` 스프레드라 `bg-state-semesterActive`로 자동 노출 — config 수정 불필요
+  - 학생회 타이틀은 기존 토큰(`text-text-pri`, `text-purple-primary`) 재사용 — 신규 토큰·accents.js 수정 불필요
+- [x] **A-3 파일 소유 계약**(교차 0건 확인). AGENT-1 `pages/admin/EntriesSheet.jsx` / AGENT-2 `pages/admin/ExhibitionAdmin.jsx`·`components/admin/AdminLayout.jsx` / AGENT-3 `pages/Curriculum.jsx`·`pages/admin/CurriculumAdmin.jsx` / AGENT-4 `pages/Home.jsx`·`pages/programs/Exhibitions.jsx`·`components/layout/Header.jsx`·`pages/submit/ExhibitSubmit.jsx`·`pages/students/Council.jsx`
+  - 확인 사항: 대시보드 카드(접수 버튼 노출·회차/대상 학기·접수 현황)는 SettingsAdmin이 아니라 **ExhibitionAdmin.jsx 한 파일**에 모여 있어 AGENT-2 단독 소유로 성립(병합 불필요). 비번 초기화 서버 라우트는 `server/src/routes/adminExtra.js:132`에 **이미 존재** — 신규 추가 없이 재사용. `ColumnFilter.jsx`·`Divider.jsx`는 공용이나 수정 불필요(Divider는 People·Careers가 계속 사용하므로 컴포넌트 삭제 금지, 홈에서 호출만 제거)
