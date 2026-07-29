@@ -10,6 +10,7 @@ import { useTitle } from '../hooks/useTitle'
 import { useLang } from '../i18n/LangContext'
 import { tracks } from '../data/tracks'
 import { curriculum } from '../data/curriculum'
+import { colors } from '../styles/tokens'
 
 // 교육과정 (J10, 20_PHASE8) — 표 형식 전환.
 // 트랙(공통기초 포함)별로 1학기·2학기 표를 나란히(데스크탑 2열, 모바일 세로) 배치.
@@ -17,6 +18,11 @@ import { curriculum } from '../data/curriculum'
 // 4년 로드맵 SVG는 과목의 개설 학기(1·2학기)를 학기 서브컬럼에 반영, 공통기초 최상단.
 
 const LANE_KEYS = ['common', 'track-1', 'track-2', 'track-3']
+
+// A0(38_UI_FIX_BATCH) 개설 과목 ↔ 교과목 원문 매칭 키.
+// 서버 개설 정보(name_ko)와 data/curriculum.js 과목명은 표기 공백이 다를 수 있어
+// (예: "디지털 디자인1" / "디지털디자인1") 공백·대소문자를 지우고 비교한다.
+const nameKey = (s) => String(s || '').replace(/\s+/g, '').toLowerCase()
 
 function coursesOf(trackKey, semester) {
   return curriculum.filter((c) => c.track === trackKey && c.semester === semester)
@@ -27,7 +33,8 @@ function courseName(course, lang) {
 }
 
 // J10: 학기 표 — 학년 | 과목명 | 학점-강의-실습
-function SemesterTable({ trackKey, semester, lang, t }) {
+// A0: 선택 학기에 개설된 과목 행은 면 자체를 state.semesterActive로 은은히 틴트한다.
+function SemesterTable({ trackKey, semester, lang, t, offeredNames }) {
   const rows = coursesOf(trackKey, semester)
   if (rows.length === 0) return null
   return (
@@ -61,7 +68,12 @@ function SemesterTable({ trackKey, semester, lang, t }) {
         </thead>
         <tbody className="divide-y divide-border-subtle">
           {rows.map((course) => (
-            <tr key={`${course.name}-${course.year}`}>
+            <tr
+              key={`${course.name}-${course.year}`}
+              className={`transition-colors duration-base ease-out ${
+                offeredNames.has(nameKey(course.name)) ? 'bg-state-semesterActive' : ''
+              }`}
+            >
               <td className="px-16 py-12 font-mono text-small-m text-text-meta md:text-small-d">
                 {course.year}
               </td>
@@ -80,7 +92,7 @@ function SemesterTable({ trackKey, semester, lang, t }) {
 }
 
 // 트랙 블록: 헤딩(+트랙 소개) + 1·2학기 표 2열
-function LaneSection({ trackKey, lang, t }) {
+function LaneSection({ trackKey, lang, t, offeredNames }) {
   const track = tracks.find((tr) => tr.id === trackKey) ?? null
   const displayName = track ? t(`tracks.${track.id}`) : t('tracks.common')
   const summary =
@@ -109,8 +121,20 @@ function LaneSection({ trackKey, lang, t }) {
       {/* J10·J13: 데스크탑 2열(1학기|2학기), 모바일 세로 스택.
           K2-11: items-start — 표 높이는 각자 행 수만큼만(등고 강제 없음) */}
       <div className="mt-32 grid grid-cols-1 items-start gap-16 md:mt-48 md:grid-cols-2 md:gap-24">
-        <SemesterTable trackKey={trackKey} semester={1} lang={lang} t={t} />
-        <SemesterTable trackKey={trackKey} semester={2} lang={lang} t={t} />
+        <SemesterTable
+          trackKey={trackKey}
+          semester={1}
+          lang={lang}
+          t={t}
+          offeredNames={offeredNames}
+        />
+        <SemesterTable
+          trackKey={trackKey}
+          semester={2}
+          lang={lang}
+          t={t}
+          offeredNames={offeredNames}
+        />
       </div>
     </Container>
   )
@@ -167,6 +191,8 @@ function buildDiagramLayout(lanes, items, lang) {
           blocks.push({
             key: `${lane.key}-${yi}-${si}-${course.name}-${ri}`,
             name: nm,
+            // 개설 정보(name_ko)와 맞추는 키 — 표시명은 언어에 따라 바뀌므로 국문명을 따로 든다
+            ko: course.name,
             display: fitBlockName(nm, w - 12),
             x: yi * colW + si * semW + 6,
             y: top + labelH + ri * rowH,
@@ -183,15 +209,9 @@ function buildDiagramLayout(lanes, items, lang) {
 }
 
 // ── H3-4(37_SHEET_ROADMAP) 학기별 개설 과목 ──────────────────────────────
-// 어드민이 semester_offerings에 저장한 (연도, 학기, 과목)을 읽어 그 학기 개설 과목만 보여준다.
-// 서버 track 값(common|design|ai|culture) → 공개 표시명 i18n 키
-const TRACK_I18N = {
-  common: 'tracks.common',
-  design: 'tracks.track-1',
-  ai: 'tracks.track-2',
-  culture: 'tracks.track-3',
-}
-
+// 어드민이 semester_offerings에 저장한 (연도, 학기, 과목)을 읽는다.
+// A0(38_UI_FIX_BATCH): 개설 과목을 나열식 목록으로 따로 붙이지 않는다. 로드맵·학기 표에는
+// 전 과목이 그대로 남고, 선택한 학기의 과목만 카드 면이 틴트된다(state.semesterActive).
 const semKey = (s) => `${s.year}-${s.term}`
 
 /**
@@ -224,7 +244,9 @@ function readCurrentSemester(settings, semesters) {
   return fallback
 }
 
-function OfferingBoard({ lang, t }) {
+// 학기 선택 상태 + 그 학기 개설 과목 이름 집합. 틴트 대상(로드맵 SVG·학기 표)이 페이지
+// 전체에 걸쳐 있어 상태를 페이지 루트에 두고 값만 내려보낸다.
+function useSemesterSelection() {
   const { data: semData } = useApi('/offerings/semesters')
   const { data: settingsData } = useApi('/settings/public')
   const [picked, setPicked] = useState(null)
@@ -254,55 +276,46 @@ function OfferingBoard({ lang, t }) {
   const { data: offData } = useApi(active ? '/offerings' : null, {
     params: active ? { year: active.year, term: active.term } : undefined,
   })
-  const items = offData?.items || []
 
+  // 틴트 판정용 이름 집합 — 표시명(언어별)이 아니라 국문명 기준
+  const offeredNames = useMemo(
+    () => new Set((offData?.items || []).map((o) => nameKey(o.name_ko))),
+    [offData]
+  )
+
+  return {
+    options,
+    active,
+    isCurrent,
+    setPicked,
+    offeredNames,
+    // 응답이 온 뒤에만 "개설 정보 없음" — 로딩 중 문구가 깜빡이지 않게
+    isEmpty: Boolean(active) && Boolean(offData) && offeredNames.size === 0,
+  }
+}
+
+// 선택된 학기 컨트롤 — 나열식 개설 목록을 대체한다. 어떤 학기가 선택돼 있는지,
+// 그 학기가 현재 학기인지, 개설 정보가 아직 없는지를 이 한 줄이 전부 말한다.
+function SemesterPicker({ options, active, isCurrent, isEmpty, onPick, t }) {
+  if (options.length === 0) return null
   const semLabel = (s) => `${s.year} ${t(s.term === 2 ? 'curriculum.sem2' : 'curriculum.sem1')}`
 
   return (
-    <div className="mt-40 md:mt-56">
-      <div className="flex flex-wrap items-center gap-12">
-        {options.length > 0 && (
-          <SegmentControl
-            mode="single"
-            options={options.map((s) => ({ value: semKey(s), label: semLabel(s) }))}
-            value={active ? semKey(active) : ''}
-            onChange={setPicked}
-            aria-label={t('meta.semester')}
-          />
-        )}
-        {isCurrent && (
-          <span className="inline-flex items-center rounded-sm border border-border-purple px-12 py-4 font-mono text-caption-m text-purple-light">
-            {t('common.currentSemester')}
-          </span>
-        )}
-      </div>
-
-      {items.length > 0 ? (
-        // 현재 학기 개설 과목만 프라이머리 잔광(A4 glow-card) — hover에서만 한 단계 상승
-        <ul className="mt-24 grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((o) => (
-            <li
-              key={o.id}
-              className={`min-w-0 rounded-md border p-16 transition-shadow duration-base ease-out ${
-                isCurrent
-                  ? 'border-border-purple shadow-glow-card hover:shadow-glow-card-hover'
-                  : 'border-border-subtle'
-              }`}
-            >
-              <p className="break-keep text-body-m text-text-pri md:text-body-d">
-                {lang === 'en' && o.name_en ? o.name_en : o.name_ko}
-              </p>
-              <p className="mt-8 font-mono text-caption-m text-text-meta">
-                {o.grade}
-                {t('curriculum.gradeSuffix')}
-                {TRACK_I18N[o.track] ? ` · ${t(TRACK_I18N[o.track])}` : ''}
-                {o.credit ? ` · ${o.credit}` : ''}
-              </p>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-24 font-mono text-caption-m text-text-meta">{t('common.noOfferings')}</p>
+    <div className="mt-24 flex flex-wrap items-center gap-12 md:mt-32">
+      <SegmentControl
+        mode="single"
+        options={options.map((s) => ({ value: semKey(s), label: semLabel(s) }))}
+        value={active ? semKey(active) : ''}
+        onChange={onPick}
+        aria-label={t('meta.semester')}
+      />
+      {isCurrent && (
+        <span className="inline-flex items-center rounded-sm border border-border-purple px-12 py-4 font-mono text-caption-m text-purple-light">
+          {t('common.currentSemester')}
+        </span>
+      )}
+      {isEmpty && (
+        <span className="font-mono text-caption-m text-text-meta">{t('common.noOfferings')}</span>
       )}
     </div>
   )
@@ -311,6 +324,7 @@ function OfferingBoard({ lang, t }) {
 function Curriculum() {
   const { lang, t } = useLang()
   useTitle(t('titles.curriculum'))
+  const semester = useSemesterSelection()
 
   const lanes = [
     { key: 'common', label: t('tracks.common') },
@@ -334,7 +348,13 @@ function Curriculum() {
       <div className="pb-section-m md:pb-section-d">
         {/* 공통기초 → 트랙 3: 학기별 표 (앵커 유지: /curriculum#track-n) */}
         {LANE_KEYS.map((key) => (
-          <LaneSection key={key} trackKey={key} lang={lang} t={t} />
+          <LaneSection
+            key={key}
+            trackKey={key}
+            lang={lang}
+            t={t}
+            offeredNames={semester.offeredNames}
+          />
         ))}
 
         {/* 4년 로드맵 — 학기 반영 SVG (md 미만은 표가 이미 학기별 정보를 제공해 숨김) */}
@@ -350,8 +370,15 @@ function Curriculum() {
               </div>
             </Reveal>
 
-            {/* H3-4: 연도·학기를 골라 그 학기 실제 개설 과목 보기 (개설 정보 없으면 안내 1줄) */}
-            <OfferingBoard lang={lang} t={t} />
+            {/* A0: 연도·학기 선택 — 고른 학기의 과목만 로드맵·학기 표에서 면이 틴트된다 */}
+            <SemesterPicker
+              options={semester.options}
+              active={semester.active}
+              isCurrent={semester.isCurrent}
+              isEmpty={semester.isEmpty}
+              onPick={semester.setPicked}
+              t={t}
+            />
 
             <div className="mt-48 hidden md:mt-64 md:block">
               <svg
@@ -437,15 +464,21 @@ function Curriculum() {
                       <g key={b.key}>
                         {/* K2-12: 블록 폭 초과 과목명은 말줄임(display), 전체명은 title 툴팁 */}
                         <title>{b.name}</title>
+                        {/* A0: 선택 학기 개설 과목은 블록 면을 틴트. 미선택은 transparent —
+                            none이 아니라 투명색이라야 fill이 색상 전환된다(레이아웃 불변) */}
                         <rect
                           x={b.x}
                           y={b.y}
                           width={b.w}
                           height={b.h}
                           rx="4"
-                          fill="none"
+                          style={{
+                            fill: semester.offeredNames.has(nameKey(b.ko))
+                              ? colors.state.semesterActive
+                              : 'transparent',
+                          }}
                           stroke="currentColor"
-                          className="text-border-subtle"
+                          className="text-border-subtle transition-colors duration-base ease-out"
                         />
                         <text
                           x={b.x + 6}

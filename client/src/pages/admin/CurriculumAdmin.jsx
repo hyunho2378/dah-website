@@ -430,10 +430,16 @@ function CurriculumAdmin() {
           )}
         </div>
 
-        {/* H3-2·H3-3: 학기 박스 — 드롭 대상. 상호작용에 크기가 변하지 않게 테두리 두께 고정 */}
+        {/* H3-2·H3-3: 학기 박스 — 드롭 대상. 상호작용에 크기가 변하지 않게 테두리 두께 고정
+            A0(38_UI_FIX_BATCH): 좌측 과목 목록이 길어도 드롭 박스가 화면에서 사라지지 않게
+            sticky. 상위 그리드가 items-start라 이 열의 높이가 내용만큼이고, 조상(main·
+            Container·section)에 overflow가 없어 sticky가 실제로 걸린다. top은 고정 헤더
+            높이(spacing.header) + 여백 24 — AdminLayout 사이드바(top-96)와 같은 선.
+            박스가 뷰포트보다 길어지면 안쪽에서만 스크롤한다(사이드바와 동일 패턴).
+            z-10은 sticky 층 — 드롭다운(30)·모달(100)보다 낮다. */}
         <div
           {...dropProps}
-          className={`flex min-h-[320px] min-w-0 flex-col gap-16 rounded-glass border bg-glass-bg p-24 transition-colors duration-fast ease-out ${
+          className={`flex min-h-[320px] min-w-0 flex-col gap-16 rounded-glass border bg-glass-bg p-24 transition-colors duration-fast ease-out lg:sticky lg:top-[calc(theme(spacing.header)+theme(spacing.24))] lg:z-10 lg:max-h-[calc(100vh-theme(spacing.128))] lg:overflow-y-auto ${
             dropOver ? 'border-border-focus' : 'border-glass-line'
           }`}
         >
