@@ -1,4 +1,4 @@
-// EntriesSheet.jsx — 전시회 접수 관리 시트 (Y3-2, 33_PHASE18 → H1, 37_SHEET_ROADMAP. admin+)
+// EntriesSheet.jsx — 전시회 접수 관리 시트 (Y3-2, 33_PHASE18 → H1, 37_SHEET_ROADMAP → B1, 38_UI_FIX_BATCH. admin+)
 // 어드민 "접수 현황 열기" → 새 탭 /admin/exhibition-entries/sheet. AdminLayout 밖 형제 라우트라
 // 사이드바 없이 전체 폭을 쓴다.
 //
@@ -6,16 +6,28 @@
 // 사이트 전역 다크 테마의 명시적 예외이며, 색은 전부 CI.md HEX를 토큰 경유로만 쓴다(HEX 하드코딩 금지).
 //
 // 레이아웃 불변 계약(37 절대원칙 4): 컬럼 폭은 colgroup + table-layout:fixed로 고정하고,
-// 넘치는 폭은 페이지가 아니라 표 래퍼 내부 가로 스크롤로 격리한다. 필터 패널(포털)·토스트(fixed)·
-// 행 확장(행 높이만 변화) 어느 동작에서도 컬럼 폭과 표 위치는 움직이지 않는다.
+// 넘치는 폭은 페이지가 아니라 표 래퍼 내부 가로 스크롤로 격리한다. 필터 패널(포털)·토스트(fixed)
+// 어느 동작에서도 컬럼 폭과 표 위치는 움직이지 않는다.
 //
-// 기능: 컬럼 헤더 필터·정렬(G1) · 검색 · 헤더/좌측 고정 · 행 확장(아코디언) · 셀/행 복사(G2 토스트) ·
+// B1(38_UI_FIX_BATCH) 폭·정렬 계약: 폭 상한(max-w-container-wide)을 두지 않는다. RESPONSIVE.md
+// "작업 중심(관리 화면)은 전체 너비를 쓰되 데이터 테이블은 화면을 채운다" + 3840 요구 1("좌우 여백이
+// 콘텐츠 너비보다 크지 않을 것")에 해당하기 때문이다. 대신 사이트 표준 거터
+// (px-gutter-m / md:px-gutter-t / lg:px-gutter-d)를 좌우 마진선으로 삼아 툴바와 표가 같은 선에 선다.
+//
+// B1 표 렌더 계약: 표는 항상 렌더한다. 필터에서 값을 전부 해제해도 tbody만 비고 thead·컬럼 필터는
+// 남아야 재선택으로 행을 되돌릴 수 있다(조건부 렌더로 표를 통째로 언마운트하면 필터 접근 경로가 사라진다).
+// filterValues는 필터 적용 전 원본(sourceRows) 기준이라 전체 해제 후에도 후보값이 남는다.
+//
+// B1 셀 인터랙션: 클릭은 선택만 한다. 자동 클립보드 복사는 없고, 셀 텍스트가 선택 가능(select-text)이라
+// 여러 셀을 드래그해 브라우저 네이티브 복사(Cmd/Ctrl+C)로 가져간다.
+//
+// 기능: 컬럼 헤더 필터·정렬(G1) · 검색 · 헤더 고정 · 셀 선택 · 빈 그리드 필러 ·
 //       CSV·엑셀 내려받기 · 수동 새로고침 + 20초 자동 새로고침(상시) · 하단 시트 탭 ·
-//       접수자 정보 탭에서 admin+ 비밀번호 초기화(서버가 권한 재검증).
+//       접수자 정보 탭(사람 단위 집계 + 과목 목록)에서 admin+ 비밀번호 초기화(서버가 권한 재검증).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, ChevronRight, Copy, Download, KeyRound, RefreshCw } from 'lucide-react'
+import { Download, KeyRound, RefreshCw } from 'lucide-react'
 import ColumnFilter from '../../components/common/ColumnFilter'
 import { useToast } from '../../components/common/Toast'
 import { useAuth } from '../../context/AuthContext'
@@ -23,8 +35,10 @@ import { api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 
 const POLL_MS = 20000
-const CONTROL_WIDTH = 72
 const DEFAULT_WIDTH = 180
+// B1-4: 데이터가 적어도 스프레드시트처럼 보이도록 채우는 최소 행 수.
+// 표 래퍼(max-h-[70dvh])를 채우는 정도만 잡는다 — 수백 행을 렌더하지 않는다.
+const MIN_ROWS = 20
 
 // fields(jsonb) 키 → 화면 라벨. 접수 폼 스키마가 자유 구조라 미등록 키는 원문 키를 그대로 쓴다.
 const FIELD_LABELS = {
@@ -68,7 +82,7 @@ const FIELD_ORDER = [
   'note',
 ]
 
-// 컬럼 폭(px) — table-layout:fixed의 기준. 필터·복사·행확장에도 이 값은 변하지 않는다.
+// 컬럼 폭(px) — table-layout:fixed의 기준. 필터·선택에도 이 값은 변하지 않는다.
 const COLUMN_WIDTH = {
   id: 72,
   created_at: 150,
@@ -91,6 +105,12 @@ const COLUMN_WIDTH = {
   'fields.title': 220,
   'fields.work_desc': 300,
   'fields.description': 300,
+  // B1-9 접수자 정보 탭(사람 단위 집계)
+  person_no: 120,
+  person_major: 150,
+  person_name: 120,
+  person_phone: 140,
+  person_subjects: 320,
 }
 
 function cellText(value) {
@@ -131,6 +151,16 @@ function personField(row, key) {
 
 function personName(row) {
   return personField(row, 'name') || cellText(row?.fields?.team_name)
+}
+
+// 폼 스키마가 자유 구조라 같은 뜻의 키가 두 벌 존재한다(student_no/student_id, major/majors …).
+// 원문 데이터는 그대로 두고 읽을 때만 대체 키를 훑는다.
+function firstPersonField(row, keys) {
+  for (const key of keys) {
+    const v = personField(row, key)
+    if (v) return v
+  }
+  return ''
 }
 
 // ── 내려받기 ────────────────────────────────────────────────
@@ -179,7 +209,9 @@ function download(content, filename, mime) {
 
 // ── 비밀번호 초기화 확인 모달 (H1-7) ─────────────────────────
 // window.confirm 금지 — 사이트 글래스 모달 패턴(AdminLayout 로그아웃 확인과 동일: 백드롭·ESC).
-function ResetConfirm({ name, busy, onCancel, onConfirm }) {
+// B1-9: 접수자 정보 탭이 사람 단위 집계라 한 사람에게 접수 건이 여럿일 수 있다.
+// 초기화 대상이 몇 건인지 모달에서 반드시 밝힌다.
+function ResetConfirm({ name, count, busy, onCancel, onConfirm }) {
   useEffect(() => {
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -212,7 +244,7 @@ function ResetConfirm({ name, busy, onCancel, onConfirm }) {
           비밀번호 초기화
         </h2>
         <p className="mt-12 text-body-m text-text-sec md:text-body-d">
-          {name}님의 접수 비밀번호를 1234로 초기화합니다.
+          {name}님의 접수 {count}건의 비밀번호를 모두 1234로 초기화합니다.
         </p>
         <div className="mt-24 flex justify-end gap-8">
           <button
@@ -238,8 +270,12 @@ function ResetConfirm({ name, busy, onCancel, onConfirm }) {
 }
 
 // ── 페이지 ──────────────────────────────────────────────────
+// B1-3: 툴바 버튼은 보더 없이 배경·hover만으로 구분한다(페이지 bg-reading-bg 위의 bg-reading-subtle 칩).
 const BTN =
-  'inline-flex h-40 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm border border-reading-hairline bg-reading-surface px-16 text-small-m font-semibold text-reading-text transition duration-fast ease-out hover:border-reading-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-reading-accent'
+  'inline-flex h-40 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm bg-reading-subtle px-16 text-small-m font-semibold text-reading-text transition-colors duration-fast ease-out hover:bg-reading-surface hover:text-reading-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-reading-accent'
+
+// B1-4: 셀 구분은 헤어라인 한 겹만. 얼룩말 배경 없이 흰 면 + 그리드(스프레드시트 표준).
+const CELL = 'border-b border-r border-reading-hairline p-0 align-top'
 
 const SHEETS = [
   { value: 'entries', label: '접수 현황' },
@@ -261,7 +297,6 @@ function EntriesSheet() {
   const [filters, setFilters] = useState({})
   const [sort, setSort] = useState(null)
   const [selected, setSelected] = useState(null)
-  const [expanded, setExpanded] = useState(() => new Set())
   const [pwTarget, setPwTarget] = useState(null)
   const [pwBusy, setPwBusy] = useState(false)
 
@@ -287,15 +322,6 @@ function EntriesSheet() {
     const timer = setInterval(load, POLL_MS)
     return () => clearInterval(timer)
   }, [load])
-
-  const copyText = async (text, message) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      toast(message)
-    } catch {
-      toast('복사에 실패했습니다')
-    }
-  }
 
   // 접수 현황 컬럼 — 고정 컬럼 + fields(jsonb) 실제 키(FIELD_ORDER 순서). 이미지 컬럼은 H1-4로 삭제.
   const entryColumns = useMemo(() => {
@@ -326,17 +352,51 @@ function EntriesSheet() {
     ]
   }, [rows])
 
-  // 접수자 정보 컬럼 (H1-6) — 인적사항만. 작품 정보 제외, 원본 데이터는 그대로 두고 뷰만 분리한다.
+  // 접수자 정보 행 (B1-9) — 접수 1건 = 1행인 원본을 "사람 단위"로 집계한다.
+  // 동일인 식별 키: 이메일 1순위, 없으면 학번+이름. 원본 데이터는 변형하지 않고 뷰만 만든다.
+  const peopleRows = useMemo(() => {
+    const map = new Map()
+    for (const row of rows) {
+      const email = cellText(row.email).trim()
+      const studentNo = firstPersonField(row, ['student_no', 'student_id'])
+      const name = personName(row)
+      const key = email ? `email:${email.toLowerCase()}` : `person:${studentNo}|${name}`
+      let person = map.get(key)
+      if (!person) {
+        person = {
+          id: key,
+          entryIds: [],
+          studentNo,
+          major: firstPersonField(row, ['major', 'majors']),
+          name,
+          email,
+          phone: firstPersonField(row, ['phone', 'contact']),
+          subjects: [],
+        }
+        map.set(key, person)
+      }
+      person.entryIds.push(row.id)
+      // 같은 사람의 접수 건마다 채워진 필드가 다를 수 있어 비어 있는 값만 보충한다.
+      if (!person.studentNo) person.studentNo = studentNo
+      if (!person.major) person.major = firstPersonField(row, ['major', 'majors'])
+      if (!person.name) person.name = name
+      if (!person.phone) person.phone = firstPersonField(row, ['phone', 'contact'])
+      const subject =
+        cellText(row.fields?.subject).trim() || cellText(row.fields?.course).trim()
+      if (subject && !person.subjects.includes(subject)) person.subjects.push(subject)
+    }
+    return [...map.values()]
+  }, [rows])
+
+  // 접수자 정보 컬럼 (B1-9) — 개인정보 5필드 + 본인이 접수한 과목 목록 + 비밀번호 초기화.
   const peopleColumns = useMemo(() => {
     const base = [
-      { key: 'id', label: '번호', get: (r) => String(r.id) },
-      { key: 'created_at', label: '접수일', get: (r) => formatDateTime(r.created_at) },
-      { key: 'entry_type', label: '참가 유형', get: (r) => (r.entry_type === 'team' ? '팀' : '개인') },
-      { key: 'person_name', label: '이름', get: personName },
-      { key: 'person_major', label: '소속', get: (r) => personField(r, 'major') },
-      { key: 'person_no', label: '학번', get: (r) => personField(r, 'student_no') },
-      { key: 'email', label: '이메일', get: (r) => cellText(r.email) },
-      { key: 'phone', label: '연락처', get: (r) => cellText(r.fields?.phone) },
+      { key: 'person_no', label: '학번', get: (r) => r.studentNo },
+      { key: 'person_major', label: '전공', get: (r) => r.major },
+      { key: 'person_name', label: '이름', get: (r) => r.name },
+      { key: 'email', label: '이메일', get: (r) => r.email },
+      { key: 'person_phone', label: '전화번호', get: (r) => r.phone },
+      { key: 'person_subjects', label: '접수 과목', get: (r) => r.subjects.join(', ') },
     ]
     // 비로그인·manager에는 초기화 UI 자체를 렌더하지 않는다(서버도 admin+ 재검증)
     if (!canReset) return base
@@ -351,7 +411,9 @@ function EntriesSheet() {
     ]
   }, [canReset])
 
-  const columns = sheet === 'people' ? peopleColumns : entryColumns
+  const isPeople = sheet === 'people'
+  const sourceRows = isPeople ? peopleRows : rows
+  const columns = isPeople ? peopleColumns : entryColumns
   const dataColumns = useMemo(() => columns.filter((c) => !c.action), [columns])
 
   const columnWidth = useCallback(
@@ -359,24 +421,25 @@ function EntriesSheet() {
     []
   )
   const tableWidth = useMemo(
-    () => columns.reduce((sum, col) => sum + columnWidth(col), CONTROL_WIDTH),
+    () => columns.reduce((sum, col) => sum + columnWidth(col), 0),
     [columns, columnWidth]
   )
 
-  // 필터 후보값 — 그 컬럼의 고유값(구글 시트 방식)
+  // 필터 후보값 — 그 컬럼의 고유값(구글 시트 방식).
+  // 필터 적용 전 sourceRows 기준이라 "전체 해제" 후에도 후보값이 남아 되돌릴 수 있다.
   const filterValues = useMemo(() => {
     const map = {}
     for (const col of dataColumns) {
       const set = new Set()
-      for (const row of rows) set.add(col.get(row))
+      for (const row of sourceRows) set.add(col.get(row))
       map[col.key] = [...set].sort((a, b) => a.localeCompare(b, 'ko'))
     }
     return map
-  }, [dataColumns, rows])
+  }, [dataColumns, sourceRows])
 
   const visibleRows = useMemo(() => {
     const keyword = q.trim().toLowerCase()
-    let list = rows
+    let list = sourceRows
     for (const col of dataColumns) {
       const picked = filters[col.key]
       if (picked instanceof Set) list = list.filter((r) => picked.has(col.get(r)))
@@ -398,20 +461,10 @@ function EntriesSheet() {
       }
       return av.localeCompare(bv, 'ko') * dir
     })
-  }, [rows, dataColumns, filters, q, sort])
+  }, [sourceRows, dataColumns, filters, q, sort])
 
-  const toggleExpanded = (id) => {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const copyRow = (row) => {
-    copyText(dataColumns.map((c) => c.get(row)).join('\t'), '행을 복사했습니다')
-  }
+  // B1-4: 데이터가 적어도 빈 셀 그리드로 표 영역을 채운다.
+  const fillerCount = Math.max(0, MIN_ROWS - visibleRows.length)
 
   const sheetLabel = SHEETS.find((s) => s.value === sheet)?.label || '접수 현황'
   const stamp = new Date().toISOString().slice(0, 10)
@@ -428,14 +481,26 @@ function EntriesSheet() {
       'application/vnd.ms-excel;charset=utf-8'
     )
 
+  // 시트를 바꾸면 컬럼 체계가 통째로 달라져 이전 시트의 필터·정렬·선택은 의미가 없다.
+  const changeSheet = (next) => {
+    setSheet(next)
+    setFilters({})
+    setSort(null)
+    setSelected(null)
+  }
+
   const closeReset = useCallback(() => setPwTarget(null), [])
 
   const confirmReset = async () => {
     if (!pwTarget) return
     setPwBusy(true)
     try {
-      await api.post(`/admin/exhibition/entries/${pwTarget.id}/reset-password`)
-      toast(`${pwTarget.name}님의 접수 비밀번호를 1234로 초기화했습니다`)
+      // 사람 단위 집계라 그 사람의 접수 건 전부를 초기화한다.
+      for (const id of pwTarget.ids) {
+        // eslint-disable-next-line no-await-in-loop
+        await api.post(`/admin/exhibition/entries/${id}/reset-password`)
+      }
+      toast(`${pwTarget.name}님의 접수 ${pwTarget.ids.length}건 비밀번호를 1234로 초기화했습니다`)
       setPwTarget(null)
     } catch (err) {
       toast(err.message || '비밀번호 초기화에 실패했습니다')
@@ -448,19 +513,32 @@ function EntriesSheet() {
   // 레이아웃이 흔들린다 — 뷰포트 실측값을 반영하는 100dvh로 대체
   return (
     <div className="min-h-[100dvh] bg-reading-bg text-reading-text">
-      <div className="mx-auto flex w-full min-w-0 max-w-container-wide flex-col gap-16 px-gutter-m py-24 md:px-gutter-t lg:px-gutter-d">
-        {/* 헤더 */}
-        <div className="flex flex-wrap items-end justify-between gap-16">
-          <div className="flex min-w-0 flex-col gap-4">
-            <h1 className="text-h2-m font-bold text-reading-textStrong md:text-h2-d">
-              접수 관리 시트
-            </h1>
-            <p className="font-mono text-caption-m text-reading-textMeta">
-              총 {rows.length}건 · 표시 {visibleRows.length}건 · 20초마다 자동 새로고침
-              {updatedAt ? ` · 마지막 갱신 ${formatDateTime(updatedAt)}` : ''}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-8">
+      {/* 폭 상한 없음 + 표준 거터. 아래 모든 블록이 같은 좌우 마진선에 선다(B1-1·2). */}
+      <div className="flex w-full min-w-0 flex-col gap-16 px-gutter-m py-24 md:px-gutter-t lg:px-gutter-d">
+        {/* 제목 */}
+        <div className="flex min-w-0 flex-col gap-4">
+          <h1 className="text-h2-m font-bold text-reading-textStrong md:text-h2-d">
+            접수 관리 시트
+          </h1>
+          <p className="font-mono text-caption-m text-reading-textMeta">
+            총 {sourceRows.length}
+            {isPeople ? '명' : '건'} · 표시 {visibleRows.length}
+            {isPeople ? '명' : '건'} · 20초마다 자동 새로고침
+            {updatedAt ? ` · 마지막 갱신 ${formatDateTime(updatedAt)}` : ''}
+          </p>
+        </div>
+
+        {/* 툴바 — 검색어는 좌측 마진선, 버튼은 우측 마진선에 붙는다(B1-2) */}
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-8">
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="검색어"
+            aria-label="검색어"
+            className="h-40 w-full min-w-0 max-w-xs rounded-sm bg-reading-surface px-12 text-small-m text-reading-text outline-none transition-colors duration-fast ease-out placeholder:text-reading-textMeta focus:outline focus:outline-2 focus:outline-offset-[-2px] focus:outline-reading-accent md:flex-1"
+          />
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-8">
             <button type="button" onClick={load} className={BTN}>
               <RefreshCw size={16} aria-hidden="true" />
               새로고침
@@ -473,17 +551,10 @@ function EntriesSheet() {
               <Download size={16} aria-hidden="true" />
               엑셀
             </button>
-            <input
-              type="search"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="검색어"
-              aria-label="검색어"
-              className="h-40 w-full max-w-xs rounded-sm border border-reading-hairline bg-reading-surface px-12 text-small-m text-reading-text outline-none transition duration-fast ease-out placeholder:text-reading-textMeta focus:border-reading-accent"
-            />
           </div>
         </div>
 
+        {/* 상태 문구는 표를 대체하지 않고 표 위에 함께 둔다(B1-8) */}
         {error && <p className="font-mono text-caption-m text-reading-accent">{error}</p>}
         {loading && <p className="font-mono text-caption-m text-reading-textMeta">불러오는 중</p>}
         {!loading && !error && visibleRows.length === 0 && (
@@ -492,166 +563,141 @@ function EntriesSheet() {
           </p>
         )}
 
-        {/* 시트 — 가로 넘침은 이 래퍼 내부 스크롤로 격리(페이지 가로 스크롤 0) */}
-        {visibleRows.length > 0 && (
-          <div className="max-h-[70dvh] w-full min-w-0 overflow-auto rounded-sm border border-reading-hairline bg-reading-surface">
-            {/* colgroup 폭 합계를 최소폭으로 잡아 컬럼 폭을 고정한다. 래퍼가 더 넓으면
-                남는 폭만 비례 분배되고(뷰포트 변화), 필터·복사·행확장에는 반응하지 않는다. */}
-            <table
-              className="w-full table-fixed border-collapse text-small-m"
-              style={{ minWidth: tableWidth }}
-            >
-              <colgroup>
-                <col style={{ width: CONTROL_WIDTH }} />
+        {/* 시트 — 가로 넘침은 이 래퍼 내부 스크롤로 격리(페이지 가로 스크롤 0).
+            표는 항상 렌더한다: 필터를 전부 해제해도 thead·컬럼 필터는 남아야 되돌릴 수 있다(B1-8). */}
+        <div className="max-h-[70dvh] w-full min-w-0 overflow-auto rounded-sm border border-reading-hairline bg-reading-surface">
+          {/* colgroup 폭 합계를 최소폭으로 잡아 컬럼 폭을 고정한다. 래퍼가 더 넓으면
+              남는 폭만 비례 분배되고(뷰포트 변화), 필터·선택에는 반응하지 않는다.
+              border-separate: border-collapse에서는 sticky thead의 보더가 스크롤 시 사라진다. */}
+          <table
+            className="w-full table-fixed border-separate border-spacing-0 text-small-m"
+            style={{ minWidth: tableWidth }}
+          >
+            <colgroup>
+              {columns.map((col) => (
+                <col key={col.key} style={{ width: columnWidth(col) }} />
+              ))}
+            </colgroup>
+            <thead>
+              <tr>
                 {columns.map((col) => (
-                  <col key={col.key} style={{ width: columnWidth(col) }} />
-                ))}
-              </colgroup>
-              <thead className="sticky top-0 z-10">
-                <tr>
                   <th
+                    key={col.key}
                     scope="col"
-                    className="sticky left-0 z-20 border-b border-r border-reading-hairline bg-reading-subtle px-8 py-8 text-left font-semibold text-reading-textMeta"
+                    className="sticky top-0 z-10 border-b border-r border-reading-hairline bg-reading-subtle px-12 py-8 text-left"
                   >
-                    행
-                  </th>
-                  {columns.map((col) => (
-                    <th
-                      key={col.key}
-                      scope="col"
-                      className="border-b border-r border-reading-hairline bg-reading-subtle px-12 py-8 text-left"
-                    >
-                      <span className="flex items-center justify-between gap-4">
-                        <span className="min-w-0 truncate font-semibold text-reading-text">
-                          {col.label}
-                        </span>
-                        {!col.action && (
-                          <ColumnFilter
-                            label={col.label}
-                            values={filterValues[col.key] || []}
-                            selected={filters[col.key] ?? null}
-                            onChange={(next) =>
-                              setFilters((prev) => ({ ...prev, [col.key]: next }))
-                            }
-                            sort={sort?.key === col.key ? sort.dir : null}
-                            onSortChange={(dir) => setSort(dir ? { key: col.key, dir } : null)}
-                          />
-                        )}
+                    <span className="flex items-center justify-between gap-4">
+                      <span className="min-w-0 truncate font-semibold text-reading-text">
+                        {col.label}
                       </span>
-                    </th>
+                      {!col.action && (
+                        <ColumnFilter
+                          label={col.label}
+                          values={filterValues[col.key] || []}
+                          selected={filters[col.key] ?? null}
+                          onChange={(next) =>
+                            setFilters((prev) => ({ ...prev, [col.key]: next }))
+                          }
+                          sort={sort?.key === col.key ? sort.dir : null}
+                          onSortChange={(dir) => setSort(dir ? { key: col.key, dir } : null)}
+                        />
+                      )}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {visibleRows.map((row) => (
+                <tr key={row.id}>
+                  {columns.map((col) => {
+                    if (col.action) {
+                      return (
+                        <td key={col.key} className="border-b border-r border-reading-hairline px-12 py-4 align-top">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPwTarget({
+                                ids: row.entryIds,
+                                name: row.name || '접수자',
+                              })
+                            }
+                            className="inline-flex h-24 cursor-pointer items-center gap-4 rounded-sm bg-reading-subtle px-8 text-caption-m font-semibold text-reading-accent transition-colors duration-fast ease-out hover:bg-reading-bg"
+                          >
+                            <KeyRound size={12} aria-hidden="true" />
+                            초기화
+                          </button>
+                        </td>
+                      )
+                    }
+                    const value = col.get(row)
+                    const cellId = `${row.id}:${col.key}`
+                    const on = selected === cellId
+                    return (
+                      <td key={col.key} className={CELL}>
+                        {/* B1-5: 선택만 한다. 자동 복사 없음 — 드래그로 여러 셀을 잡아
+                            네이티브 Cmd/Ctrl+C로 복사하도록 select-text를 보장한다. */}
+                        <div
+                          tabIndex={0}
+                          title={value}
+                          onClick={() => setSelected(cellId)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              setSelected(cellId)
+                            }
+                          }}
+                          className={`block w-full cursor-cell select-text truncate px-12 py-8 text-left text-reading-text transition-colors duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-reading-accent ${
+                            on
+                              ? 'outline outline-2 outline-offset-[-2px] outline-reading-accent'
+                              : 'outline-none hover:bg-reading-subtle'
+                          }`}
+                        >
+                          {value}
+                        </div>
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+              {/* 필러 행 — 값이 없는 빈 그리드. 선택·복사 대상이 아니라 인터랙션을 걸지 않는다. */}
+              {Array.from({ length: fillerCount }, (_, i) => (
+                <tr key={`filler-${i}`} aria-hidden="true">
+                  {columns.map((col) => (
+                    <td key={col.key} className={CELL}>
+                      <div className="block w-full truncate px-12 py-8">&nbsp;</div>
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {visibleRows.map((row, index) => {
-                  const open = expanded.has(row.id)
-                  return (
-                    <tr key={row.id} className={index % 2 === 1 ? 'bg-reading-bg' : 'bg-reading-surface'}>
-                      <td className="sticky left-0 z-[1] border-b border-r border-reading-hairline bg-inherit px-8 py-4 align-top">
-                        <span className="flex items-center gap-4">
-                          <button
-                            type="button"
-                            onClick={() => toggleExpanded(row.id)}
-                            aria-expanded={open}
-                            aria-label={`${row.id}번 행 ${open ? '접기' : '펼치기'}`}
-                            className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-sm text-reading-textMeta transition-colors duration-fast ease-out hover:bg-reading-subtle hover:text-reading-textStrong"
-                          >
-                            {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => copyRow(row)}
-                            aria-label={`${row.id}번 행 복사`}
-                            className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-sm text-reading-textMeta transition-colors duration-fast ease-out hover:bg-reading-subtle hover:text-reading-textStrong"
-                          >
-                            <Copy size={14} />
-                          </button>
-                        </span>
-                      </td>
-                      {columns.map((col) => {
-                        if (col.action) {
-                          return (
-                            <td
-                              key={col.key}
-                              className="border-b border-r border-reading-hairline px-12 py-4 align-top"
-                            >
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setPwTarget({ id: row.id, name: personName(row) || '접수자' })
-                                }
-                                className="inline-flex h-24 cursor-pointer items-center gap-4 rounded-sm border border-reading-hairline px-8 text-caption-m font-semibold text-reading-accent transition-colors duration-fast ease-out hover:bg-reading-subtle"
-                              >
-                                <KeyRound size={12} aria-hidden="true" />
-                                초기화
-                              </button>
-                            </td>
-                          )
-                        }
-                        const value = col.get(row)
-                        const cellId = `${row.id}:${col.key}`
-                        return (
-                          <td
-                            key={col.key}
-                            className="border-b border-r border-reading-hairline p-0 align-top"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelected(cellId)
-                                copyText(value, '셀을 복사했습니다')
-                              }}
-                              title={value}
-                              className={`block w-full cursor-cell px-12 py-8 text-left text-reading-text transition-colors duration-fast ease-out hover:bg-reading-subtle ${
-                                open ? 'whitespace-pre-wrap break-words' : 'truncate'
-                              } ${
-                                selected === cellId
-                                  ? 'outline outline-2 outline-offset-[-2px] outline-reading-accent'
-                                  : ''
-                              }`}
-                            >
-                              {value}
-                            </button>
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-        {/* 하단 시트 탭 (H1-6) */}
-        <div className="flex items-center gap-4 border-t border-reading-hairline pt-8">
+        {/* 하단 시트 탭 (H1-6, B1-3) — 보더 없이 선택된 탭만 배경으로 떠 보인다 */}
+        <div className="flex flex-wrap items-center gap-4">
           {SHEETS.map((item) => (
             <button
               key={item.value}
               type="button"
-              onClick={() => setSheet(item.value)}
+              onClick={() => changeSheet(item.value)}
               aria-pressed={sheet === item.value}
-              className={`cursor-pointer rounded-b-sm border-b-2 px-16 py-8 text-small-m font-semibold transition-colors duration-fast ease-out ${
+              className={`cursor-pointer rounded-sm px-16 py-8 text-small-m font-semibold transition-colors duration-fast ease-out ${
                 sheet === item.value
-                  ? 'border-reading-accent bg-reading-surface text-reading-textStrong'
-                  : 'border-transparent text-reading-textMeta hover:text-reading-text'
+                  ? 'bg-reading-surface text-reading-textStrong'
+                  : 'text-reading-textMeta hover:text-reading-text'
               }`}
             >
               {item.label}
             </button>
           ))}
         </div>
-
-        <p className="font-mono text-caption-m text-reading-textMeta">
-          셀을 누르면 값이, 복사 아이콘을 누르면 행 전체가 클립보드에 복사됩니다. 화살표를 누르면 그
-          행의 전체 내용이 펼쳐집니다. 컬럼 헤더의 필터 아이콘으로 값 선택·정렬을 하고, 내려받기는
-          현재 시트·필터·검색 결과 기준입니다.
-        </p>
       </div>
 
       {pwTarget && (
         <ResetConfirm
           name={pwTarget.name}
+          count={pwTarget.ids.length}
           busy={pwBusy}
           onCancel={closeReset}
           onConfirm={confirmReset}
