@@ -1,5 +1,5 @@
 // ExhibitionAdmin.jsx — 전시회 접수 시스템 관리 (12_BACKEND 5절, admin+)
-// 일정(exhibition_settings: submit_open·submit_close·edit_close) 편집 + 접수 현황 목록.
+// 일정(exhibition_settings: submit_open·submit_close·edit_close) 편집 + 접수 현황 요약(건수·시트 바로가기).
 // Y3-1(33_PHASE18): 접수 버튼 노출 스위치를 이 화면에서도 직접 조작하고(기존에는 사이트 설정
 // 안에만 있었다), 접수 폼이 읽는 과목 목록(1·2학기)을 여기서 관리한다.
 // 과목 목록 저장 위치: site_settings.exhibitionSubjects → GET /settings/public에
@@ -12,15 +12,12 @@ import { useTitle } from '../../hooks/useTitle'
 import SegmentControl from '../../components/common/SegmentControl'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 import {
-  EmptyNote,
   ErrorText,
   Field,
   GhostButton,
   Input,
   PageHead,
-  Pagination,
   PrimaryButton,
-  Select,
   Toggle,
   DateInput,
 } from '../../components/admin/FormControls'
@@ -38,20 +35,15 @@ function fromLocalInput(v) {
   return v ? new Date(v).toISOString() : null
 }
 
-// 접수 fields jsonb에서 표시용 대표 텍스트 추출 (폼 스키마 자유 구조 대응)
-function entryTitle(entry) {
-  const f = entry.fields || {}
-  return f.work_title || f.title || f.name || entry.email
-}
-
 const PANEL =
   'flex flex-col gap-16 rounded-glass border border-glass-line bg-glass-bg p-24 backdrop-blur-glass-mobile'
 
 function ExhibitionAdmin() {
   useTitle('전시회 설정')
   const settings = useApi('/settings/public')
-  const [page, setPage] = useState(1)
-  const entries = useApi('/admin/exhibition/entries', { params: { page, pageSize: 20 } })
+  // 요약 카드는 건수만 쓴다 — 상세 열람은 전용 시트(/admin/exhibition-entries/sheet).
+  // total은 서버가 전체 COUNT로 계산하므로 페이지 크기와 무관하다.
+  const entries = useApi('/admin/exhibition/entries', { params: { page: 1, pageSize: 1 } })
 
   const [form, setForm] = useState({ submit_open: '', submit_close: '', edit_close: '' })
   const [hydrated, setHydrated] = useState(false)
@@ -203,8 +195,7 @@ function ExhibitionAdmin() {
     }
   }
 
-  const items = entries.data?.items || []
-  const total = entries.data?.total ?? items.length
+  const total = entries.data?.total ?? 0
 
   return (
     <section className="flex flex-col gap-32">
@@ -251,46 +242,26 @@ function ExhibitionAdmin() {
         </div>
       </form>
 
-      {/* Y3-1: 접수 버튼 노출 — 히어로 편집이 아니라 이 화면에서 바로 켜고 끈다 */}
-      <form onSubmit={saveButton} className={PANEL}>
-        <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">접수 버튼 노출</h3>
-        <p className="text-small-m text-text-sec">
-          스위치를 켜면 전시회 페이지와 헤더에 접수 버튼이 노출됩니다. 기간 검증은 제출 시점에
-          서버가 적용합니다.
+      {/* 접수 현황 요약 — 건수 + 전용 시트 바로가기. 사람별 상세는 시트에서 본다 */}
+      <div className={PANEL}>
+        <div className="flex flex-wrap items-center justify-between gap-16">
+          <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">접수 현황</h3>
+          {/* Y3-2: 전용 관리 시트 — 새 탭으로 전체화면 열람 */}
+          <a
+            href="/admin/exhibition-entries/sheet"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm border border-border-subtle px-24 text-body-m font-semibold text-text-pri transition duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+          >
+            <ExternalLink size={16} aria-hidden="true" />
+            접수 현황 바로가기
+          </a>
+        </div>
+        {entries.error && <ErrorText>{entries.error.message}</ErrorText>}
+        <p className="font-mono text-caption-m text-text-meta">
+          {entries.loading ? '불러오는 중' : `현재 접수 ${total}건`}
         </p>
-        <div className="flex flex-wrap items-start gap-24">
-          <Field label="노출 허용">
-            <Toggle
-              checked={headerVisible}
-              onChange={(v) => {
-                setButtonSaved(false)
-                setHeaderVisible(v)
-              }}
-              label="접수 버튼 노출 허용"
-            />
-          </Field>
-          <Field label="위치">
-            <Select
-              value={buttonMode}
-              onChange={(e) => {
-                setButtonSaved(false)
-                setButtonMode(e.target.value)
-              }}
-              options={[
-                { value: 'header', label: '헤더' },
-                { value: 'floating', label: '플로팅' },
-              ]}
-            />
-          </Field>
-        </div>
-        <ErrorText>{buttonError}</ErrorText>
-        {buttonSaved && <p className="font-mono text-caption-m text-text-meta">저장 완료</p>}
-        <div>
-          <PrimaryButton type="submit" disabled={buttonBusy || !hydrated}>
-            {buttonBusy ? '저장 중' : '노출 설정 저장'}
-          </PrimaryButton>
-        </div>
-      </form>
+      </div>
 
       {/* H2-2·H2-4: 회차·접수 대상 학기 — 접수 안내 제목과 접수 폼 과목 기본 학기가 이 값을 읽는다 */}
       <form onSubmit={saveRound} className={PANEL}>
@@ -405,63 +376,53 @@ function ExhibitionAdmin() {
         </div>
       </form>
 
-      {/* 접수 현황 목록 */}
-      <div className="flex flex-col gap-16">
-        <div className="flex flex-wrap items-center justify-between gap-16">
-          <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">접수 현황</h3>
-          <div className="flex flex-wrap items-center gap-12">
-            <p className="font-mono text-caption-m text-text-meta">총 {total}건</p>
-            {/* Y3-2: 전용 관리 시트 — 새 탭으로 전체화면 열람 */}
-            <a
-              href="/admin/exhibition-entries/sheet"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-11 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm border border-border-subtle px-24 text-body-m font-semibold text-text-pri transition duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
-            >
-              <ExternalLink size={16} aria-hidden="true" />
-              접수 현황 열기
-            </a>
+      {/* Y3-1: 접수 버튼 노출 — 히어로 편집이 아니라 이 화면에서 바로 켜고 끈다 */}
+      <form onSubmit={saveButton} className={PANEL}>
+        <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">접수 버튼 노출</h3>
+        <p className="text-small-m text-text-sec">
+          스위치를 켜면 전시회 페이지와 헤더에 접수 버튼이 노출됩니다. 기간 검증은 제출 시점에
+          서버가 적용합니다.
+        </p>
+        <div className="flex flex-wrap items-start gap-24">
+          <Field label="노출 허용">
+            <Toggle
+              checked={headerVisible}
+              onChange={(v) => {
+                setButtonSaved(false)
+                setHeaderVisible(v)
+              }}
+              label="접수 버튼 노출 허용"
+            />
+          </Field>
+          <div className="flex min-w-0 flex-col gap-8">
+            <span className="font-mono text-label-m uppercase tracking-label text-text-meta">
+              위치
+            </span>
+            {/* 옆 컨트롤과 같은 w-160 폭. flex-1로 두 옵션 버튼 폭을 서로 같게 맞춘다 */}
+            <SegmentControl
+              mode="segment"
+              options={[
+                { value: 'header', label: '헤더' },
+                { value: 'floating', label: '플로팅' },
+              ]}
+              value={buttonMode}
+              onChange={(v) => {
+                setButtonSaved(false)
+                setButtonMode(v)
+              }}
+              aria-label="접수 버튼 위치"
+              className="w-160 [&>button]:flex-1"
+            />
           </div>
         </div>
-        {entries.error && <ErrorText>{entries.error.message}</ErrorText>}
-        {entries.loading && <p className="font-mono text-caption-m text-text-meta">불러오는 중</p>}
-        {!entries.loading && !items.length && <EmptyNote>접수 내역이 없습니다</EmptyNote>}
-
-        {items.length > 0 && (
-          <ul className="flex flex-col">
-            {items.map((entry) => (
-              <li
-                key={entry.id}
-                className="flex min-w-0 items-center gap-12 border-b border-border-subtle py-12 first:border-t"
-              >
-                <span className="w-96 shrink-0 font-mono text-caption-m text-text-meta">
-                  {String(entry.created_at).slice(0, 10)}
-                </span>
-                <span className="w-48 shrink-0 font-mono text-caption-m text-text-meta">
-                  {entry.entry_type === 'team' ? '팀' : '개인'}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-body-m text-text-pri">
-                    {entryTitle(entry)}
-                  </span>
-                  <span className="block truncate font-mono text-caption-m text-text-meta">
-                    {entry.email}
-                  </span>
-                </span>
-                <span className="shrink-0 font-mono text-caption-m text-text-meta">
-                  이미지 {Array.isArray(entry.images) ? entry.images.length : 0}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <Pagination
-          page={page}
-          pageSize={entries.data?.pageSize || 20}
-          total={total}
-          onPage={setPage}
-        />
-      </div>
+        <ErrorText>{buttonError}</ErrorText>
+        {buttonSaved && <p className="font-mono text-caption-m text-text-meta">저장 완료</p>}
+        <div>
+          <PrimaryButton type="submit" disabled={buttonBusy || !hydrated}>
+            {buttonBusy ? '저장 중' : '노출 설정 저장'}
+          </PrimaryButton>
+        </div>
+      </form>
     </section>
   )
 }

@@ -13,50 +13,70 @@ import Container from '../layout/Container'
 import { GhostButton, PrimaryButton } from './FormControls'
 import { RequireRole, useAuth } from '../../context/AuthContext'
 
+// 38_UI_FIX_BATCH: 그룹 순서·묶음을 공개 헤더 IA(data/nav.js)와 일치시킨다.
+// About / 학사 안내 / 학과 행사 / 학생 활동 / 공지사항 / 자료실 순서와 각 그룹 하위 순서를 그대로 옮겼다.
+// 권한은 항목 단위로 유지한다 — 그룹을 IA로 다시 묶으면서 예전 그룹 role을 그대로 물려주면
+// 접근 범위가 바뀌므로, 각 항목이 원래 속했던 그룹의 role을 그대로 들고 간다(값 변경 0건).
+// 시스템·오너 전용(전시회 설정·사이트 설정·상담·사용자)은 IA에 없으므로 뒤에 별도 그룹으로 둔다.
 const NAV_GROUPS = [
   {
-    label: 'OWNER',
-    role: 'owner',
-    items: [{ to: '/admin/users', label: '사용자' }],
+    label: 'DASHBOARD',
+    items: [{ to: '/admin', label: '대시보드', end: true, role: 'manager' }],
   },
   {
-    label: 'CONTENT',
-    role: 'manager',
+    label: 'ABOUT',
     items: [
-      { to: '/admin', label: '대시보드', end: true },
-      { to: '/admin/posts/notice', label: '공지사항' },
-      { to: '/admin/posts/resource', label: '자료실' },
-      { to: '/admin/posts/lecture', label: '특강' },
-      { to: '/admin/posts/contest', label: '공모전' },
-      { to: '/admin/posts/exhibitions', label: '프로젝트 전시회' },
-      { to: '/admin/posts/achievement', label: '학생 성과' },
-      { to: '/admin/posts/club', label: '동아리' },
-      { to: '/admin/posts/portfolios', label: '포트폴리오' },
-      { to: '/admin/showcase', label: '웹&앱 쇼케이스' },
+      { to: '/admin/professors', label: '교수진', role: 'admin' },
+      { to: '/admin/mentors', label: '멘토', role: 'admin' },
+      { to: '/admin/ci', label: 'CI', role: 'admin' },
     ],
   },
   {
-    label: 'STRUCTURE',
-    role: 'admin',
+    label: 'ACADEMICS',
     items: [
-      { to: '/admin/professors', label: '교수진' },
-      { to: '/admin/mentors', label: '멘토' },
-      { to: '/admin/curriculum', label: '교과목' },
-      { to: '/admin/codesharing', label: '코드쉐어링' },
-      { to: '/admin/nanodegree', label: '나노디그리' },
-      { to: '/admin/ci', label: 'CI' },
-      { to: '/admin/council', label: '운영위원회' },
-      { to: '/admin/careers', label: '취업 현황' },
+      { to: '/admin/curriculum', label: '교과목', role: 'admin' },
+      { to: '/admin/codesharing', label: '코드쉐어링', role: 'admin' },
+      { to: '/admin/nanodegree', label: '나노디그리', role: 'admin' },
     ],
+  },
+  {
+    label: 'EVENTS',
+    items: [
+      { to: '/admin/posts/exhibitions', label: '프로젝트 전시회', role: 'manager' },
+      { to: '/admin/posts/contest', label: '공모전', role: 'manager' },
+      { to: '/admin/posts/lecture', label: '특강', role: 'manager' },
+    ],
+  },
+  {
+    label: 'STUDENT LIFE',
+    items: [
+      { to: '/admin/council', label: '운영위원회', role: 'admin' },
+      { to: '/admin/posts/club', label: '동아리', role: 'manager' },
+      { to: '/admin/posts/achievement', label: '학생 성과', role: 'manager' },
+      { to: '/admin/showcase', label: '웹&앱 쇼케이스', role: 'manager' },
+      { to: '/admin/careers', label: '취업 현황', role: 'admin' },
+      { to: '/admin/posts/portfolios', label: '포트폴리오', role: 'manager' },
+    ],
+  },
+  {
+    label: 'NOTICES',
+    items: [{ to: '/admin/posts/notice', label: '공지사항', role: 'manager' }],
+  },
+  {
+    label: 'RESOURCES',
+    items: [{ to: '/admin/posts/resource', label: '자료실', role: 'manager' }],
   },
   {
     label: 'SYSTEM',
-    role: 'admin',
     items: [
-      { to: '/admin/exhibition', label: '전시회 설정' },
-      { to: '/admin/settings', label: '사이트 설정' },
-      { to: '/admin/consultations', label: '상담 신청' },
+      { to: '/admin/exhibition', label: '전시회 설정', role: 'admin' },
+      { to: '/admin/settings', label: '사이트 설정', role: 'admin' },
+      { to: '/admin/consultations', label: '상담 신청', role: 'admin' },
     ],
+  },
+  {
+    label: 'OWNER',
+    items: [{ to: '/admin/users', label: '사용자', role: 'owner' }],
   },
 ]
 
@@ -156,6 +176,12 @@ function AdminNav() {
   const { user, logout, hasRole } = useAuth()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
+  // 항목 단위 권한 필터 — 볼 수 있는 항목이 하나도 없는 그룹은 제목까지 감춘다
+  const visibleGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => hasRole(item.role)),
+  })).filter((group) => group.items.length > 0)
+
   return (
     <>
       <nav
@@ -181,7 +207,7 @@ function AdminNav() {
           </button>
         </div>
 
-        {NAV_GROUPS.filter((group) => hasRole(group.role)).map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.label} className="flex flex-col gap-8">
             <p className="font-mono text-label-m uppercase tracking-label text-text-meta">
               {group.label}
