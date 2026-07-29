@@ -4,7 +4,6 @@ import { useState } from 'react'
 import PageBanner from '../../components/layout/PageBanner'
 import ImageFrame from '../../components/common/ImageFrame'
 import Container from '../../components/layout/Container'
-import Accent from '../../components/common/Accent'
 import { ACCENT } from '../../styles/accents'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
@@ -22,10 +21,13 @@ function majorsEn(majors) {
   return majors.replace(/^디지털인문예술( ?전공)?/, 'Digital Arts & Humanities')
 }
 
-// A2(36_ACCENT_POLISH) 기수 타이틀 포인트 정밀화 — "2026 제1대 운영위원회 LUCID"에서
-//   연도(2026)      → text.ter 톤다운(보라 아님). 정보 위계상 가장 낮다.
-//   제1대의 숫자 1  → purple.mid. "제"·"대"·"운영위원회"는 text.pri 유지(서수 숫자만 포인트).
-//   기수명(LUCID)   → purple.light. 고유명만 강조.
+// 38_UI_FIX_BATCH 기수 타이틀 3색 규칙(A2(36_ACCENT_POLISH) 톤다운·연보라 처리를 대체) —
+// "2026 제1대 운영위원회 LUCID"에서
+//   연도(2026)      → 화이트(text.pri). 톤다운하지 않는다.
+//   제1대의 숫자 1  → purple.primary. "제", "대", "운영위원회"는 text.pri 유지(서수 숫자만 포인트).
+//   기수명(LUCID)   → purple.primary. 고유명만 강조.
+// purple.mid/light가 아니라 대표색 primary 하나로 통일해 두 포인트가 같은 층위임을 드러낸다.
+// accents.js(ACCENT.index/proper)는 다른 화면이 공유하므로 건드리지 않고 여기서만 클래스를 쓴다.
 // 원문 문자열은 자르거나 바꾸지 않고 표시만 분리한다(사용자 원문 불변).
 // g 플래그 없음: split은 g 없이도 전체를 분해하고, test는 lastIndex 상태가 남지 않는다.
 const TITLE_SPLIT_RE = /(^\d{4}|제\s?\d+대|\b[A-Z]{2,}\b)/
@@ -42,7 +44,7 @@ function TitleWithAccents({ text }) {
       const key = `${part}-${i}`
       if (YEAR_RE.test(part)) {
         return (
-          <span key={key} className="text-text-meta">
+          <span key={key} className="text-text-pri">
             {part}
           </span>
         )
@@ -53,17 +55,16 @@ function TitleWithAccents({ text }) {
         return (
           <span key={key}>
             {prefix}
-            {/* 서수 숫자 = 순번 인덱스라 ACCENT.index(purple.mid)와 같은 용처 */}
-            <Accent kind="index">{digits}</Accent>
+            <span className="text-purple-primary">{digits}</span>
             {suffix}
           </span>
         )
       }
       if (PROPER_RE.test(part)) {
         return (
-          <Accent key={key} kind="proper">
+          <span key={key} className="text-purple-primary">
             {part}
-          </Accent>
+          </span>
         )
       }
       return part

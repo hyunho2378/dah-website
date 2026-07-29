@@ -7,12 +7,12 @@ import ProgramShowcase from '../components/home/ProgramShowcase'
 import TracksSection from '../components/home/TracksSection'
 import AchievementsHighlight from '../components/home/AchievementsHighlight'
 import NewsSection from '../components/home/NewsSection'
-import Divider from '../components/common/Divider'
 
 // 홈 v2 (10_IA_V2 4절, 순서 고정):
 // 1 Hero → 2 퀵링크 → 3 프로그램 마스터-디테일 → 4 트랙 3 → 5 성과 하이라이트 → 6 최신 소식 → 7 Final CTA
 // v1 섹션(NewsBar·Identity·Curriculum·Stats·PeoplePreview)은 홈에서 제외 — 파일 정리는 BR 담당.
-// P10: 연속 그리드 섹션 사이에만 Divider(프로그램–트랙, 트랙–성과)
+// 38_UI_FIX_BATCH: 홈에서는 Divider를 쓰지 않는다(P10 예외). 섹션 구분은 여백만.
+// Divider 컴포넌트 자체는 People·Careers가 계속 사용하므로 유지한다.
 function Home() {
   useTitle(null)
 
@@ -29,19 +29,9 @@ function Home() {
     <>
       <HeroSection settings={settings} />
       {/* G13: 퀵링크 바 삭제 — 히어로 하단 페이드가 다음 섹션으로 바로 이어진다 */}
-      {showSection('programs') && (
-        <>
-          <ProgramShowcase />
-          <Divider />
-        </>
-      )}
+      {showSection('programs') && <ProgramShowcase />}
       <TracksSection />
-      {showSection('achievements') && (
-        <>
-          <Divider />
-          <AchievementsHighlight />
-        </>
-      )}
+      {showSection('achievements') && <AchievementsHighlight />}
       {showSection('news') && <NewsSection />}
       {/* J9: FinalCTA(BUILD WHAT'S NEXT) 섹션 삭제 */}
     </>

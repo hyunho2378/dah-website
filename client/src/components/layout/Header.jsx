@@ -249,10 +249,13 @@ function Header() {
             바에 들어가는 요소 수가 변하지 않으므로 겹침·넘침이 구조적으로 불가능하다. */}
         <div onMouseEnter={close} className="flex shrink-0 items-center gap-16">
           {/* H10: 접수 기간 중 헤더 접수 버튼 (button_mode=header) — 데스크탑 전용 */}
+          {/* 38_UI_FIX_BATCH: CTA와 KR/EN 토글이 컨테이너 gap 16px로 붙어 보인다.
+              컨테이너 gap을 키우면 나머지 유틸 쌍까지 벌어지므로 이 요소에만 우측 마진(lg:mr-8)을
+              더해 그 쌍만 24px로 만든다. CTA가 hidden인 lg 미만에는 영향 없다. */}
           {showSubmit && submitMode === 'header' && (
             <Link
               to="/submit"
-              className="hidden h-32 items-center gap-8 rounded-sm bg-bg-invert px-16 text-small-m font-semibold text-text-invert transition-opacity duration-fast ease-out hover:opacity-90 md:text-small-d lg:inline-flex"
+              className="hidden h-32 items-center gap-8 rounded-sm bg-bg-invert px-16 text-small-m font-semibold text-text-invert transition-opacity duration-fast ease-out hover:opacity-90 md:text-small-d lg:mr-8 lg:inline-flex"
             >
               <CalendarCheck size={16} aria-hidden="true" />
               {t('actions.submitExhibition')}

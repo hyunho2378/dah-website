@@ -254,7 +254,8 @@ function ExhibitSubmit() {
   return (
     <>
       <Banner />
-      {/* H2-1: 온보딩은 상단 여백을 줄여 첫 화면에 핵심 안내와 시작 버튼이 함께 들어오게 한다 */}
+      {/* H2-1: 온보딩은 상단 여백을 줄여 첫 화면에 핵심 안내가 바로 들어오게 한다
+          (38_UI_FIX_BATCH 이후 시작 버튼은 섹션 최하단에 있다) */}
       <Container
         as="section"
         className={
@@ -278,20 +279,6 @@ function ExhibitSubmit() {
                 또는 팀 단위로 출품합니다.
               </p>
             </header>
-
-            {/* H2-1: 시작 버튼을 절차·유의사항보다 앞에 둬 첫 화면에서 바로 접수를 시작할 수 있게 한다 */}
-            <div className="flex flex-wrap items-center gap-16">
-              <button
-                type="button"
-                onClick={() => setStep('form')}
-                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed md:h-48 md:text-body-d"
-              >
-                접수 시작하기
-              </button>
-              <Button variant="secondary" href="/submit/edit">
-                접수 내역 확인·수정
-              </Button>
-            </div>
 
             <ScheduleHighlight exhibition={exhibition} />
 
@@ -332,6 +319,22 @@ function ExhibitSubmit() {
                   ))}
                 </ul>
               </Panel>
+            </div>
+
+            {/* 38_UI_FIX_BATCH: 시작 버튼을 섹션 최하단으로 이동 — 절차·유의사항을 다 읽고
+                누르게 한다. Wayfinding: 안내가 길어도 발견되도록 상단 헤어라인으로 구간을
+                끊고 여백을 키운다(새 구분선 컴포넌트 없이 border-t 하나로). */}
+            <div className="flex flex-wrap items-center gap-16 border-t border-border-subtle pt-24 md:pt-32">
+              <button
+                type="button"
+                onClick={() => setStep('form')}
+                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed md:h-48 md:text-body-d"
+              >
+                접수 시작하기
+              </button>
+              <Button variant="secondary" href="/submit/edit">
+                접수 내역 확인·수정
+              </Button>
             </div>
           </div>
         )}

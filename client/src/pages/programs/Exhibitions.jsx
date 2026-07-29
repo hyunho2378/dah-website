@@ -94,8 +94,10 @@ function FeaturedExhibition({ item, showSubmit }) {
         </div>
         <div className="flex min-w-0 flex-col justify-center gap-24">
           <div className="flex min-w-0 flex-col gap-12">
-            {/* Y2-1: 피처드 제목 위계 최상단 — displayXL */}
-            <h2 className="min-w-0 text-display-xl-m font-extrabold leading-tight tracking-display text-text-pri md:text-display-xl-d">
+            {/* 38_UI_FIX_BATCH: displayXL(40/64) → h1(26/36). 카드 제목이 페이지 H1(PageBanner,
+                h1 26/36)의 1.78배라 위계가 역전돼 있었다. 페이지 H1과 같은 상한까지만 내리고,
+                웨이트·행간도 새 크기에 맞춘다(800→700, 1.05→1.25). 상세 페이지 제목과 동일 규격. */}
+            <h2 className="min-w-0 text-h1-m font-bold leading-snug tracking-display text-text-pri md:text-h1-d">
               {fullTitle}
             </h2>
             {showTitle && (
