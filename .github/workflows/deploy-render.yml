@@ -1,0 +1,37 @@
+name: Deploy server to Render
+
+# 배경: 레포 소유자 계정과 Render GitHub App 설치 계정이 달라 Render 쪽 webhook이 생성되지
+# 않았고, 그래서 main에 push해도 서버가 자동 배포되지 않았다(클라이언트는 Vercel이 별도로 배포).
+# 복구 방식: Render가 서비스마다 발급하는 Deploy Hook URL로 POST를 보내 배포를 트리거한다.
+#
+# 시크릿(RENDER_DEPLOY_HOOK)이 없으면 실패시키지 않고 조용히 건너뛴다 —
+# 포크·PR 환경에서는 시크릿이 주입되지 않아 매번 빨간 X가 뜨는 것을 막기 위함.
+
+on:
+  push:
+    branches: [main]
+  # 수동 실행(Actions 탭 > Run workflow)으로도 배포를 걸 수 있게 둔다
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    # 포크에서는 돌리지 않는다(시크릿도 없고 원본 서비스를 건드릴 이유도 없다)
+    if: github.repository == 'hyunho2378/dah-website'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "${RENDER_DEPLOY_HOOK}" ]; then
+            echo "RENDER_DEPLOY_HOOK 시크릿이 없습니다 — 배포 트리거를 건너뜁니다."
+            echo "등록 방법: GitHub 레포 > Settings > Secrets and variables > Actions >"
+            echo "  New repository secret > Name=RENDER_DEPLOY_HOOK, Value=<Render Deploy Hook URL>"
+            exit 0
+          fi
+          echo "Render 배포를 트리거합니다."
+          # -f: HTTP 4xx/5xx면 실패 처리(훅 URL이 만료·오타면 워크플로가 빨갛게 뜨도록)
+          # -sS: 진행률은 숨기되 에러는 보이게. 응답 본문에 배포 id가 담겨 로그로 남는다.
+          curl -fsS -X POST "${RENDER_DEPLOY_HOOK}"
+          echo ""
+          echo "트리거 완료. 실제 배포 진행 상황은 Render 대시보드 > 서비스 > Events에서 확인하세요."

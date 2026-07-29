@@ -8,7 +8,14 @@ import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useAuth } from '../../context/AuthContext'
 import ExportButton from '../../components/admin/ExportButton'
-import { EmptyNote, ErrorText, PageHead, Toggle } from '../../components/admin/FormControls'
+import {
+  EmptyNote,
+  ErrorText,
+  GhostButton,
+  PageHead,
+  PrimaryButton,
+  Toggle,
+} from '../../components/admin/FormControls'
 
 // 유형별 카운트 대상 — 롤 미충족 유형은 조회 자체를 생략(403 방지)
 const COUNT_TARGETS = [
@@ -60,6 +67,9 @@ function Dashboard() {
 
   // Y3-3: 공개/비공개 토글 (admin+만 변경 가능 — PUT /admin/settings는 admin 게이트)
   const [visibility, setVisibility] = useState(DEFAULT_VISIBILITY)
+  const [savedVisibility, setSavedVisibility] = useState(DEFAULT_VISIBILITY)
+  const [visSaving, setVisSaving] = useState(false)
+  const [visSaved, setVisSaved] = useState(false)
   const [visError, setVisError] = useState(null)
 
   // pending 쇼케이스 큐 (13_CMS 6절)
@@ -101,26 +111,51 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasRole])
 
-  // 설정 응답 도착 시 저장된 공개 상태를 반영
+  // 설정 응답 도착 시 저장된 공개 상태를 반영. saved는 "서버에 저장된 값"으로,
+  // visibility(초안)와 비교해 변경 여부(dirty)를 판정하는 기준이 된다.
   useEffect(() => {
     const remote = settings.data?.settings?.contentVisibility
     if (remote && typeof remote === 'object') {
-      setVisibility({ ...DEFAULT_VISIBILITY, ...remote })
+      const merged = { ...DEFAULT_VISIBILITY, ...remote }
+      setVisibility(merged)
+      setSavedVisibility(merged)
     }
   }, [settings.data])
 
-  const toggleVisibility = async (type, next) => {
-    const prev = visibility
-    const merged = { ...visibility, [type]: next }
-    setVisibility(merged)
+  // 38_VISIBILITY: 토글은 초안만 바꾸고 저장하지 않는다. 아래 "저장" 버튼을 눌러야 서버에 반영된다
+  // (실수로 공개 상태가 바뀌는 것을 막고, 여러 유형을 한 번에 바꿀 수 있게 한다).
+  const toggleVisibility = (type, next) => {
+    setVisibility((prev) => ({ ...prev, [type]: next }))
     setVisError(null)
+    setVisSaved(false)
+  }
+
+  const dirtyKeys = Object.keys(visibility).filter(
+    (k) => Boolean(visibility[k]) !== Boolean(savedVisibility[k])
+  )
+  const isDirty = dirtyKeys.length > 0
+
+  const saveVisibility = async () => {
+    if (!isDirty || visSaving) return
+    setVisSaving(true)
+    setVisError(null)
+    setVisSaved(false)
     try {
-      await api.put('/admin/settings', { settings: { contentVisibility: merged } })
+      await api.put('/admin/settings', { settings: { contentVisibility: visibility } })
+      setSavedVisibility(visibility)
+      setVisSaved(true)
       settings.refetch()
     } catch (err) {
-      setVisibility(prev)
       setVisError(err.hint ? `${err.message} (${err.hint})` : err.message)
+    } finally {
+      setVisSaving(false)
     }
+  }
+
+  const resetVisibility = () => {
+    setVisibility(savedVisibility)
+    setVisError(null)
+    setVisSaved(false)
   }
 
   const approve = async (item) => {
@@ -172,6 +207,27 @@ function Dashboard() {
             </li>
           ))}
         </ul>
+
+        {/* 38_VISIBILITY: 토글은 초안이고, 저장을 눌러야 공개 사이트에 반영된다.
+            변경이 있을 때만 활성화하고 결과를 문구로 알린다. */}
+        {hasRole('admin') && (
+          <div className="mt-16 flex flex-wrap items-center gap-16">
+            <PrimaryButton type="button" onClick={saveVisibility} disabled={!isDirty || visSaving}>
+              {visSaving ? '저장 중' : '저장'}
+            </PrimaryButton>
+            {isDirty && !visSaving && (
+              <>
+                <GhostButton onClick={resetVisibility}>되돌리기</GhostButton>
+                <span className="font-mono text-caption-m text-text-meta">
+                  변경 {dirtyKeys.length}건 — 저장해야 공개 사이트에 반영됩니다
+                </span>
+              </>
+            )}
+            {!isDirty && visSaved && (
+              <span className="font-mono text-caption-m text-text-meta">저장했습니다</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* pending 쇼케이스 큐 */}

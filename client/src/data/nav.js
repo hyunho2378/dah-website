@@ -28,8 +28,8 @@ export const nav = [
     children: [
       { label: '전공 소개', labelEn: 'Overview', to: '/about' },
       { label: '연혁', labelEn: 'History', to: '/about#history' },
-      { label: '교수진', labelEn: 'Faculty', to: '/about/people' },
-      { label: '멘토', labelEn: 'Mentors', to: '/about/people#mentors' },
+      { label: '교수진', labelEn: 'Faculty', to: '/about/people', visibilityKey: 'professors' },
+      { label: '멘토', labelEn: 'Mentors', to: '/about/people#mentors', visibilityKey: 'mentors' },
       { label: 'CI', labelEn: 'CI', to: '/about/ci' },
     ],
   },
@@ -38,7 +38,7 @@ export const nav = [
     labelEn: 'Academics',
     to: '/curriculum',
     children: [
-      { label: '교육과정', labelEn: 'Curriculum', to: '/curriculum' },
+      { label: '교육과정', labelEn: 'Curriculum', to: '/curriculum', visibilityKey: 'curriculum' },
       { label: '코드쉐어링', labelEn: 'Code Sharing', to: '/curriculum/codesharing' },
       { label: '나노디그리', labelEn: 'Nanodegree', to: '/curriculum/nanodegree' },
     ],
@@ -48,9 +48,9 @@ export const nav = [
     labelEn: 'Events',
     to: '/programs/exhibitions',
     children: [
-      { label: '프로젝트 전시회', labelEn: 'Exhibitions', to: '/programs/exhibitions' },
-      { label: '공모전', labelEn: 'Contests', to: '/programs/contests' },
-      { label: '특강', labelEn: 'Lectures', to: '/programs/lectures' },
+      { label: '프로젝트 전시회', labelEn: 'Exhibitions', to: '/programs/exhibitions', visibilityKey: 'exhibitions' },
+      { label: '공모전', labelEn: 'Contests', to: '/programs/contests', visibilityKey: 'contest' },
+      { label: '특강', labelEn: 'Lectures', to: '/programs/lectures', visibilityKey: 'lecture' },
     ],
   },
   {
@@ -58,11 +58,11 @@ export const nav = [
     labelEn: 'Student Life',
     to: '/students/council',
     children: [
-      { label: '운영위원회', labelEn: 'Student Council', to: '/students/council' },
-      { label: '동아리', labelEn: 'Clubs', to: '/students/clubs' },
-      { label: '학생 성과', labelEn: 'Achievements', to: '/students/achievements' },
-      { label: '웹&앱 쇼케이스', labelEn: 'Web & App Showcase', to: '/showcase' },
-      { label: '취업 현황', labelEn: 'Employment', to: '/students/careers' },
+      { label: '운영위원회', labelEn: 'Student Council', to: '/students/council', visibilityKey: 'council' },
+      { label: '동아리', labelEn: 'Clubs', to: '/students/clubs', visibilityKey: 'club' },
+      { label: '학생 성과', labelEn: 'Achievements', to: '/students/achievements', visibilityKey: 'achievement' },
+      { label: '웹&앱 쇼케이스', labelEn: 'Web & App Showcase', to: '/showcase', visibilityKey: 'showcase' },
+      { label: '취업 현황', labelEn: 'Employment', to: '/students/careers', visibilityKey: 'careers' },
       // Y3-3(33_PHASE18): 대시보드에서 포트폴리오를 공개로 켜면 나타난다(기본 비공개).
       // visibilityKey가 있는 하위는 Header가 useContentVisibility로 필터링한다.
       {
@@ -77,12 +77,14 @@ export const nav = [
     label: '공지사항',
     labelEn: 'Notices',
     to: '/news',
+    visibilityKey: 'notice',
     children: [],
   },
   {
     label: '자료실',
     labelEn: 'Resources',
     to: '/resources',
+    visibilityKey: 'resource',
     children: [],
   },
 ];

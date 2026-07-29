@@ -1,5 +1,7 @@
 import { useTitle } from '../hooks/useTitle'
 import { useApi } from '../hooks/useApi'
+import useContentVisibility from '../hooks/useContentVisibility'
+import { HOME_SECTION_VISIBILITY } from '../data/visibility'
 import HeroSection from '../components/home/HeroSection'
 import ProgramShowcase from '../components/home/ProgramShowcase'
 import TracksSection from '../components/home/TracksSection'
@@ -17,16 +19,32 @@ function Home() {
   // site_settings 공개 설정 — 히어로 버튼 오버라이드 + 접수 기간 노출 판정에 공용
   const { data: settings } = useApi('/settings/public')
 
+  // 38_VISIBILITY: 섹션이 다루는 유형이 전부 비공개면 그 섹션 자체를 렌더하지 않는다
+  // (P6 빈 상태 규칙: 데이터가 비면 홈에서는 섹션을 아예 안 그린다).
+  // 트랙 섹션은 정적 데이터(data/tracks.js) 기반이라 가시성 제어 대상이 아니다.
+  const { isPublic } = useContentVisibility()
+  const showSection = (key) => HOME_SECTION_VISIBILITY[key].some((t) => isPublic(t))
+  const showPrograms = showSection('programs')
+  const showAchievements = showSection('achievements')
+
   return (
     <>
       <HeroSection settings={settings} />
       {/* G13: 퀵링크 바 삭제 — 히어로 하단 페이드가 다음 섹션으로 바로 이어진다 */}
-      <ProgramShowcase />
-      <Divider />
+      {showPrograms && (
+        <>
+          <ProgramShowcase />
+          <Divider />
+        </>
+      )}
       <TracksSection />
-      <Divider />
-      <AchievementsHighlight />
-      <NewsSection />
+      {showAchievements && (
+        <>
+          <Divider />
+          <AchievementsHighlight />
+        </>
+      )}
+      {showSection('news') && <NewsSection />}
       {/* J9: FinalCTA(BUILD WHAT'S NEXT) 섹션 삭제 */}
     </>
   )

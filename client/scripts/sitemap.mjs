@@ -52,7 +52,64 @@ const PAGES = [
   { path: '/terms', changefreq: 'yearly', priority: '0.3' },
 ]
 
-const urls = PAGES.map(
+// 38_VISIBILITY: 대시보드에서 비공개로 둔 콘텐츠 유형은 사이트맵에서도 빼야 한다
+// (검색엔진에 색인되면 메뉴에서 숨긴 의미가 없다). 가시성은 런타임 DB 값이라 빌드 시점에
+// 공개 설정 API를 한 번 조회한다. 서버가 슬립·다운이면 조회에 실패할 수 있는데,
+// 그때는 "전부 공개"로 간주해 기존 동작을 유지한다(빌드를 깨뜨리지 않는다).
+const PAGE_VISIBILITY = {
+  '/about/people': ['professors', 'mentors'],
+  '/curriculum': ['curriculum'],
+  '/programs/exhibitions': ['exhibitions'],
+  '/programs/contests': ['contest'],
+  '/programs/lectures': ['lecture'],
+  '/students/council': ['council'],
+  '/students/clubs': ['club'],
+  '/students/achievements': ['achievement'],
+  '/students/careers': ['careers', 'portfolios'],
+  '/showcase': ['showcase'],
+  '/news': ['notice'],
+  '/resources': ['resource'],
+}
+
+async function fetchVisibility() {
+  const api = (env.VITE_API_URL || '').trim().replace(/\/+$/, '')
+  if (!api) return null
+  try {
+    const res = await fetch(`${api}/settings/public`, {
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return null
+    const json = await res.json()
+    const v = json?.settings?.contentVisibility
+    return v && typeof v === 'object' ? v : null
+  } catch {
+    return null
+  }
+}
+
+const visibility = await fetchVisibility()
+if (!visibility) {
+  console.warn(
+    '[sitemap] 공개 설정을 불러오지 못했습니다(서버 슬립·미설정 가능) — 전 페이지를 포함합니다.'
+  )
+}
+
+const isPublic = (type) => !visibility || visibility[type] !== false
+const visiblePages = PAGES.filter((p) => {
+  const types = PAGE_VISIBILITY[p.path]
+  return !types || types.some(isPublic)
+})
+const dropped = PAGES.length - visiblePages.length
+if (dropped > 0) {
+  console.log(
+    `[sitemap] 비공개 유형 ${dropped}개 경로 제외: ` +
+      PAGES.filter((p) => !visiblePages.includes(p))
+        .map((p) => p.path)
+        .join(', ')
+  )
+}
+
+const urls = visiblePages.map(
   (p) =>
     `  <url>\n` +
     `    <loc>${SITE_URL}${p.path}</loc>\n` +

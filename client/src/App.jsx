@@ -5,6 +5,7 @@ import { LoginModalProvider } from './context/LoginModalContext'
 import { LangProvider } from './i18n/LangContext'
 import CosmosBackground from './components/cosmos/CosmosBackground'
 import { ToastProvider } from './components/common/Toast'
+import VisibilityGate from './components/content/VisibilityGate'
 import Analytics from './components/Analytics'
 import ScrollToTop from './components/layout/ScrollToTop'
 import Header from './components/layout/Header'
@@ -120,15 +121,21 @@ function App() {
           <main className="relative">
             <PageFade>
             <Routes>
+              {/* 38_VISIBILITY: 비공개 유형은 직접 URL로도 못 들어오게 VisibilityGate로 감싼다.
+                  게이트는 제어 대상 경로만 판정하고(그 외는 그대로 통과), 로그인 관리자는 예외로 통과시킨다. */}
               {PUBLIC_ROUTES.map(({ path, element }) => (
-                <Route key={path} path={path} element={element} />
+                <Route
+                  key={path}
+                  path={path}
+                  element={<VisibilityGate>{element}</VisibilityGate>}
+                />
               ))}
               {/* /en 미러 — LangContext가 프리픽스를 감지해 영문 라벨 렌더 */}
               {PUBLIC_ROUTES.map(({ path, element }) => (
                 <Route
                   key={`/en${path}`}
                   path={path === '/' ? '/en' : `/en${path}`}
-                  element={element}
+                  element={<VisibilityGate>{element}</VisibilityGate>}
                 />
               ))}
 
