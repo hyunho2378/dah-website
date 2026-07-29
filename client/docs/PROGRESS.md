@@ -596,3 +596,31 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
   - 학생회 타이틀은 기존 토큰(`text-text-pri`, `text-purple-primary`) 재사용 — 신규 토큰·accents.js 수정 불필요
 - [x] **A-3 파일 소유 계약**(교차 0건 확인). AGENT-1 `pages/admin/EntriesSheet.jsx` / AGENT-2 `pages/admin/ExhibitionAdmin.jsx`·`components/admin/AdminLayout.jsx` / AGENT-3 `pages/Curriculum.jsx`·`pages/admin/CurriculumAdmin.jsx` / AGENT-4 `pages/Home.jsx`·`pages/programs/Exhibitions.jsx`·`components/layout/Header.jsx`·`pages/submit/ExhibitSubmit.jsx`·`pages/students/Council.jsx`
   - 확인 사항: 대시보드 카드(접수 버튼 노출·회차/대상 학기·접수 현황)는 SettingsAdmin이 아니라 **ExhibitionAdmin.jsx 한 파일**에 모여 있어 AGENT-2 단독 소유로 성립(병합 불필요). 비번 초기화 서버 라우트는 `server/src/routes/adminExtra.js:132`에 **이미 존재** — 신규 추가 없이 재사용. `ColumnFilter.jsx`·`Divider.jsx`는 공용이나 수정 불필요(Divider는 People·Careers가 계속 사용하므로 컴포넌트 삭제 금지, 홈에서 호출만 제거)
+
+### PHASE B — 병렬 (AGENT-1~4, 파일 소유 교차 0건)
+- [x] **[A1] 접수 시트·접수자 정보 탭 재설계**(`EntriesSheet.jsx` 단독) — 폭 상한 제거 후 gutter 정렬 / 탭·버튼·입력 보더 제거 / 필러 행 빈 그리드 + 얼룩말 배경 제거 / 셀 클릭 선택만(자동 복사 삭제, `select-text`) / 좌측 행 열·도움말 제거 / 표 상시 렌더로 필터 소멸 해결 / 접수자 정보 탭 사람 단위 집계. 서버 라우트는 `adminExtra.js:132` 기존 것 재사용(신규 0)
+  - `border-collapse` → `border-separate border-spacing-0` + sticky를 `<thead>`가 아니라 각 `<th>`에 건 이유: collapse에서는 sticky 헤더의 보더가 스크롤 시 사라진다
+- [x] **[A2] 대시보드 설정·순서**(`ExhibitionAdmin.jsx`·`AdminLayout.jsx`) — 카드 스왑 / 현황 요약화 / 위치·학기 세그먼트 / 어드민 그룹을 `nav.js` 헤더 IA 순서로 재정렬
+  - 재정렬의 함정: IA 그룹이 권한을 섞는다(운영위원회 admin vs 동아리 manager). `role`을 그룹에서 항목으로 내리고 **path+role 집합 동일**을 대조해 권한 변경 0건 확인
+- [x] **[A3] 교육과정 학기 틴트·편집기 sticky**(`Curriculum.jsx`·`CurriculumAdmin.jsx`) — 나열식 제거 후 SemesterPicker, 로드맵 SVG `rect` fill을 `state.semesterActive`로. 비활성은 `none`이 아니라 `transparent`(none은 색 보간이 안 돼 전환이 튄다). md 미만은 로드맵이 hidden이라 학기 표 행에도 동일 틴트
+- [x] **[A4] 공개 페이지 스팟**(`Home.jsx`·`Exhibitions.jsx`·`Header.jsx`·`ExhibitSubmit.jsx`·`Council.jsx`) — 구분선 2개 제거(컴포넌트는 People·Careers가 써서 보존) / featured 타이틀 display-xl→h1 + weight 800→700·leading 1.05→1.25 / CTA `lg:mr-8` / 접수 버튼 최하단 / 타이틀 3색
+- [!] 린터는 eslint가 아니라 **oxlint**(`package.json`의 `"lint": "oxlint"`)다. 에이전트 2명이 eslint 부재로 검증을 못 했다고 보고해 전량 oxlint로 재검증했다 — 수정 파일 경고 0
+
+### PHASE C — 단독 (크로스커팅 + 통합 검증)
+- [x] 섹션 간격 축소: `spacing.section` 96→80 / 160→128. 호출부 37곳이 전부 `py-section-m lg:py-section-d`라 토큰 1줄이 전 페이지 적용
+- [x] 헤드라인 여백: `PageBanner` `pb-40 pt-48 md:pb-64 md:pt-80` → `pb-32 pt-40 md:pb-40 md:pt-64`
+- [x] **[AR 추가 수정] 필러 행 고정값 20 → 실측 기반**. 3840x1200에서 그리드 773px / 허용 840px로 **아래 67px이 빈 채로 남는 것을 재현**했다. 첫 시도(래퍼 `clientHeight` 측정)는 래퍼가 콘텐츠에 맞춰 줄어들어 "현재 행 수가 곧 답"이 되는 고정점에 갇혀 실패했고, 기준을 상한(`max-h-[70dvh]`의 computed maxHeight)으로 바꿔 해결. 하한 20 / 상한 200(렌더 폭주 안전판)
+- [x] 통합 빌드 성공(2032 modules), oxlint 경고 0(잔여 7건은 전부 기존 `only-export-components`, 이번 수정 파일 아님)
+- [x] **실측 재검증**(로컬 dev + scratchpad 스텁 API. 실 DB 미접속 — 프로덕션 쓰기 위험 회피)
+  - 접수 시트: 검색 left 32 / 표 left 32 / 표 right 32 / 버튼 right 32 **완전 정렬** · 탭 border 0px · 20→22행 필러(잔여 여백 0) · 셀 클릭 시 클립보드 호출 **0회** · 셀 다중 드래그 선택 텍스트 정상 추출 · 선택 셀만 `#6844C4` 2px 아웃라인 · 첫 헤더 "번호"(행 열 제거) · 도움말 문구 부재
+  - **필터 소멸 재현·해결 확인**: 전체 해제 → 데이터행 0이지만 thead 15·필터 15·패널 열린 상태 유지 → 값 재선택 → 3행 복귀
+  - 접수자 정보 탭: 접수 3건 → **2명 집계**, 김하늘 "UX디자인, 디지털 디자인2" 2과목 / 팀 접수자는 `members`에서 학번·이름 추출 / 초기화가 그 사람의 접수 2건(id 1·3) **모두에 POST** + 토스트
+  - 대시보드: 카드 순서 접수 일정→접수 현황→회차·학기→과목→접수 버튼 노출 · 현황 카드 "바로가기 + 현재 접수 3건"(리스트 0) · 위치 세그먼트 **헤더 73px = 플로팅 73px 동일 폭** · 사이드바 DASHBOARD/ABOUT/ACADEMICS/EVENTS/STUDENT LIFE/NOTICES/RESOURCES/SYSTEM/OWNER
+  - 교육과정: 2학기 선택 시 UX디자인·디지털 디자인2만 틴트 → **1학기로 전환하면 디지털인문예술입문·디자인 씽킹으로 이동**, 전 과목은 표에 잔존, "현재 학기" 배지 정상 해제
+  - 공개 페이지: 홈 `<hr>` 0개 · featured 타이틀 64px→**36px**(페이지 H1과 동일) weight 700 leading 1.25 · CTA↔KR/EN **16→24px**, 자료실↔CTA 191px 유지 · 접수 버튼 2개가 마지막 안내(top 674) 아래 top 1019 · 학생회 2026=#F7F5FC / 1·LUCID=#815FD7
+  - 간격: 제목 아래 249→**193px**, 섹션 패딩 160→128 / 96→80
+  - 반응형 320·768·1440·3840 전부 **페이지 가로 스크롤 0**, 표 초과폭은 래퍼 내부 스크롤로 격리
+- [!] **미검증(실서버 필요)**: 비번 초기화의 실제 bcrypt 저장 결과, 실 데이터에서 `curriculum.name_ko`와 정적 `data/curriculum.js` 과목명 일치 여부(불일치 시 그 과목만 틴트 안 됨), Safari에서 `<th>` sticky + `border-separate` 동작
+- [!] **범위 밖 관찰(고치지 않음)**: 3840px에서 콘텐츠 1280 / 좌우 여백 각 1273px로 RESPONSIVE.md 4K 요구("여백이 콘텐츠보다 크면 안 됨")에 7px 차로 겨우 걸린다. 컨테이너 상한은 이번 배치가 건드린 값이 아니라 기존 설계이며, 4K 전략 변경은 별도 과제다
+- [!] 학생회 타이틀 `#815FD7`는 `#100D18` 위 **4.17:1** — h2(20/28) 700이라 WCAG AA 큰 텍스트(3:1)는 통과하나 일반 텍스트(4.5:1) 미달. 요청한 규칙의 직접 결과라 그대로 뒀다. 되돌린다면 `purple.mid`(#A286E9)가 절충안
+- [!] 어드민 그룹 라벨은 영문 유지(기존 OWNER·SYSTEM과 동일 스타일). 국문 원하면 후속 처리

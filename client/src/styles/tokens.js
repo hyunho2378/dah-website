@@ -132,7 +132,11 @@ export const typography = {
 export const spacing = {
   // 4pt 배수 (K2-4: 운영위 로고 1.5배 스케일용 144 추가)
   scale: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128, 144, 160],
-  section: { mobile: 96, desktop: 160 },   // 섹션 수직 패딩
+  // AR(38_UI_FIX_BATCH) 섹션 수직 패딩 소폭 축소: 96→80(-17%) / 160→128(-20%).
+  // 실측 근거 — vw1425에서 상하 각 160px이라 섹션 사이 실효 간격이 320px였다.
+  // 호출부 37곳이 전부 `py-section-m lg:py-section-d`라 이 한 줄이 곧 전 페이지 적용이고,
+  // tailwind fluid()가 clamp(80, 보간, 128)로 재계산해 브레이크포인트 점프도 없다.
+  section: { mobile: 80, desktop: 128 },   // 섹션 수직 패딩
   container: { desktop: 1280, wide: 1440 }, // 콘텐츠 최대폭
   gutter: { mobile: 16, tablet: 24, desktop: 32 },
 };

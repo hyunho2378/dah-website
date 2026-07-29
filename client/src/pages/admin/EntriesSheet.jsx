@@ -25,7 +25,7 @@
 //       CSV·엑셀 내려받기 · 수동 새로고침 + 20초 자동 새로고침(상시) · 하단 시트 탭 ·
 //       접수자 정보 탭(사람 단위 집계 + 과목 목록)에서 admin+ 비밀번호 초기화(서버가 권한 재검증).
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Download, KeyRound, RefreshCw } from 'lucide-react'
 import ColumnFilter from '../../components/common/ColumnFilter'
@@ -38,7 +38,12 @@ const POLL_MS = 20000
 const DEFAULT_WIDTH = 180
 // B1-4: 데이터가 적어도 스프레드시트처럼 보이도록 채우는 최소 행 수.
 // 표 래퍼(max-h-[70dvh])를 채우는 정도만 잡는다 — 수백 행을 렌더하지 않는다.
+// AR: 고정값 20은 세로가 긴 화면에서 부족했다(실측 3840x1200에서 그리드 773px / 허용 840px
+// → 아래 67px이 빈 채로 남음). 래퍼 높이를 실측해 필요한 행 수를 계산하고, 20은 하한으로만
+// 쓴다. 상한 200은 4K 세로(70dvh ≈ 1512px)까지 덮으면서 렌더 폭주를 막는 안전판이다.
 const MIN_ROWS = 20
+const MAX_FILLER_ROWS = 200
+const FALLBACK_ROW_H = 37
 
 // fields(jsonb) 키 → 화면 라벨. 접수 폼 스키마가 자유 구조라 미등록 키는 원문 키를 그대로 쓴다.
 const FIELD_LABELS = {
@@ -464,7 +469,29 @@ function EntriesSheet() {
   }, [sourceRows, dataColumns, filters, q, sort])
 
   // B1-4: 데이터가 적어도 빈 셀 그리드로 표 영역을 채운다.
-  const fillerCount = Math.max(0, MIN_ROWS - visibleRows.length)
+  // AR: 필요한 행 수는 래퍼 실측 높이에서 나온다. 행 높이는 렌더된 행에서 읽고(없으면 폴백),
+  // 뷰포트·글꼴 변화는 ResizeObserver가 잡는다. 관측 대상은 래퍼 하나뿐이라 비용이 없다.
+  const wrapRef = useRef(null)
+  const [fitRows, setFitRows] = useState(MIN_ROWS)
+  useEffect(() => {
+    // 기준은 래퍼의 실제 높이가 아니라 상한(max-h-[70dvh])이다. 래퍼는 콘텐츠에 맞춰
+    // 줄어들기 때문에, 실제 높이로 계산하면 "현재 행 수"가 그대로 답이 되는 고정점에 갇힌다.
+    const measure = () => {
+      const el = wrapRef.current
+      if (!el) return
+      const cap = parseFloat(getComputedStyle(el).maxHeight)
+      if (!Number.isFinite(cap)) return
+      const rowH = el.querySelector('tbody tr')?.getBoundingClientRect().height || FALLBACK_ROW_H
+      const headH = el.querySelector('thead')?.getBoundingClientRect().height || rowH
+      const need = Math.ceil((cap - headH) / rowH)
+      setFitRows(Math.min(MAX_FILLER_ROWS, Math.max(MIN_ROWS, need)))
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
+
+  const fillerCount = Math.max(0, fitRows - visibleRows.length)
 
   const sheetLabel = SHEETS.find((s) => s.value === sheet)?.label || '접수 현황'
   const stamp = new Date().toISOString().slice(0, 10)
@@ -565,7 +592,10 @@ function EntriesSheet() {
 
         {/* 시트 — 가로 넘침은 이 래퍼 내부 스크롤로 격리(페이지 가로 스크롤 0).
             표는 항상 렌더한다: 필터를 전부 해제해도 thead·컬럼 필터는 남아야 되돌릴 수 있다(B1-8). */}
-        <div className="max-h-[70dvh] w-full min-w-0 overflow-auto rounded-sm border border-reading-hairline bg-reading-surface">
+        <div
+          ref={wrapRef}
+          className="max-h-[70dvh] w-full min-w-0 overflow-auto rounded-sm border border-reading-hairline bg-reading-surface"
+        >
           {/* colgroup 폭 합계를 최소폭으로 잡아 컬럼 폭을 고정한다. 래퍼가 더 넓으면
               남는 폭만 비례 분배되고(뷰포트 변화), 필터·선택에는 반응하지 않는다.
               border-separate: border-collapse에서는 sticky thead의 보더가 스크롤 시 사라진다. */}

@@ -26,7 +26,10 @@ function PageBanner({ titleKo, titleEn, breadcrumb = [], nebulaX = '30%', nebula
       className="border-b border-border-subtle bg-nebula"
       style={{ '--x': nebulaX, '--y': nebulaY }}
     >
-      <Container className="pb-40 pt-48 md:pb-64 md:pt-80">
+      {/* AR(38_UI_FIX_BATCH) 헤드라인 아래 여백 축소. 실측: /about에서 h1 하단부터
+          첫 콘텐츠까지 249px였다(배너 pb 64 + 다음 섹션 pt 160). 배너가 곧바로
+          py-section 섹션과 맞물리는 구조라 배너 하단 패딩이 이중으로 쌓인다. */}
+      <Container className="pb-32 pt-40 md:pb-40 md:pt-64">
         {breadcrumb.length > 0 && (
           <nav aria-label={t('aria.breadcrumb')}>
             <ol className="flex flex-wrap items-center gap-8 font-mono text-caption-m text-text-meta md:text-caption-d">
