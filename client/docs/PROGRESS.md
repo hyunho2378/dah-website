@@ -555,3 +555,25 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [!] 스펙 이탈 1건(합리적 판단으로 수용): H1-1의 "행 클릭 시 확장"을 **좌측 고정열 화살표 버튼**으로 구현. 셀 클릭이 이미 복사 동작(H1-5)이라 같은 클릭에 두 동작을 겹치면 예측 불가능해지기 때문
 - [!] 잔여(소유 밖·별도 과제): `GET /admin/exhibition/entries`는 여전히 `images`를 반환(시트에서만 컬럼 제거) / ExhibitionAdmin 접수 목록의 이미지 개수 표시 / 서버 `curriculum.track`(common|design|ai|culture)과 정적 `data/curriculum.js`(common|track-1~3) 두 소스 분리 상태 / 비밀번호 초기화 이력은 DB에만 기록하고 화면 미표시
 - [!] 육안 확인(사용자, 서버 배포 후): 시트 마진·필터·행확장·탭·비번 초기화 / 접수폼 학기 전환·회차 / 상담 이메일·영문(헤더 토글로 /en/consult) / 로드맵 학기별·현재 학기 글로우 / 공지·자료실 상세 밝은 표면
+
+## PHASE 31 · Render 자동 배포 복구 + 공개/비공개 실제 반영 (38_VISIBILITY)
+### 1) Render 자동 배포 복구 (GitHub Actions Deploy Hook)
+- [x] 원인: 레포 소유자 계정과 Render GitHub App 설치 계정이 달라 Render 쪽 webhook이 생성되지 않았다 → main에 push해도 서버가 자동 배포되지 않았다(클라이언트는 Vercel이 별도 배포라 정상이었고, 그래서 "클라만 최신, 서버는 구버전" 상태가 반복됐다)
+- [x] `.github/workflows/deploy-render.yml` 신설: main push + 수동 실행(workflow_dispatch) 시 `secrets.RENDER_DEPLOY_HOOK`으로 POST해 배포 트리거. `curl -fsS`라 훅 URL이 만료·오타면 워크플로가 빨갛게 실패한다
+- [x] 시크릿이 없으면 `exit 0`으로 **조용히 스킵**(포크·PR에서 매번 실패하지 않게) + `if: github.repository == 'hyunho2378/dah-website'` 포크 가드
+- [!] **사용자 등록 필요 — 이거 하기 전까지는 자동 배포가 동작하지 않는다**:
+  1. **Render Deploy Hook URL 찾기**: Render 대시보드 → 해당 Web Service(dah-website) 선택 → 좌측 **Settings** → 아래로 스크롤해 **Deploy Hook** 항목 → `https://api.render.com/deploy/srv-XXXXX?key=YYYYY` 형태 URL 복사(비밀값이라 공개 금지)
+  2. **GitHub 시크릿 등록**: 레포 → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** → Name `RENDER_DEPLOY_HOOK`, Value에 위 URL 붙여넣기
+  3. 등록 후 main에 아무 커밋이나 push하면 Actions 탭에서 "Deploy server to Render"가 돌고 Render Events에 배포가 뜬다. 즉시 걸고 싶으면 Actions 탭 → 해당 워크플로 → **Run workflow**
+### 2) 대시보드 공개/비공개 토글 실제 반영
+- [x] **근본 원인**: 토글은 `site_settings.contentVisibility`에 정상 저장되고 있었지만, 실제로 반영되는 곳이 **헤더 하위 메뉴의 포트폴리오 한 곳뿐**이었다(nav.js에 `visibilityKey`가 portfolios에만 붙어 있었다). 그래서 다른 유형을 비공개로 바꿔도 화면이 그대로였다 — 저장이 안 된 게 아니라 소비처가 없던 것
+- [x] `client/src/data/visibility.js` 신설 — 유형 → 라우트/홈 섹션 대응의 **단일 진실 소스**. 헤더·홈·라우트 가드·사이트맵이 전부 이 표만 참조한다. 유형 키는 서버 `DEFAULT_VISIBILITY` 14종과 1:1
+- [x] **저장 버튼**(요구 1): 토글은 초안만 바꾸고 즉시 저장하지 않는다. 하단 "저장"을 눌러야 PUT `/admin/settings`. **변경이 있을 때만 활성화**, 변경 건수 표시, "되돌리기", 저장 완료·실패 문구. 저장 성공 시 서버 값을 기준(savedVisibility)으로 갱신해 dirty 판정이 정확하다
+- [x] **헤더**(요구 2): 하위 항목뿐 아니라 **최상위 단일 링크(공지사항·자료실)**도 숨기고, 원래 하위가 있던 그룹의 하위가 전부 숨겨지면 **그룹 자체를 제거**한다(그룹 대표 to가 첫 하위 경로라 놔두면 막힌 페이지로 보낸다). 데스크탑 드롭다운과 모바일 시트가 같은 `visibleNav`를 쓰므로 한 번의 수정으로 둘 다 반영
+- [x] **홈 섹션**(요구 2): 섹션이 다루는 유형이 전부 비공개면 섹션 자체를 렌더하지 않는다(P6 빈 상태 규칙). ProgramShowcase는 카테고리 단위로 숨기고, 첫 카테고리가 숨겨졌을 때 `active`가 사라진 항목을 가리켜 우측 패널이 비는 문제까지 폴백 처리
+- [x] **직접 URL 차단**(요구 2): `VisibilityGate` 신설 후 App의 공개 라우트(/en 미러 포함) 전체에 적용. 목록·상세(`/news/12` 등 접두사 매칭) 모두 차단. **로그인 관리자는 통과**(요구 4), 비로그인은 존재를 드러내지 않도록 403이 아니라 **404**. 설정·인증 로딩 중에는 렌더하지 않아 "잠깐 보였다 404" 깜빡임 없음
+- [x] **사이트맵**(요구 2): 빌드 시 `/settings/public`을 조회해 비공개 유형 경로를 제외. 조회 실패(서버 슬립 등) 시 전부 포함으로 폴백해 빌드를 깨뜨리지 않는다. 실서버 조회 성공 확인
+- [x] **포트폴리오 연동**(요구 3) 검증: 공개로 전환 시 "학생 활동" 하위에 포트폴리오가 나타나는 것을 로직 하네스로 확인
+- [x] 검증(소스 파싱 하네스로 시나리오 전수): 포트폴리오 공개 전환 → 메뉴 등장 ✅ / 공지사항·자료실 비공개 → 최상위 제거 ✅ / 학과 행사 3종 전부 비공개 → 그룹째 제거 ✅ / 전시회만 비공개 → 그룹은 남고 항목만 제거 ✅ / 라우트 매핑(`/news/12`→notice, `/en/students/clubs`→club, `/about`→제어 대상 아님) ✅ / 홈 섹션 숨김 ✅ / 사이트맵 제외(단, `/students/careers`는 careers가 공개면 유지) ✅. build 성공, lint 경고 0
+- [!] 해석 note: 요구의 "사이드바"는 **공개 사이트의 모바일 내비 시트**로 해석해 헤더와 함께 처리했다. **어드민 사이드바는 일부러 필터하지 않았다** — 관리자는 비공개 콘텐츠를 관리할 수 있어야 하고(요구 4), 사이드바에서까지 지우면 비공개로 돌린 콘텐츠에 아예 못 들어간다
+- [!] 이번 턴 작업 중 작업 트리가 외부에서 hard reset·clean 돼 편집분과 신규 파일이 전부 소실되는 일이 있었다. 전량 재적용 후 **즉시 커밋**으로 보호했다(4cf2423 · 8637364)
