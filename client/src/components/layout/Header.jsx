@@ -124,11 +124,21 @@ function Header() {
   // Y3-3(33_PHASE18) 통합: visibilityKey가 붙은 하위 메뉴는 대시보드에서 해당 유형을
   // 공개로 켰을 때만 노출한다(예: 포트폴리오는 기본 비공개). 데스크탑 드롭다운과
   // 모바일 시트가 같은 목록을 쓰도록 여기서 한 번만 필터링한다.
+  // 38_VISIBILITY: 공개/비공개를 헤더 전체(데스크탑 드롭다운 + 모바일 시트)에 반영한다.
+  //   1) 최상위 단일 링크(공지사항·자료실)는 자기 visibilityKey로 숨긴다.
+  //   2) 하위 항목은 각자의 visibilityKey로 숨긴다.
+  //   3) 원래 하위가 있던 그룹인데 전부 숨겨졌으면 그룹 자체를 뺀다
+  //      (그룹 대표 경로 to가 첫 하위 경로라, 놔두면 막힌 페이지로 보내게 된다).
   const { isPublic } = useContentVisibility()
-  const visibleNav = nav.map((item) => ({
-    ...item,
-    children: item.children.filter((c) => !c.visibilityKey || isPublic(c.visibilityKey)),
-  }))
+  const visibleNav = nav
+    .filter((item) => !item.visibilityKey || isPublic(item.visibilityKey))
+    .map((item) => ({
+      ...item,
+      // 필터 후 인덱스는 원본 nav와 어긋나므로 "원래 하위가 있었는지"를 항목에 실어 나른다
+      hadChildren: item.children.length > 0,
+      children: item.children.filter((c) => !c.visibilityKey || isPublic(c.visibilityKey)),
+    }))
+    .filter((item) => !item.hadChildren || item.children.length > 0)
 
   const glassed = scrolled || openIndex !== null
   // 35_HEADER_HOVER_WHALE: 헤더 바·모바일 시트 모두 liquidGL 미적용(불변식 = 헤더는 어떤

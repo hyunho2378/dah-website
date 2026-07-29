@@ -6,16 +6,19 @@ import Reveal from '../common/Reveal'
 import ArrowLink from '../common/ArrowLink'
 import Container from '../layout/Container'
 import { useApi } from '../../hooks/useApi'
+import useContentVisibility from '../../hooks/useContentVisibility'
 import { useLang } from '../../i18n/LangContext'
 
 // 홈 v2 #3 프로그램 마스터-디테일 (10_IA_V2 4절, KPC SERVICE 이식)
 // 좌 카테고리 hover/focus → 우 글래스 패널 crossfade 200ms + 미세 translateY(11_DESIGN_V2 5절 명시값).
 // 모바일(lg 미만)은 세로 아코디언 폴백.
+// 38_VISIBILITY: visibilityKey는 서버 settings.js DEFAULT_VISIBILITY 유형 키와 1:1.
+// 대시보드에서 비공개로 바꾼 유형은 아래 마스터-디테일 목록에서 통째로 빠진다.
 const CATEGORIES = [
-  { key: 'exhibitions', no: '01', to: '/programs/exhibitions', api: '/content/exhibitions' },
-  { key: 'contests', no: '02', to: '/programs/contests', api: '/content/contest' },
-  { key: 'lectures', no: '03', to: '/programs/lectures', api: '/content/lecture' },
-  { key: 'showcase', no: '04', to: '/showcase', api: '/content/showcase' },
+  { key: 'exhibitions', no: '01', to: '/programs/exhibitions', api: '/content/exhibitions', visibilityKey: 'exhibitions' },
+  { key: 'contests', no: '02', to: '/programs/contests', api: '/content/contest', visibilityKey: 'contest' },
+  { key: 'lectures', no: '03', to: '/programs/lectures', api: '/content/lecture', visibilityKey: 'lecture' },
+  { key: 'showcase', no: '04', to: '/showcase', api: '/content/showcase', visibilityKey: 'showcase' },
 ]
 
 // API 응답(배열 또는 {items}) → 최신 3건 제목 리스트. 실패·미기동 시 빈 배열(P6: 리스트만 생략)
@@ -67,6 +70,13 @@ function ProgramShowcase() {
   const { t } = useLang()
   const [active, setActive] = useState(CATEGORIES[0].key)
   const [openMobile, setOpenMobile] = useState(null)
+  // 훅 호출 개수·순서는 가시성과 무관하게 고정해야 하므로(Rules of Hooks)
+  // 아래 useApi 4개는 그대로 두고 "렌더할 목록"만 걸러낸다.
+  const { isPublic } = useContentVisibility()
+  const shown = CATEGORIES.filter((c) => isPublic(c.visibilityKey))
+  // 첫 카테고리가 비공개면 active가 사라진 항목을 가리켜 우측 패널이 비어버린다.
+  // 표시 목록에 없으면 첫 노출 항목으로 되돌린다(상태는 두고 파생값만 보정).
+  const activeKey = shown.some((c) => c.key === active) ? active : shown[0]?.key
 
   // 최신 항목 4소스 — 서버 미기동 시 data null → 리스트 생략, 설명+VIEW MORE는 유지
   const exhibitions = useApi(CATEGORIES[0].api)
@@ -96,8 +106,8 @@ function ProgramShowcase() {
           {/* Y1-1: 좌측 리스트도 열 높이를 채우게(flex-col + 항목 flex-1) 해 마지막 헤어라인과
               우측 패널 하단(VIEW MORE)이 같은 선에서 끝난다 */}
           <ul className="flex flex-col">
-            {CATEGORIES.map((category) => {
-              const isActive = active === category.key
+            {shown.map((category) => {
+              const isActive = activeKey === category.key
               return (
                 <li
                   key={category.key}
@@ -133,8 +143,8 @@ function ProgramShowcase() {
           </ul>
 
           <div className="grid h-full">
-            {CATEGORIES.map((category) => {
-              const isActive = active === category.key
+            {shown.map((category) => {
+              const isActive = activeKey === category.key
               return (
                 <div
                   key={category.key}
@@ -155,7 +165,7 @@ function ProgramShowcase() {
         {/* 모바일: 세로 아코디언 폴백 */}
         <div className="mt-48 lg:hidden">
           <ul className="border-t border-border-subtle">
-            {CATEGORIES.map((category) => {
+            {shown.map((category) => {
               const isOpen = openMobile === category.key
               return (
                 <li key={category.key} className="border-b border-border-subtle">
