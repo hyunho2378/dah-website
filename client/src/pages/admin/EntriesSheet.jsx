@@ -23,14 +23,11 @@
 //
 // 기능: 컬럼 헤더 필터·정렬(G1) · 검색 · 헤더 고정 · 셀 선택 · 빈 그리드 필러 ·
 //       CSV·엑셀 내려받기 · 수동 새로고침 + 20초 자동 새로고침(상시) · 하단 시트 탭 ·
-//       접수자 정보 탭(사람 단위 집계 + 과목 목록)에서 admin+ 비밀번호 초기화(서버가 권한 재검증).
+//       접수자 정보 탭(사람 단위 집계 + 과목 목록).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Download, KeyRound, RefreshCw } from 'lucide-react'
+import { Download, RefreshCw } from 'lucide-react'
 import ColumnFilter from '../../components/common/ColumnFilter'
-import { useToast } from '../../components/common/Toast'
-import { useAuth } from '../../context/AuthContext'
 import { api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 
@@ -212,68 +209,6 @@ function download(content, filename, mime) {
   URL.revokeObjectURL(url)
 }
 
-// ── 비밀번호 초기화 확인 모달 (H1-7) ─────────────────────────
-// window.confirm 금지 — 사이트 글래스 모달 패턴(AdminLayout 로그아웃 확인과 동일: 백드롭·ESC).
-// B1-9: 접수자 정보 탭이 사람 단위 집계라 한 사람에게 접수 건이 여럿일 수 있다.
-// 초기화 대상이 몇 건인지 모달에서 반드시 밝힌다.
-function ResetConfirm({ name, count, busy, onCancel, onConfirm }) {
-  useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') onCancel()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [onCancel])
-
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-gutter-m">
-      <button
-        type="button"
-        aria-label="닫기"
-        tabIndex={-1}
-        onClick={onCancel}
-        className="absolute inset-0 bg-bg-base/70"
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="pw-reset-title"
-        className="relative w-full max-w-sm rounded-glass border border-glass-line bg-cosmos-depth1/[0.96] p-32 backdrop-blur-glass"
-      >
-        <h2 id="pw-reset-title" className="text-h3-m font-bold text-text-pri md:text-h3-d">
-          비밀번호 초기화
-        </h2>
-        <p className="mt-12 text-body-m text-text-sec md:text-body-d">
-          {name}님의 접수 {count}건의 비밀번호를 모두 1234로 초기화합니다.
-        </p>
-        <div className="mt-24 flex justify-end gap-8">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex h-40 cursor-pointer items-center justify-center rounded-sm border border-border-subtle px-16 text-small-m font-semibold text-text-pri transition duration-fast ease-out hover:border-border-strong"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={busy}
-            className="inline-flex h-40 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-16 text-small-m font-semibold text-button-primaryText transition duration-fast ease-out hover:bg-button-primaryHover disabled:cursor-default disabled:opacity-60"
-          >
-            {busy ? '초기화 중' : '초기화'}
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  )
-}
-
 // ── 페이지 ──────────────────────────────────────────────────
 // B1-3: 툴바 버튼은 보더 없이 배경·hover만으로 구분한다(페이지 bg-reading-bg 위의 bg-reading-subtle 칩).
 const BTN =
@@ -289,9 +224,6 @@ const SHEETS = [
 
 function EntriesSheet() {
   useTitle('접수 관리 시트')
-  const toast = useToast()
-  const { hasRole } = useAuth()
-  const canReset = hasRole('admin')
 
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -302,8 +234,6 @@ function EntriesSheet() {
   const [filters, setFilters] = useState({})
   const [sort, setSort] = useState(null)
   const [selected, setSelected] = useState(null)
-  const [pwTarget, setPwTarget] = useState(null)
-  const [pwBusy, setPwBusy] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -370,7 +300,6 @@ function EntriesSheet() {
       if (!person) {
         person = {
           id: key,
-          entryIds: [],
           studentNo,
           major: firstPersonField(row, ['major', 'majors']),
           name,
@@ -380,7 +309,6 @@ function EntriesSheet() {
         }
         map.set(key, person)
       }
-      person.entryIds.push(row.id)
       // 같은 사람의 접수 건마다 채워진 필드가 다를 수 있어 비어 있는 값만 보충한다.
       if (!person.studentNo) person.studentNo = studentNo
       if (!person.major) person.major = firstPersonField(row, ['major', 'majors'])
@@ -393,38 +321,26 @@ function EntriesSheet() {
     return [...map.values()]
   }, [rows])
 
-  // 접수자 정보 컬럼 (B1-9) — 개인정보 5필드 + 본인이 접수한 과목 목록 + 비밀번호 초기화.
-  const peopleColumns = useMemo(() => {
-    const base = [
+  // 접수자 정보 컬럼 (B1-9) — 개인정보 5필드 + 본인이 접수한 과목 목록.
+  // 41_AUTH_CONTRACT: 접수자 신원은 구글 계정이다. 이메일은 구글이 확인한 로그인 계정 값을
+  // 서버가 접수 행에 채우므로, 여기 이메일과 이름이 곧 계정 신원이다.
+  const peopleColumns = useMemo(
+    () => [
       { key: 'person_no', label: '학번', get: (r) => r.studentNo },
       { key: 'person_major', label: '전공', get: (r) => r.major },
       { key: 'person_name', label: '이름', get: (r) => r.name },
       { key: 'email', label: '이메일', get: (r) => r.email },
       { key: 'person_phone', label: '전화번호', get: (r) => r.phone },
       { key: 'person_subjects', label: '접수 과목', get: (r) => r.subjects.join(', ') },
-    ]
-    // 비로그인·manager에는 초기화 UI 자체를 렌더하지 않는다(서버도 admin+ 재검증)
-    if (!canReset) return base
-    return [
-      ...base,
-      {
-        key: 'pw_reset',
-        label: '비밀번호',
-        action: true,
-        get: () => '',
-      },
-    ]
-  }, [canReset])
+    ],
+    []
+  )
 
   const isPeople = sheet === 'people'
   const sourceRows = isPeople ? peopleRows : rows
   const columns = isPeople ? peopleColumns : entryColumns
-  const dataColumns = useMemo(() => columns.filter((c) => !c.action), [columns])
 
-  const columnWidth = useCallback(
-    (col) => (col.action ? 150 : COLUMN_WIDTH[col.key] || DEFAULT_WIDTH),
-    []
-  )
+  const columnWidth = useCallback((col) => COLUMN_WIDTH[col.key] || DEFAULT_WIDTH, [])
   const tableWidth = useMemo(
     () => columns.reduce((sum, col) => sum + columnWidth(col), 0),
     [columns, columnWidth]
@@ -434,26 +350,26 @@ function EntriesSheet() {
   // 필터 적용 전 sourceRows 기준이라 "전체 해제" 후에도 후보값이 남아 되돌릴 수 있다.
   const filterValues = useMemo(() => {
     const map = {}
-    for (const col of dataColumns) {
+    for (const col of columns) {
       const set = new Set()
       for (const row of sourceRows) set.add(col.get(row))
       map[col.key] = [...set].sort((a, b) => a.localeCompare(b, 'ko'))
     }
     return map
-  }, [dataColumns, sourceRows])
+  }, [columns, sourceRows])
 
   const visibleRows = useMemo(() => {
     const keyword = q.trim().toLowerCase()
     let list = sourceRows
-    for (const col of dataColumns) {
+    for (const col of columns) {
       const picked = filters[col.key]
       if (picked instanceof Set) list = list.filter((r) => picked.has(col.get(r)))
     }
     if (keyword) {
-      list = list.filter((r) => dataColumns.some((c) => c.get(r).toLowerCase().includes(keyword)))
+      list = list.filter((r) => columns.some((c) => c.get(r).toLowerCase().includes(keyword)))
     }
     if (!sort) return list
-    const col = dataColumns.find((c) => c.key === sort.key)
+    const col = columns.find((c) => c.key === sort.key)
     if (!col) return list
     const dir = sort.dir === 'asc' ? 1 : -1
     return [...list].sort((a, b) => {
@@ -466,7 +382,7 @@ function EntriesSheet() {
       }
       return av.localeCompare(bv, 'ko') * dir
     })
-  }, [sourceRows, dataColumns, filters, q, sort])
+  }, [sourceRows, columns, filters, q, sort])
 
   // B1-4: 데이터가 적어도 빈 셀 그리드로 표 영역을 채운다.
   // AR: 필요한 행 수는 래퍼 실측 높이에서 나온다. 행 높이는 렌더된 행에서 읽고(없으면 폴백),
@@ -497,13 +413,13 @@ function EntriesSheet() {
   const stamp = new Date().toISOString().slice(0, 10)
   const exportCsv = () =>
     download(
-      toCsv(dataColumns, visibleRows),
+      toCsv(columns, visibleRows),
       `${sheetLabel}-${stamp}.csv`,
       'text/csv;charset=utf-8'
     )
   const exportExcel = () =>
     download(
-      toSpreadsheetML(dataColumns, visibleRows, sheetLabel),
+      toSpreadsheetML(columns, visibleRows, sheetLabel),
       `${sheetLabel}-${stamp}.xls`,
       'application/vnd.ms-excel;charset=utf-8'
     )
@@ -514,26 +430,6 @@ function EntriesSheet() {
     setFilters({})
     setSort(null)
     setSelected(null)
-  }
-
-  const closeReset = useCallback(() => setPwTarget(null), [])
-
-  const confirmReset = async () => {
-    if (!pwTarget) return
-    setPwBusy(true)
-    try {
-      // 사람 단위 집계라 그 사람의 접수 건 전부를 초기화한다.
-      for (const id of pwTarget.ids) {
-        // eslint-disable-next-line no-await-in-loop
-        await api.post(`/admin/exhibition/entries/${id}/reset-password`)
-      }
-      toast(`${pwTarget.name}님의 접수 ${pwTarget.ids.length}건 비밀번호를 1234로 초기화했습니다`)
-      setPwTarget(null)
-    } catch (err) {
-      toast(err.message || '비밀번호 초기화에 실패했습니다')
-    } finally {
-      setPwBusy(false)
-    }
   }
 
   // iOS Safari 동적 툴바 대응: 100vh는 주소창·툴바 접힘/펼침에 따라 값이 바뀌어
@@ -620,18 +516,14 @@ function EntriesSheet() {
                       <span className="min-w-0 truncate font-semibold text-reading-text">
                         {col.label}
                       </span>
-                      {!col.action && (
-                        <ColumnFilter
-                          label={col.label}
-                          values={filterValues[col.key] || []}
-                          selected={filters[col.key] ?? null}
-                          onChange={(next) =>
-                            setFilters((prev) => ({ ...prev, [col.key]: next }))
-                          }
-                          sort={sort?.key === col.key ? sort.dir : null}
-                          onSortChange={(dir) => setSort(dir ? { key: col.key, dir } : null)}
-                        />
-                      )}
+                      <ColumnFilter
+                        label={col.label}
+                        values={filterValues[col.key] || []}
+                        selected={filters[col.key] ?? null}
+                        onChange={(next) => setFilters((prev) => ({ ...prev, [col.key]: next }))}
+                        sort={sort?.key === col.key ? sort.dir : null}
+                        onSortChange={(dir) => setSort(dir ? { key: col.key, dir } : null)}
+                      />
                     </span>
                   </th>
                 ))}
@@ -641,25 +533,6 @@ function EntriesSheet() {
               {visibleRows.map((row) => (
                 <tr key={row.id}>
                   {columns.map((col) => {
-                    if (col.action) {
-                      return (
-                        <td key={col.key} className="border-b border-r border-reading-hairline px-12 py-4 align-top">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setPwTarget({
-                                ids: row.entryIds,
-                                name: row.name || '접수자',
-                              })
-                            }
-                            className="inline-flex h-24 cursor-pointer items-center gap-4 rounded-sm bg-reading-subtle px-8 text-caption-m font-semibold text-reading-accent transition-colors duration-fast ease-out hover:bg-reading-bg"
-                          >
-                            <KeyRound size={12} aria-hidden="true" />
-                            초기화
-                          </button>
-                        </td>
-                      )
-                    }
                     const value = col.get(row)
                     const cellId = `${row.id}:${col.key}`
                     const on = selected === cellId
@@ -723,16 +596,6 @@ function EntriesSheet() {
           ))}
         </div>
       </div>
-
-      {pwTarget && (
-        <ResetConfirm
-          name={pwTarget.name}
-          count={pwTarget.ids.length}
-          busy={pwBusy}
-          onCancel={closeReset}
-          onConfirm={confirmReset}
-        />
-      )}
     </div>
   )
 }
