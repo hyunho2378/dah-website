@@ -25,8 +25,3 @@ export function isValidPhone(v) {
 export function isValidEmail(v) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v ?? '').trim())
 }
-
-/** 수정용 비밀번호 최소 길이(4자 이상) */
-export function isValidPassword(v) {
-  return String(v ?? '').length >= 4
-}
