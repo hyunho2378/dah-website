@@ -1,7 +1,8 @@
-// /showcase/submit — 쇼케이스 제출 (비로그인 공개, 12_BACKEND 6절)
-// 제목·주제·팀/개인 이름·설명·활용 툴(태그)·링크·메인 1+서브 2 이미지·수정용 비밀번호.
+// /showcase/submit — 쇼케이스 제출 (12_BACKEND 6절, 41_AUTH_CONTRACT)
+// 제목·주제·팀/개인 이름·설명·활용 툴(태그)·링크·메인 1+서브 2 이미지.
 // 이미지는 canvas 중앙 크롭으로 16:9 미리보기만 생성 — 실제 리사이즈는 서버(1920x1080).
-// 제출 후 status pending — 승인 대기 안내. 비밀번호는 클라이언트에 저장하지 않는다.
+// 제출 후 status pending — 승인 대기 안내.
+// 41: 제출자 신원은 로그인한 구글 계정이다. 비로그인 상태에서는 폼 대신 로그인 게이트를 띄운다.
 import { useState } from 'react'
 import { ImagePlus, Plus, X } from 'lucide-react'
 import PageBanner from '../../components/layout/PageBanner'
@@ -9,6 +10,9 @@ import GlassCard from '../../components/common/GlassCard'
 import Button from '../../components/common/Button'
 import { api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
+import { usePublicAuth } from '../../hooks/usePublicAuth'
+import { AccountBar, LoginGate } from '../submit/exhibitFormKit'
+import { submitErrorMessage } from '../submit/exhibitFormShared'
 
 const inputCls =
   'w-full min-w-0 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri placeholder:text-text-meta transition-colors duration-fast ease-out focus:border-border-strong focus:outline-none md:text-body-d'
@@ -102,14 +106,14 @@ function CropThumb({ image, label, onRemove }) {
 
 function ShowcaseSubmit() {
   useTitle('쇼케이스 제출')
+  // 공개 제출자 신원 — 스태프 로그인(useAuth)과 다른 신원 클래스다(41_AUTH_CONTRACT)
+  const { user, loading: authLoading, logout } = usePublicAuth()
   const [form, setForm] = useState({
     title: '',
     topic: '',
     creator: '',
     description: '',
     link: '',
-    password: '',
-    passwordConfirm: '',
   })
   const [tools, setTools] = useState([])
   const [toolInput, setToolInput] = useState('')
@@ -161,14 +165,6 @@ function ShowcaseSubmit() {
       setError('서브 이미지 2장이 필요합니다')
       return
     }
-    if (form.password.length < 4) {
-      setError('수정용 비밀번호는 4자 이상이어야 합니다')
-      return
-    }
-    if (form.password !== form.passwordConfirm) {
-      setError('비밀번호가 일치하지 않습니다')
-      return
-    }
     setSubmitting(true)
     setError(null)
     try {
@@ -186,11 +182,11 @@ function ShowcaseSubmit() {
         link: form.link.trim() || null,
         main_img: mainUrl,
         sub_imgs: subUrls,
-        password: form.password,
       })
       setDone(true)
-    } catch {
-      setError('제출에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+    } catch (err) {
+      // 41: 제출에 로그인이 필요해졌으므로 만료(401)를 구분해 알린다
+      setError(submitErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -210,24 +206,48 @@ function ShowcaseSubmit() {
         nebulaY="48%"
       />
       <section className="mx-auto max-w-container px-gutter-m py-section-m md:px-gutter-t lg:px-gutter-d lg:py-section-d 3xl:max-w-container-wide">
-        {done ? (
-          <GlassCard className="flex flex-col items-start gap-24">
+        {authLoading && (
+          <p className="text-body-m text-text-meta md:text-body-d" aria-live="polite">
+            로그인 상태 확인 중
+          </p>
+        )}
+
+        {/* 41: 비로그인 상태에서는 폼 대신 로그인 게이트. 로그인 전환은 배너와 섹션을
+            그대로 둔 채 이 블록만 교체되며 .page-fade(opacity 0→1)로 이어진다 */}
+        {!authLoading && !user && (
+          <div key="guest" className="page-fade min-w-0">
+            <LoginGate
+              title="구글 로그인 후 제출"
+              description="쇼케이스 제출은 구글 계정으로 로그인한 뒤 진행합니다. 로그인한 계정이 제출자로 기록되어 이후 수정 권한의 기준이 됩니다."
+            >
+              <Button variant="ghost" href="/showcase">
+                쇼케이스 둘러보기
+              </Button>
+            </LoginGate>
+          </div>
+        )}
+
+        {!authLoading && user && done && (
+          <GlassCard key="done" className="page-fade flex flex-col items-start gap-24">
             <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
               제출 완료
             </h2>
             <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
               승인 대기 상태로 접수되었습니다. 담당자 승인 후 쇼케이스에 게시됩니다.
-              수정은 제출 시 등록한 비밀번호로 가능합니다.
             </p>
             <Button variant="secondary" href="/showcase">
               쇼케이스로 이동
             </Button>
           </GlassCard>
-        ) : (
+        )}
+
+        {!authLoading && user && !done && (
           <form
+            key="account"
             onSubmit={handleSubmit}
-            className="mx-auto flex min-w-0 max-w-container flex-col gap-32"
+            className="page-fade mx-auto flex min-w-0 max-w-container flex-col gap-32"
           >
+            <AccountBar user={user} onLogout={logout} />
             <Field label="제목" required>
               <input
                 type="text"
@@ -365,32 +385,6 @@ function ShowcaseSubmit() {
                 </div>
               )}
             </Field>
-            <div className="grid grid-cols-1 gap-24 md:grid-cols-2">
-              <Field
-                label="수정용 비밀번호"
-                required
-                hint="제출 후 내용 수정에 사용됩니다. 4자 이상."
-              >
-                <input
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  value={form.password}
-                  onChange={set('password')}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="비밀번호 확인" required>
-                <input
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  value={form.passwordConfirm}
-                  onChange={set('passwordConfirm')}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
             {error && (
               <p role="alert" className="text-small-m text-state-error md:text-small-d">
                 {error}

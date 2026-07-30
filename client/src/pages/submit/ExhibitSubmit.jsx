@@ -2,8 +2,9 @@
 // 기간 판정 최종 권한은 서버(403) — settings/public.exhibition.is_submit_period는 UX 안내용.
 // 33_PHASE18 Y2-3/Y2-4: 같은 라우트 안에서 온보딩(intro) → 폼(form) → 완료(done) 단계로 진행한다.
 //   (App.jsx 라우트를 건드리지 않기 위해 단계는 컴포넌트 state로만 관리)
-// 개인/팀 분기 폼: 인적사항·과목·연락처·작품명·작품 설명(100자)·수정용 이메일+비밀번호.
-// 비밀번호는 서버 검증 전용 — 클라이언트 저장 금지.
+// 개인/팀 분기 폼: 인적사항·과목·연락처·작품명·작품 설명(100자).
+// 41_AUTH_CONTRACT: 제출자 신원은 로그인한 구글 계정이다. 비로그인 상태에서는 폼 대신
+//   로그인 게이트를 보여주고, 접수 이메일은 서버가 계정에서 채운다(폼에서 입력받지 않는다).
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
@@ -16,10 +17,14 @@ import { ACCENT } from '../../styles/accents'
 import { api, useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useAuth } from '../../context/AuthContext'
+import { usePublicAuth } from '../../hooks/usePublicAuth'
 import { EXHIBITION_SUFFIX, exhibitionFullTitle } from '../../data/exhibitionTitle'
-import { isValidEmail, isValidPassword, isValidPhone } from '../../utils/format'
+import { isValidPhone } from '../../utils/format'
 import {
+  AccountBar,
   Field,
+  LockedField,
+  LoginGate,
   MemberRows,
   PhoneInput,
   ScheduleHighlight,
@@ -32,7 +37,6 @@ import {
   ENTRY_TYPE_LABEL,
   WORK_TITLE_HINT,
   inputCls,
-  labelCls,
   formatKst,
   resolveCurrentSemester,
   resolveOrdinal,
@@ -48,13 +52,10 @@ const INITIAL_FORM = {
   studentNo: '',
   major: '',
   teamName: '',
-  email: '',
   phone: '',
   course: '',
   workTitle: '',
   workDesc: '',
-  password: '',
-  passwordConfirm: '',
 }
 
 const ENTRY_TYPE_OPTIONS = [
@@ -64,21 +65,21 @@ const ENTRY_TYPE_OPTIONS = [
 
 // Y2-3 온보딩 절차 안내 — 접수 시작 전에 전체 흐름을 먼저 보여준다
 const STEPS = [
-  { n: '01', title: '작성', desc: '참가 유형·인적사항·과목·작품 정보를 입력합니다.' },
-  { n: '02', title: '제출', desc: '수정용 이메일과 비밀번호를 등록하고 접수를 완료합니다.' },
+  { n: '01', title: '로그인', desc: '구글 계정으로 로그인해 접수자 신원을 확인합니다.' },
+  { n: '02', title: '작성', desc: '참가 유형·인적사항·과목·작품 정보를 입력합니다.' },
   {
     n: '03',
     title: '수정',
-    desc: '수정 마감 전까지 「접수 내역 확인·수정」에서 등록한 이메일·비밀번호로 다시 열어 수정합니다.',
+    desc: '수정 마감 전까지 같은 구글 계정으로 로그인해 접수 내용을 수정합니다.',
   },
 ]
 
 const NOTES = [
   WORK_TITLE_HINT,
+  '접수 이메일은 로그인한 구글 계정 주소로 자동 입력됩니다.',
   '참가 유형·과목·이메일은 접수 후 수정할 수 없습니다. 제출 전에 확인해 주세요.',
   '연락처는 010-0000-0000 형식으로만 입력됩니다.',
   '작품 설명은 최대 100자입니다.',
-  '수정용 비밀번호는 4자 이상이며, 분실 시 복구가 어려우니 따로 보관해 주세요.',
 ]
 
 function Banner() {
@@ -113,6 +114,8 @@ function ExhibitSubmit() {
     params: { pageSize: 20 },
   })
   const { hasRole } = useAuth()
+  // 공개 제출자 신원 — 스태프 로그인(useAuth)과 다른 신원 클래스다(41_AUTH_CONTRACT)
+  const { user, loading: authLoading, logout } = usePublicAuth()
   const [searchParams] = useSearchParams()
   const exhibition = settingsRes?.exhibition ?? null
   // Y2-4-8: 과목 목록은 어드민(Y3-1)이 등록한 값 — 아직 없으면 빈 배열 → 자유 입력 폴백
@@ -137,7 +140,11 @@ function ExhibitSubmit() {
   const submitOpenNow =
     previewBypass || (exhibition ? exhibition.is_submit_period === true : true)
 
-  const [step, setStep] = useState('intro') // intro | form | done
+  // 구글 로그인은 전체 페이지 이동이라 복귀 시 컴포넌트 state가 초기화된다.
+  // 게이트가 next=/submit?step=form으로 돌려보내므로 폼 단계에서 이어서 진행된다.
+  const [step, setStep] = useState(
+    searchParams.get('step') === 'form' ? 'form' : 'intro'
+  ) // intro | form | done
   const [form, setForm] = useState(INITIAL_FORM)
   const [members, setMembers] = useState([{ ...EMPTY_MEMBER }])
   const [submitting, setSubmitting] = useState(false)
@@ -150,24 +157,12 @@ function ExhibitSubmit() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    if (!isValidEmail(form.email)) {
-      setError('이메일 형식을 확인해 주세요 (예: example@hallym.ac.kr)')
-      return
-    }
     if (!isValidPhone(form.phone)) {
       setError('연락처를 010-0000-0000 형식으로 모두 입력해 주세요')
       return
     }
     if (!form.course.trim()) {
       setError('과목을 선택해 주세요')
-      return
-    }
-    if (!isValidPassword(form.password)) {
-      setError('수정용 비밀번호는 4자 이상이어야 합니다')
-      return
-    }
-    if (form.password !== form.passwordConfirm) {
-      setError('비밀번호가 일치하지 않습니다')
       return
     }
     if (
@@ -202,11 +197,10 @@ function ExhibitSubmit() {
             major: form.major.trim(),
             ...common,
           }
+      // 이메일은 서버가 로그인 계정에서 채운다(41_AUTH_CONTRACT) — 본문에 싣지 않는다
       await api.post('/submit/exhibition', {
         entry_type: form.entryType,
         fields,
-        email: form.email.trim(),
-        password: form.password,
       })
       setStep('done')
     } catch (err) {
@@ -345,8 +339,8 @@ function ExhibitSubmit() {
               접수 완료
             </h2>
             <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
-              전시회 출품이 접수되었습니다. 내용 수정은 접수 시 등록한 이메일과
-              비밀번호로 가능합니다
+              전시회 출품이 접수되었습니다. 내용 수정은 접수에 사용한 구글 계정으로
+              로그인해 가능합니다
               {formatKst(exhibition?.edit_close)
                 ? ` (수정 마감: ${formatKst(exhibition?.edit_close)})`
                 : ''}
@@ -363,8 +357,35 @@ function ExhibitSubmit() {
           </GlassCard>
         )}
 
-        {step === 'form' && (
-          <div className="flex min-w-0 flex-col gap-24">
+        {step === 'form' && authLoading && (
+          <p className="text-body-m text-text-meta md:text-body-d" aria-live="polite">
+            로그인 상태 확인 중
+          </p>
+        )}
+
+        {/* 41: 비로그인 상태에서는 폼 대신 로그인 게이트. 로그인 전환은 배너와 컨테이너를
+            그대로 둔 채 이 블록만 교체되며 .page-fade(opacity 0→1)로 이어진다 */}
+        {step === 'form' && !authLoading && !user && (
+          <div key="guest" className="page-fade flex min-w-0 flex-col gap-24">
+            <ScheduleHighlight exhibition={exhibition} />
+            <LoginGate
+              title="구글 로그인 후 접수"
+              description="전시회 접수는 구글 계정으로 로그인한 뒤 진행합니다. 로그인한 계정의 이메일이 접수 이메일로 기록되고, 접수 후 수정도 같은 계정으로 합니다."
+              next="/submit?step=form"
+            >
+              <button
+                type="button"
+                onClick={() => setStep('intro')}
+                className="cursor-pointer text-small-m text-text-meta transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d"
+              >
+                안내로 돌아가기
+              </button>
+            </LoginGate>
+          </div>
+        )}
+
+        {step === 'form' && !authLoading && user && (
+          <div key="account" className="page-fade flex min-w-0 flex-col gap-24">
             <ScheduleHighlight exhibition={exhibition} />
             <GlassCard className="p-24 md:p-40">
               <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-32">
@@ -386,6 +407,8 @@ function ExhibitSubmit() {
                     안내로 돌아가기
                   </button>
                 </div>
+
+                <AccountBar user={user} onLogout={logout} />
 
                 <Field as="div" label="참가 유형" required>
                   <RadioCards
@@ -465,17 +488,8 @@ function ExhibitSubmit() {
                 )}
 
                 <div className="grid grid-cols-1 gap-24 md:grid-cols-2">
-                  <Field label="이메일" required hint="접수 확인과 수정에 사용됩니다">
-                    <input
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={form.email}
-                      onChange={set('email')}
-                      className={inputCls}
-                      placeholder="example@hallym.ac.kr"
-                    />
-                  </Field>
+                  {/* 접수 이메일은 로그인 계정 고정 — 서버도 본문 email을 무시한다 */}
+                  <LockedField label="접수 이메일" value={user.email} />
                   <Field label="연락처" required hint="010-0000-0000">
                     <PhoneInput value={form.phone} onChange={setValue('phone')} />
                   </Field>
@@ -516,35 +530,6 @@ function ExhibitSubmit() {
                     {form.workDesc.length}/{DESC_MAX}
                   </span>
                 </Field>
-
-                {/* Y2-4-3: 비밀번호·확인은 세로 배치(2열 금지) */}
-                <fieldset className="flex min-w-0 flex-col gap-24">
-                  <legend className={labelCls}>수정용 비밀번호</legend>
-                  <Field
-                    label="비밀번호"
-                    required
-                    hint="접수 후 내용 수정에 사용됩니다. 4자 이상."
-                  >
-                    <input
-                      type="password"
-                      required
-                      autoComplete="new-password"
-                      value={form.password}
-                      onChange={set('password')}
-                      className={inputCls}
-                    />
-                  </Field>
-                  <Field label="비밀번호 확인" required>
-                    <input
-                      type="password"
-                      required
-                      autoComplete="new-password"
-                      value={form.passwordConfirm}
-                      onChange={set('passwordConfirm')}
-                      className={inputCls}
-                    />
-                  </Field>
-                </fieldset>
 
                 {error && (
                   <p role="alert" className="text-small-m text-state-error md:text-small-d">

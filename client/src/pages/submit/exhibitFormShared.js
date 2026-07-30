@@ -1,5 +1,5 @@
 // 전시회 접수 공용 상수·헬퍼 (12_BACKEND 5절) — JSX 없는 모듈(fast refresh 분리)
-// 이메일·비밀번호는 컴포넌트 state(메모리)만 사용 — 브라우저 스토리지 저장 금지.
+// 제출자 신원은 로그인한 구글 계정이다(41_AUTH_CONTRACT) — 이 모듈은 신원 값을 다루지 않는다.
 // 기간 판정의 최종 권한은 서버(403) — settings/public 플래그는 UX 안내용.
 
 export const DESC_MAX = 100
@@ -29,8 +29,10 @@ export function formatKst(iso) {
   return Number.isNaN(date.getTime()) ? null : kstFormat.format(date)
 }
 
-/** B1 에러 계약({error, hint?}) → 사용자 문구. 403은 기간 밖, 429는 rate limit. */
+/** B1 에러 계약({error, hint?}) → 사용자 문구. 401은 로그인 만료, 403은 기간 밖, 429는 rate limit. */
 export function submitErrorMessage(err) {
+  // 41: 공개 인증이 끊긴 경우 서버 원문('google login required') 대신 재로그인을 안내한다
+  if (err?.status === 401) return '로그인이 풀렸습니다. 구글 로그인을 다시 해주세요.'
   if (err?.status === 403) return err.message || '접수·수정 기간이 아닙니다.'
   if (err?.status === 429)
     return '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.'

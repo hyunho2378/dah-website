@@ -1,10 +1,12 @@
 // 전시회 접수 폼 공용 컴포넌트 (12_BACKEND 5절) — ExhibitSubmit·ExhibitEdit 전용
+// LoginGate와 AccountBar만 공개 제출 공용이라 ShowcaseSubmit도 함께 쓴다(41_AUTH_CONTRACT).
 // 상수·헬퍼는 exhibitFormShared.js(비 JSX 모듈) — 이 파일은 컴포넌트만 export.
 import { useState } from 'react'
-import { Lock, X } from 'lucide-react'
+import { Lock, LogOut, X } from 'lucide-react'
 import GlassCard from '../../components/common/GlassCard'
 import RadioCards from '../../components/common/RadioCards'
 import SegmentControl from '../../components/common/SegmentControl'
+import GoogleLoginButton from '../../components/auth/GoogleLoginButton'
 import { ACCENT } from '../../styles/accents'
 import { formatPhone } from '../../utils/format'
 import { formatKst, inputCls, labelCls, semesterDesc } from './exhibitFormShared'
@@ -64,6 +66,60 @@ export function LockedField({ label, value }) {
           className="pointer-events-none absolute right-16 top-1/2 -translate-y-1/2 text-text-meta"
         />
       </div>
+    </div>
+  )
+}
+
+/**
+ * 로그인 게이트(41_AUTH_CONTRACT) — 비로그인 상태에서 폼 대신 노출한다.
+ * 제출자 신원이 구글 계정으로 바뀌었으므로 폼에는 비밀번호 항목이 없다.
+ * @param {string} title       카드 제목
+ * @param {string} description 로그인이 필요한 이유 한 문단
+ * @param {string} [next]      로그인 후 복귀 경로. 생략 시 현재 URL
+ * @param {React.ReactNode} [children] 로그인 버튼 옆 보조 동선(막다른 화면 방지)
+ */
+export function LoginGate({ title, description, next, children }) {
+  return (
+    <GlassCard className="flex flex-col items-start gap-24 p-24 md:p-40">
+      <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
+        {title}
+      </h2>
+      <p className="text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
+        {description}
+      </p>
+      <div className="flex flex-wrap items-center gap-16">
+        <GoogleLoginButton next={next} />
+        {children}
+      </div>
+    </GlassCard>
+  )
+}
+
+/**
+ * 로그인 계정 표시(41_AUTH_CONTRACT) — 제출자 신원은 구글 계정이라 읽기 전용이다.
+ * 계정을 바꾸려면 로그아웃뿐이므로 로그아웃도 신원이 보이는 이 자리에 둔다.
+ * @param {{email: string, name?: string}} user
+ * @param {Function} onLogout
+ */
+export function AccountBar({ user, onLogout }) {
+  return (
+    <div className="flex min-w-0 flex-wrap items-center justify-between gap-16 rounded-md border border-border-subtle bg-bg-elev px-16 py-12">
+      <div className="flex min-w-0 flex-col gap-4">
+        <span className="text-caption-m text-text-meta md:text-caption-d">
+          로그인 계정
+        </span>
+        <span className="min-w-0 text-body-m font-semibold text-text-pri md:text-body-d">
+          {user.name ? `${user.name} (${user.email})` : user.email}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="inline-flex shrink-0 cursor-pointer items-center gap-8 rounded-sm border border-border-subtle px-16 py-8 text-small-m font-semibold text-text-pri transition-colors duration-fast ease-out hover:border-border-strong md:text-small-d"
+      >
+        <LogOut size={16} aria-hidden="true" />
+        로그아웃
+      </button>
     </div>
   )
 }
