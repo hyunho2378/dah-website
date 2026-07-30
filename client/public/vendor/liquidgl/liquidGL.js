@@ -437,6 +437,12 @@
             const over = (Math.max(fullW, fullH) * scale) / MAX_MOBILE_DIM;
             if (over > 1) scale = scale / over;
           }
+          /* 39_FIX: scrollWidth/Height를 레이아웃·폰트 안정 전에 읽으면 위 계산이
+             NaN으로 떨어지고, html2canvas가 "Canvas renderer initialized with scale NaN"
+             으로 스냅샷을 통째로 날린다. 유한 양수가 아니면 dpr로 폴백한다. */
+          if (!Number.isFinite(scale) || scale <= 0) {
+            scale = Math.min(2, window.devicePixelRatio || 1);
+          }
           this.scaleFactor = Math.max(0.1, scale);
 
           this.canvas.style.visibility = "hidden";

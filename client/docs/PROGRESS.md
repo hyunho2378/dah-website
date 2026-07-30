@@ -624,3 +624,10 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [!] **범위 밖 관찰(고치지 않음)**: 3840px에서 콘텐츠 1280 / 좌우 여백 각 1273px로 RESPONSIVE.md 4K 요구("여백이 콘텐츠보다 크면 안 됨")에 7px 차로 겨우 걸린다. 컨테이너 상한은 이번 배치가 건드린 값이 아니라 기존 설계이며, 4K 전략 변경은 별도 과제다
 - [!] 학생회 타이틀 `#815FD7`는 `#100D18` 위 **4.17:1** — h2(20/28) 700이라 WCAG AA 큰 텍스트(3:1)는 통과하나 일반 텍스트(4.5:1) 미달. 요청한 규칙의 직접 결과라 그대로 뒀다. 되돌린다면 `purple.mid`(#A286E9)가 절충안
 - [!] 어드민 그룹 라벨은 영문 유지(기존 OWNER·SYSTEM과 동일 스타일). 국문 원하면 후속 처리
+
+## 39_FIX_EXHIBITION_REVEAL — 전시 CTA·본문 reveal 정지 버그
+- [x] **FIX 1 (결정적)**: `hooks/useReveal.js` — 노출 판정을 mount + IntersectionObserver로만 수렴시켰다. (1) 마운트 다음 프레임에 `getBoundingClientRect`로 직접 교차를 판정해 above-the-fold 요소는 IO 첫 배달을 기다리지 않고 즉시 노출, (2) observe 등록 후 1200ms 안에 IO 배달이 **한 번도** 오지 않으면 관찰 파이프라인이 죽은 것으로 보고 무조건 노출하는 안전망. 정상 환경에서는 첫 배달이 즉시 도착해 안전망이 발동하지 않으므로 스크롤 리빌 동작은 그대로다. reduced-motion 즉시 노출 경로는 기존 유지
+- [x] **FIX 2**: `pages/programs/Exhibitions.jsx` — featured CTA 패널에서 유리를 **완전히** 제거했다. liquidGL(`useLiquidGlass` 호출·import·`.dah-liquid-cta` 선택자 클래스)은 물론 CSS 글래스도 쓰지 않는다. 새 `CTA_SURFACE`(`rounded-glass border border-glass-line bg-bg-elev shadow-glass`) — 불투명 카드 표면 `bg.elev`(#171321, 사이트 카드와 동일 계열) + 헤어라인 토큰, `backdrop-filter`·반투명·굴절 0. 접수 링크가 든 표면이라 장식보다 가독성·결정성을 택했고, 배경 네뷸라가 비쳐 대비가 로드마다 흔들리던 것도 함께 사라진다. 포스터 프레임은 기존 `GLASS_SURFACE` 유지(요청 범위 밖)
+- [x] **FIX 3 (방어)**: `public/vendor/liquidgl/liquidGL.js` — `captureSnapshot`의 scale이 유한 양수가 아니면 dpr(상한 2)로 폴백(`Canvas renderer initialized ... with scale NaN`의 직접 원인). `hooks/useLiquidGlass.js` — 스크립트 로드 후 `document.fonts.ready` + rAF 1프레임을 더 기다려 치수 확정 후 초기화. 중복 벤더 사본 `client/vendor/liquidgl/` 삭제(서빙본은 `client/public/vendor/`, 중복본은 어떤 코드·빌드 설정에서도 참조되지 않았음)
+- [!] **`useLiquidGlass` 호출부 0개**: FIX 2로 마지막 사용처가 사라졌다. 헤더는 d4a78e6에서, 모바일 시트는 그 이전에 이미 CSS 글래스로 전환돼 있었다. 훅·벤더(265KB, public/ 서빙이라 번들 미포함)는 "전역에서 뜯어내지 말 것" 지시에 따라 남겼다 — 순수 장식 표면에 재도입할 계획이 없다면 훅·벤더·FIX 3 가드를 통째로 지우는 후속 정리가 가능하다
+- [!] **미검증(브라우저 도구 부재)**: 이번 세션에 브라우저 자동화 도구가 없어 요구된 `/programs/exhibitions` 하드 리로드 10회 실측, computed opacity 확인, CTA 패널 `backdrop-filter` 미적용 확인, 320/430/1440/3840px 렌더 확인, reduced-motion 확인을 수행하지 못했다. `npm run build` 통과만 확인했다. 배포 후 육안 검증 필요

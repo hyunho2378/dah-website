@@ -88,7 +88,16 @@ export default function useLiquidGlass(selector, options = {}, enabled = true) {
       })
     }
 
+    // 39_FIX: 스냅샷 치수를 폰트·레이아웃 확정 전에 읽으면 html2canvas scale이 NaN이
+    // 되어 스냅샷이 통째로 실패한다(vendor 측에도 폴백 가드를 뒀다). 로드가 끝나도
+    // document.fonts.ready + 다음 프레임까지 기다린 뒤에 초기화한다.
+    const layoutSettled = () =>
+      (document.fonts?.ready ?? Promise.resolve()).then(
+        () => new Promise((resolve) => requestAnimationFrame(resolve))
+      )
+
     Promise.all([loadScript(H2C_SRC), loadScript(LG_SRC)])
+      .then(layoutSettled)
       .then(() => {
         if (cancelled || typeof window.liquidGL !== 'function') return
         if (!document.querySelector(selector)) return

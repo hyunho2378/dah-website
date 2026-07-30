@@ -12,7 +12,6 @@ import InlineEditBar from '../../components/content/InlineEditBar'
 import { ACCENT } from '../../styles/accents'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 import { useApi } from '../../hooks/useApi'
-import useLiquidGlass from '../../hooks/useLiquidGlass'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 
@@ -45,12 +44,18 @@ function periodText(start, end, fallback) {
 
 // 피처드 전시(is_featured) — 목록 최상단 히어로 블록
 // Y2-1(33_PHASE18): 유리 질감의 정점. 포스터를 키우고 유리 프레임으로 감싸며,
-// 블록 뒤에 은은한 퍼플 글로우(bg-nebula-* 토큰)를 깐다. CTA는 별도 유리 패널(.dah-liquid-cta)로
-// 분리해 X3 liquidGL 대상이 된다(카드에는 절대 적용 금지 — 성능 계약).
+// 블록 뒤에 은은한 퍼플 글로우(bg-nebula-* 토큰)를 깐다.
 // 유리 표면은 backdrop-blur 없이 bg-glass-bg + hairline + shadow-glass로만 구성한다
-// (11_DESIGN_V2 2절: 동시 blur 상한 3 — 헤더·liquidGL CTA·모바일 시트 몫을 남긴다).
+// (11_DESIGN_V2 2절: 동시 blur 상한 3 — 헤더·모바일 시트 몫을 남긴다).
 const GLASS_SURFACE =
   'rounded-glass border border-glass-line bg-glass-bg shadow-glass'
+
+// 39_FIX: 접수 CTA 패널은 장식보다 가독성·결정성이 우선이라 유리를 쓰지 않는다.
+// liquidGL은 물론 CSS 글래스(반투명·backdrop-filter)도 금지 — 사이트 카드와 같은
+// 불투명 표면(bg-bg-elev) + 헤어라인으로만 구성한다. 배경 네뷸라가 비쳐 텍스트·링크
+// 대비가 로드마다 흔들리던 문제도 함께 사라진다.
+const CTA_SURFACE =
+  'rounded-glass border border-glass-line bg-bg-elev shadow-glass'
 
 function FeaturedExhibition({ item, showSubmit }) {
   const { lang } = useLang()
@@ -67,8 +72,6 @@ function FeaturedExhibition({ item, showSubmit }) {
   const ctaLabel =
     lang === 'en' ? item.cta_label_en || fullTitle : item.cta_label || fullTitle
   const hasCta = item.cta_show !== false
-  // X3: CTA 패널만 리퀴드글래스. 실패·모바일·reduced-motion은 훅 내부에서 CSS 글래스로 폴백한다.
-  useLiquidGlass('.dah-liquid-cta', {}, hasCta || showSubmit)
 
   return (
     <div className="relative isolate min-w-0">
@@ -116,7 +119,7 @@ function FeaturedExhibition({ item, showSubmit }) {
           ) : null}
           {/* Q2.2: 상단 고정(피처드)일 때만 CTA. 라벨=cta_label 우선(없으면 full_title), 링크=cta_url>site_url>상세 */}
           {(hasCta || showSubmit || period) && (
-            <div className={`dah-liquid-cta flex min-w-0 flex-col gap-20 p-24 md:p-32 ${GLASS_SURFACE}`}>
+            <div className={`flex min-w-0 flex-col gap-20 p-24 md:p-32 ${CTA_SURFACE}`}>
               {period && (
                 <div className="flex min-w-0 flex-col gap-8">
                   <p className="text-small-m text-text-meta md:text-small-d">전시 기간</p>
