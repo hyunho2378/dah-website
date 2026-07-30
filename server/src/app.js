@@ -6,6 +6,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { isConfigured, setDb } from './db.js'
 import authRoutes from './routes/auth.js'
+import googleAuthRoutes from './routes/googleAuth.js'
 import contentRoutes from './routes/content.js'
 import adminRoutes from './routes/admin.js'
 import uploadRoutes, { UPLOADS_DIR, MAX_UPLOAD_BYTES } from './routes/upload.js'
@@ -51,6 +52,9 @@ export function createApp(options = {}) {
   })
 
   app.use('/auth', authRoutes)
+  // 공개 제출자 구글 로그인 (41_AUTH_CONTRACT). 스태프 라우트와 하위 경로가 겹치지 않는다.
+  // authRoutes: /login, /setup-password, /logout, /me. 아래는 /google/*, /public/* 뿐이다.
+  app.use('/auth', googleAuthRoutes)
   app.use('/content', contentRoutes)
   app.use('/admin/content', adminRoutes)
   app.use('/upload', uploadRoutes)

@@ -13,6 +13,16 @@ CREATE TABLE IF NOT EXISTS users (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 공개 제출자 (41_AUTH_CONTRACT). 구글 로그인으로만 생성되며 스태프 users와 신원 클래스가 다르다.
+CREATE TABLE IF NOT EXISTS public_users (
+  id            SERIAL PRIMARY KEY,
+  google_sub    TEXT UNIQUE NOT NULL,
+  email         TEXT NOT NULL,
+  name          TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_login_at TIMESTAMPTZ
+);
+
 -- 사이트 설정 (hero 버튼 텍스트·링크, 접수 버튼 노출 등 key-value)
 CREATE TABLE IF NOT EXISTS site_settings (
   key   TEXT PRIMARY KEY,
@@ -144,7 +154,9 @@ CREATE TABLE IF NOT EXISTS showcase (
   semester_label TEXT,
   edit_pw_hash   TEXT,
   status         TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'published')),
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- 41_AUTH_CONTRACT: 제출 소유자(public_users.id). 구글 로그인 이전 행은 NULL.
+  public_user_id INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_showcase_status ON showcase (status, created_at DESC);
 
@@ -159,20 +171,25 @@ CREATE TABLE IF NOT EXISTS exhibition_settings (
   button_mode    TEXT NOT NULL DEFAULT 'header' CHECK (button_mode IN ('header', 'floating'))
 );
 
--- 전시회 접수 (구글 폼 대체. 이메일+비밀번호로 본인 수정)
+-- 전시회 접수 (구글 폼 대체. 41_GOOGLE_AUTH_PUBLIC 이후 본인 확인은 구글 로그인)
 CREATE TABLE IF NOT EXISTS exhibition_entries (
   id             SERIAL PRIMARY KEY,
   semester_label TEXT,
   entry_type     TEXT NOT NULL CHECK (entry_type IN ('solo', 'team')),
   fields         JSONB,
   email          TEXT NOT NULL,
-  pw_hash        TEXT NOT NULL,
+  -- 41_AUTH_CONTRACT: 구글 로그인 전환으로 신규 접수는 비밀번호를 받지 않는다.
+  -- 기존 접수 건의 값이 남아 있으므로 컬럼은 유지하고 NOT NULL 제약만 없앤다.
+  pw_hash        TEXT,
   images         JSONB,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   -- H1-7(37_SHEET_ROADMAP): 수정용 비밀번호 초기화 이력(누가·언제). admin+만 실행 가능.
   pw_reset_at    TIMESTAMPTZ,
-  pw_reset_by    TEXT
+  pw_reset_by    TEXT,
+  -- 41_AUTH_CONTRACT: 접수 소유자(public_users.id). 구글 로그인 이전 행은 NULL이며
+  -- 이메일이 일치하면 조회 시점에 백필된다.
+  public_user_id INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_exhibition_entries_email ON exhibition_entries (email);
 

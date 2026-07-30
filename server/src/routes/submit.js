@@ -1,23 +1,20 @@
-// src/routes/submit.js — 비로그인 제출 (12_BACKEND.md 5·6절)
-// 전시회 접수: POST/PUT /submit/exhibition — 기간 서버 검증(클라 시계 불신), readonly 필드 보호
-// 쇼케이스: POST /submit/showcase, PUT /submit/showcase/:id — status pending, 비번 수정
-// 보조: POST /submit/exhibition/list — /submit/edit 화면의 본인 접수 목록 (8절 계약 외 확장)
-// 보조: POST /submit/exhibition/lookup — 접수 확인·수정 진입(33_PHASE18 Y2-5).
-//        목록 + 수정 마감 판정을 서버 시계로 함께 반환한다(클라 시계 불신).
+// src/routes/submit.js: 공개 제출 (12_BACKEND.md 5, 6절 + 41_AUTH_CONTRACT)
+// 제출자 신원은 구글 로그인(requirePublicAuth)으로 확인한다. 비밀번호 방식은 폐지했고
+// 이메일은 본문이 아니라 로그인 계정에서 서버가 채운다(본문의 email, password는 무시).
+// 전시회 접수: POST/PUT /submit/exhibition (기간은 서버 시계로 검증, readonly 필드 보호)
+// 본인 접수 목록: GET /submit/exhibition/mine (구 POST /exhibition/list, /exhibition/lookup 대체)
+// 쇼케이스: POST /submit/showcase, PUT /submit/showcase/:id (status pending)
 import { Router } from 'express'
-import bcrypt from 'bcrypt'
 import { query } from '../db.js'
+import { requirePublicAuth } from '../middleware/publicAuth.js'
 import { submitLimiter } from '../middleware/rateLimit.js'
+import { sendExhibitionConfirmation } from '../lib/mailer.js'
 import { wrap } from './content.js'
 
 const router = Router()
 
 const MAX_ENTRY_IMAGES = 5 // 접수 1건당 이미지 개수 상한 (용량은 /upload에서 제한)
 const MAX_SHOWCASE_SUB_IMGS = 2
-const MIN_SUBMIT_PW = 6 // 쇼케이스 제출용 비밀번호 최소 길이 (스태프 계정 8자와 별개)
-// 전시회 접수 수정용 비밀번호 최소 길이 — 접수 폼 안내·클라 검증(utils/format isValidPassword)과 동일 4자.
-const MIN_ENTRY_PW = 4
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // 전시회 접수 readonly 보호 대상 (12_BACKEND 5절: 참가 유형·과목·이메일은 수정 불가)
 const READONLY_TOP = ['entry_type', 'email']
@@ -53,29 +50,56 @@ function validImages(images) {
   )
 }
 
+// 접수, 수정 기간 게이트. 통과한 설정 행은 핸들러가 재조회하지 않도록 req에 실어 보낸다.
+// 기간 판정을 로그인 게이트보다 앞에 두는 이유: 이미 마감된 접수인데 구글 동의부터
+// 요구하면 사용자가 로그인을 마친 뒤에야 마감 사실을 알게 된다.
+function requireWindow(kind) {
+  const isEdit = kind === 'edit'
+  return wrap(async (req, res, next) => {
+    const settings = await getExhibitionSettings()
+    const now = new Date()
+    // 수정은 edit_close까지 허용 (submit_close 이후부터 edit_close 사이에도 가능)
+    const close = isEdit ? settings?.edit_close : settings?.submit_close
+    if (!settings || !within(now, settings.submit_open, close)) {
+      return res.status(403).json({
+        error: isEdit ? 'edit period closed' : 'submission period closed',
+        schedule: settings
+          ? isEdit
+            ? { submit_open: settings.submit_open, edit_close: settings.edit_close }
+            : { submit_open: settings.submit_open, submit_close: settings.submit_close }
+          : null,
+      })
+    }
+    req.exhibitionSettings = settings
+    next()
+  })
+}
+
+// 접수 소유 검증. public_user_id가 있으면 그것만 본다.
+// 구글 로그인 이전 접수에는 소유자가 없으므로 이메일이 같으면 본인으로 인정하고 그 자리에서
+// public_user_id를 백필한다. 이 승계가 없으면 기존 접수자가 자기 접수에 접근할 수 없다.
+// 사용자 원문 데이터(fields, images, email)는 건드리지 않는다.
+async function ownsEntry(entry, user) {
+  if (entry.public_user_id != null) return Number(entry.public_user_id) === Number(user.id)
+  if (String(entry.email || '').toLowerCase() !== String(user.email).toLowerCase()) return false
+  await query(
+    'UPDATE exhibition_entries SET public_user_id = $1 WHERE id = $2 AND public_user_id IS NULL',
+    [user.id, entry.id]
+  )
+  entry.public_user_id = user.id
+  return true
+}
+
 // ── 전시회 접수 ──────────────────────────────────────────────
 
 router.post(
   '/exhibition',
   submitLimiter,
+  requireWindow('submit'),
+  requirePublicAuth,
   wrap(async (req, res) => {
-    const settings = await getExhibitionSettings()
-    const now = new Date()
-    if (!settings || !within(now, settings.submit_open, settings.submit_close)) {
-      return res.status(403).json({
-        error: 'submission period closed',
-        schedule: settings
-          ? { submit_open: settings.submit_open, submit_close: settings.submit_close }
-          : null,
-      })
-    }
-
-    const { entry_type, email, password, fields, images } = req.body || {}
+    const { entry_type, fields, images } = req.body || {}
     if (!['solo', 'team'].includes(entry_type)) return res.status(400).json({ error: 'entry_type must be solo or team' })
-    if (!EMAIL_RE.test(String(email || ''))) return res.status(400).json({ error: 'valid email required' })
-    if (!password || String(password).length < MIN_ENTRY_PW) {
-      return res.status(400).json({ error: `password must be at least ${MIN_ENTRY_PW} characters` })
-    }
     if (fields !== undefined && (typeof fields !== 'object' || fields === null || Array.isArray(fields))) {
       return res.status(400).json({ error: 'fields must be an object' })
     }
@@ -83,59 +107,48 @@ router.post(
       return res.status(400).json({ error: `images must be an array of at most ${MAX_ENTRY_IMAGES} urls` })
     }
 
-    const pwHash = await bcrypt.hash(String(password), 10)
     const { rows } = await query(
-      `INSERT INTO exhibition_entries (semester_label, entry_type, fields, email, pw_hash, images)
+      `INSERT INTO exhibition_entries (semester_label, entry_type, fields, email, images, public_user_id)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, semester_label, entry_type, fields, email, images, created_at, updated_at`,
       [
-        semesterLabelFrom(settings),
+        semesterLabelFrom(req.exhibitionSettings),
         entry_type,
         fields ? JSON.stringify(fields) : null,
-        String(email).trim().toLowerCase(),
-        pwHash,
+        String(req.publicUser.email).trim().toLowerCase(),
         images ? JSON.stringify(images) : JSON.stringify([]),
+        req.publicUser.id,
       ]
     )
-    res.status(201).json({ entry: rows[0] })
+    const entry = rows[0]
+
+    // 확인 메일은 접수와 독립. 실패해도 접수 응답은 성공하고 SMTP 미설정이면 조용히 스킵된다.
+    sendExhibitionConfirmation(entry).catch((err) =>
+      console.error('[submit/exhibition] 접수 확인 메일 실패:', err.message)
+    )
+
+    res.status(201).json({ entry })
   })
 )
 
 router.put(
   '/exhibition',
   submitLimiter,
+  requireWindow('edit'),
+  requirePublicAuth,
   wrap(async (req, res) => {
-    const settings = await getExhibitionSettings()
-    const now = new Date()
-    // 수정은 edit_close까지 허용 (submit_close 이후~edit_close 사이에도 가능)
-    if (!settings || !within(now, settings.submit_open, settings.edit_close)) {
-      return res.status(403).json({
-        error: 'edit period closed',
-        schedule: settings
-          ? { submit_open: settings.submit_open, edit_close: settings.edit_close }
-          : null,
-      })
-    }
-
-    const { id, email, password, new_password, fields, images } = req.body || {}
+    const { id, fields, images } = req.body || {}
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'entry id required' })
-    if (!email || !password) return res.status(400).json({ error: 'email and password required' })
     if (!validImages(images)) {
       return res.status(400).json({ error: `images must be an array of at most ${MAX_ENTRY_IMAGES} urls` })
     }
-    // 비밀번호 변경은 선택 — 보내지 않으면 기존 해시 유지. 평문은 저장·응답하지 않는다.
-    if (new_password !== undefined && String(new_password).length < MIN_ENTRY_PW) {
-      return res.status(400).json({ error: `new_password must be at least ${MIN_ENTRY_PW} characters` })
-    }
 
-    const { rows } = await query(
-      'SELECT * FROM exhibition_entries WHERE id = $1 AND email = $2',
-      [id, String(email).trim().toLowerCase()]
-    )
+    const { rows } = await query('SELECT * FROM exhibition_entries WHERE id = $1', [id])
     const entry = rows[0]
     if (!entry) return res.status(404).json({ error: 'entry not found' })
-    const ok = await bcrypt.compare(String(password), entry.pw_hash)
-    if (!ok) return res.status(401).json({ error: 'invalid credentials' })
+    if (!(await ownsEntry(entry, req.publicUser))) {
+      return res.status(403).json({ error: 'not your entry' })
+    }
 
     // readonly 필드 보호: 참가 유형·과목·이메일은 PUT에서 무시하고 로그 (12_BACKEND 5절)
     const ignoredTop = READONLY_TOP.filter((k) => req.body[k] !== undefined && req.body[k] !== entry[k])
@@ -162,64 +175,45 @@ router.put(
       }
     }
 
-    const nextHash = new_password === undefined ? null : await bcrypt.hash(String(new_password), 10)
     const updated = await query(
       `UPDATE exhibition_entries
-       SET fields = $1, images = COALESCE($2, images), pw_hash = COALESCE($3, pw_hash), updated_at = now()
-       WHERE id = $4
+       SET fields = $1, images = COALESCE($2, images), updated_at = now()
+       WHERE id = $3
        RETURNING id, semester_label, entry_type, fields, email, images, created_at, updated_at`,
-      [JSON.stringify(mergedFields), images ? JSON.stringify(images) : null, nextHash, entry.id]
+      [JSON.stringify(mergedFields), images ? JSON.stringify(images) : null, entry.id]
     )
     res.json({ entry: updated.rows[0] })
   })
 )
 
-// 본인 접수 목록 (이메일+비밀번호 검증 후 반환) — /submit/edit 화면용 보조 엔드포인트
-router.post(
-  '/exhibition/list',
-  submitLimiter,
+// 본인 접수 목록 (41_AUTH_CONTRACT). 수정 마감 판정(can_edit)은 서버 시계로 함께 내려주지만
+// 실제 저장 차단의 최종 권한은 PUT /submit/exhibition의 403이다.
+router.get(
+  '/exhibition/mine',
+  requirePublicAuth,
   wrap(async (req, res) => {
-    const { email, password } = req.body || {}
-    if (!email || !password) return res.status(400).json({ error: 'email and password required' })
+    const user = req.publicUser
+    const email = String(user.email).trim().toLowerCase()
     const { rows } = await query(
-      'SELECT * FROM exhibition_entries WHERE email = $1 ORDER BY created_at DESC',
-      [String(email).trim().toLowerCase()]
+      `SELECT * FROM exhibition_entries
+       WHERE public_user_id = $1 OR (public_user_id IS NULL AND email = $2)
+       ORDER BY created_at DESC`,
+      [user.id, email]
     )
-    const entries = []
-    for (const row of rows) {
-      if (await bcrypt.compare(String(password), row.pw_hash)) entries.push(stripSensitive(row))
-    }
-    if (entries.length === 0) return res.status(401).json({ error: 'invalid credentials' })
-    res.json({ entries })
-  })
-)
 
-// 접수 확인·수정 진입 (33_PHASE18 Y2-5) — 이메일+수정용 비밀번호 검증 후 본인 항목만 반환.
-// /list와 달리 수정 마감 판정(can_edit)을 서버 시계로 함께 내려준다. 클라 시계는 신뢰하지 않으며
-// 실제 저장 차단은 PUT /submit/exhibition의 403이 최종 권한이다.
-router.post(
-  '/exhibition/lookup',
-  submitLimiter,
-  wrap(async (req, res) => {
-    const { email, password } = req.body || {}
-    if (!EMAIL_RE.test(String(email || ''))) return res.status(400).json({ error: 'valid email required' })
-    if (!password) return res.status(400).json({ error: 'password required' })
-
-    const { rows } = await query(
-      'SELECT * FROM exhibition_entries WHERE email = $1 ORDER BY created_at DESC',
-      [String(email).trim().toLowerCase()]
-    )
-    const entries = []
-    for (const row of rows) {
-      if (await bcrypt.compare(String(password), row.pw_hash)) entries.push(stripSensitive(row))
+    // 이메일로 찾은 옛 접수는 여기서 소유자를 확정해 둔다 (승계)
+    const legacyIds = rows.filter((r) => r.public_user_id == null).map((r) => r.id)
+    if (legacyIds.length > 0) {
+      await query(
+        'UPDATE exhibition_entries SET public_user_id = $1 WHERE id = ANY($2::int[]) AND public_user_id IS NULL',
+        [user.id, legacyIds]
+      )
     }
-    // 존재하지 않는 이메일과 비밀번호 불일치를 같은 응답으로 묶어 계정 존재 여부를 노출하지 않는다
-    if (entries.length === 0) return res.status(401).json({ error: 'invalid credentials' })
 
     const settings = await getExhibitionSettings()
     const now = new Date()
     res.json({
-      entries,
+      entries: rows.map(stripSensitive),
       can_edit: Boolean(settings) && within(now, settings.submit_open, settings.edit_close),
       edit_close: settings?.edit_close ?? null,
       submit_close: settings?.submit_close ?? null,
@@ -249,17 +243,14 @@ function validateShowcaseBody(body, { creating }) {
 router.post(
   '/showcase',
   submitLimiter,
+  requirePublicAuth,
   wrap(async (req, res) => {
     const body = req.body || {}
     const invalid = validateShowcaseBody(body, { creating: true })
     if (invalid) return res.status(400).json({ error: invalid })
-    if (!body.password || String(body.password).length < MIN_SUBMIT_PW) {
-      return res.status(400).json({ error: `password must be at least ${MIN_SUBMIT_PW} characters` })
-    }
 
-    const pwHash = await bcrypt.hash(String(body.password), 10)
     const { rows } = await query(
-      `INSERT INTO showcase (title, topic, creator, description, tools, link, main_img, sub_imgs, semester_label, edit_pw_hash, status)
+      `INSERT INTO showcase (title, topic, creator, description, tools, link, main_img, sub_imgs, semester_label, public_user_id, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
        RETURNING id, title, topic, creator, description, tools, link, main_img, sub_imgs, semester_label, status, created_at`,
       [
@@ -272,7 +263,7 @@ router.post(
         body.main_img,
         JSON.stringify(body.sub_imgs ?? []),
         body.semester_label ?? null,
-        pwHash,
+        req.publicUser.id,
       ]
     )
     res.status(201).json({ item: rows[0] })
@@ -282,19 +273,22 @@ router.post(
 router.put(
   '/showcase/:id',
   submitLimiter,
+  requirePublicAuth,
   wrap(async (req, res) => {
     const id = parseInt(req.params.id, 10)
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' })
     const body = req.body || {}
-    if (!body.password) return res.status(400).json({ error: 'password required' })
     const invalid = validateShowcaseBody(body, { creating: false })
     if (invalid) return res.status(400).json({ error: invalid })
 
     const { rows } = await query('SELECT * FROM showcase WHERE id = $1', [id])
     const item = rows[0]
     if (!item) return res.status(404).json({ error: 'not found' })
-    const ok = await bcrypt.compare(String(body.password), item.edit_pw_hash || '')
-    if (!ok) return res.status(401).json({ error: 'invalid password' })
+    // 쇼케이스에는 이메일 컬럼이 없어 전시회 접수 같은 이메일 승계가 불가능하다.
+    // 구글 로그인 이전 제출(public_user_id 없음)은 어드민 경로로만 수정한다.
+    if (item.public_user_id == null || Number(item.public_user_id) !== Number(req.publicUser.id)) {
+      return res.status(403).json({ error: 'not your submission' })
+    }
 
     const sets = []
     const params = []
