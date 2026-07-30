@@ -113,3 +113,8 @@ export function requireRole(minRole) {
     next()
   }
 }
+
+// 41_GOOGLE_AUTH_PUBLIC: 공개 제출자 인증(publicAuth.js)이 같은 시크릿·같은 cross-site
+// 쿠키 속성을 쓰도록 내부 헬퍼를 공개한다. 두 신원 클래스가 쿠키 속성을 각자 정의하면
+// SameSite=None+Secure 조합이 한쪽에서만 어긋나는 과거 버그가 재발한다 — 단일 출처 유지.
+export { secret as jwtSecret, baseCookieOpts, cookieOpts }
