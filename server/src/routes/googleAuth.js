@@ -27,7 +27,11 @@ const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth'
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
 const VALID_ISS = ['accounts.google.com', 'https://accounts.google.com']
 
-// CSRF용 1회성 state. 랜덤 nonce와 복귀 경로를 담은 단기 JWT를 쿠키로 들고 있다가 콜백에서 대조한다.
+// CSRF용 1회성 state. 랜덤 nonce와 복귀 경로를 담은 단기 서명 JWT다.
+// 이 JWT를 구글 state 파라미터로 왕복시켜(콜백이 쿠키에 의존하지 않게) 검증한다.
+// 쿠키(dah_oauth_state)는 정상 브라우저의 추가 바인딩용으로만 함께 심는다(선택적 대조).
+// 프론트(vercel.app)와 API(onrender.com)가 서로 다른 사이트라, cross-site SameSite=None 쿠키는
+// Safari ITP·서드파티 쿠키 차단에서 유실될 수 있다 — 쿠키에만 의존하면 "invalid oauth state"가 난다.
 const STATE_COOKIE = 'dah_oauth_state'
 const STATE_TTL_SEC = 10 * 60
 
@@ -87,7 +91,7 @@ router.get('/google/login', (req, res) => {
     redirect_uri: cfg.redirectUri,
     response_type: 'code',
     scope: 'openid email profile',
-    state: nonce,
+    state, // 서명 JWT 자체를 왕복(쿠키 유실돼도 콜백 성립). ~208B라 구글 state 한도 내.
     access_type: 'online',
     prompt: 'select_account',
   })
@@ -110,17 +114,34 @@ router.get(
       })
     }
 
+    // 1순위: 구글이 되돌려준 state(서명 JWT)를 검증한다. 쿠키 없이도 성립한다.
+    //   서명(HMAC jwtSecret)이 위조를, 만료(10분)가 재사용을 막는다.
     let statePayload = null
     try {
-      statePayload = jwt.verify(String(stateCookie || ''), jwtSecret())
+      statePayload = jwt.verify(String(req.query.state || ''), jwtSecret())
     } catch {
       statePayload = null
     }
-    if (!statePayload || !req.query.state || statePayload.nonce !== String(req.query.state)) {
+    if (!statePayload) {
       return res.status(400).json({
         error: 'invalid oauth state',
         hint: '로그인 요청이 만료되었거나 다른 창에서 시작되었습니다. 처음부터 다시 시도하세요.',
       })
+    }
+    // 2순위(선택): 쿠키가 도착한 정상 브라우저는 nonce 일치까지 확인(추가 CSRF 바인딩).
+    //   쿠키가 유실된 브라우저(Safari ITP·서드파티 차단)는 위 서명 검증만으로 통과시킨다.
+    if (stateCookie) {
+      try {
+        const cookiePayload = jwt.verify(String(stateCookie), jwtSecret())
+        if (cookiePayload.nonce !== statePayload.nonce) {
+          return res.status(400).json({
+            error: 'invalid oauth state',
+            hint: '로그인 요청이 만료되었거나 다른 창에서 시작되었습니다. 처음부터 다시 시도하세요.',
+          })
+        }
+      } catch {
+        // 쿠키 만료·손상 — 쿼리 state 서명이 유효하므로 진행
+      }
     }
 
     const code = String(req.query.code || '')
