@@ -645,3 +645,17 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [!] **레거시 쇼케이스는 자가 승계 불가**: `showcase`에는 email 컬럼이 없어 구글 계정과 대조할 값이 없다. 구글 전환 이전 제출 건은 본인 수정 시 403이며 관리자 경로로만 처리 가능하다
 - [!] **배포 전 필수**: `node scripts/migrate-phase41.mjs`를 **서버 배포보다 먼저** 실행해야 한다. 신규 접수는 `pw_hash` 없이 INSERT하는데 현 운영 스키마는 `pw_hash NOT NULL`이라 마이그레이션 전에는 접수가 전부 실패한다
 - [!] **미검증(브라우저·실계정 부재)**: 실제 구글 왕복(동의 화면→콜백), 실제 SMTP 수신, 320~3840px 렌더, 크로스페이드 육안 확인을 하지 못했다. OAuth는 fetch 스텁으로만, 메일은 실패 경로로만 검증했다. 마이그레이션 SQL도 `DATABASE_URL`이 없어 실행하지 못했다
+
+## 38_EXHIBITION_POLISH — 전시회 상세·대시보드·접수 시트·접수폼 정리 (단독 STEP1 → 병렬 K1·K2·K3 → 단독 STEP3)
+### STEP 1 (단독 공용 선결)
+- [x] **J1 커스텀 DatePicker 연/월 점프**(`components/common/DatePicker.jsx`): 월 헤더의 정적 텍스트를 클릭 버튼으로 바꿔 연·월 직접 선택 모드를 추가. 연도는 숫자 입력으로 점프(1900~2200) + 앞6·뒤5년 목록에서 바로 고르기(가로 스크롤 칩), 월은 3열 그리드. 모드 시 좌우 화살표는 해에 연동(±1년). 패널 닫으면 모드 리셋. 네이티브 date 미사용 유지 — 전 어드민 날짜 필드가 `DateInput` 경유로 이 컴포넌트를 쓰므로 자동 전파
+- [x] **J2 AI식 상태 문구 정비**(`pages/admin/EntriesSheet.jsx`): "총 N건 · 표시 M건 · 20초마다 자동 새로고침 · 마지막 갱신 …" 가운데점 나열을 위계 분리로 교체 — 주요(건수)는 body 크기 "총 N건 중 M건 표시", 갱신 정보는 작은 보조줄 "20초마다 자동 갱신, 마지막 갱신 …". 가운데점·마침표 나열 제거
+- [x] 빌드·oxlint 통과 확인 후 병렬 착수
+### STEP 2 (병렬 3, 소유 계약 무충돌 — 파일 교차 0건)
+- [x] **K1 전시회 공개**(`pages/programs/Exhibitions.jsx`·`ExhibitionDetail.jsx`): 피처드 블록에서 접수·수정 버튼 제거(전시 기간·날짜·전시명만, 박스 정렬 교정, 고아 prop/변수 정리) / 상세 레이아웃 재배치(헤드라인→학기·기간→본문(intro/body)→사이트·공유 버튼, 본문을 우측 컬럼 안 dl 아래로 상향) / 편집 버튼 2개→1개 통합(목록으로 가던 InlineEditBar 제거, 그 전시 수정 페이지로 가는 EditPencil만 유지, 미사용 import 정리)
+- [x] **K2 공모전·어드민 편집**(`pages/programs/ContestDetail.jsx`·`pages/admin/PostForm.jsx`): 공모전 상세의 접수 버튼(applyExternal, primary)을 전시 사이트 외부 버튼(exhibitionSite, secondary)으로 교체 — `external_url` 재사용(공모전은 이메일 접수라 사이트 접수 없음, 새 컬럼·서버 변경 없음) / PostForm t2에서 `type==='contest'`일 때 URL 필드 라벨 "전시 사이트 URL"·hint "새 탭으로 전시 사이트를 엽니다"로 분기(lecture는 기존 "외부 접수 URL" 유지) / 전시회 폼(template exhibition)의 site_url·ordinal·semester_label·start_date/end_date(DateInput=J1) 필드 정상 확인, 수정 없음
+- [x] **K3 접수 시트·폼·사이드바**(`pages/admin/EntriesSheet.jsx`·`pages/submit/ExhibitSubmit.jsx`·`exhibitFormKit.jsx`·`components/admin/AdminLayout.jsx`): 시트 컨테이너 `h-[100dvh] flex-col` + 표 래퍼 `flex-1 min-h-0` 내부 스크롤 → 하단 탭 바 뷰포트 하단 고정(sticky footer) / 다중 셀 드래그 선택(range=anchor·focus 인덱스, mousedown+mouseenter, window mouseup) + 하이라이트(reading.accent /10 틴트·아웃라인) + Cmd/Ctrl+C·복사 버튼으로 TSV 클립보드 복사(토스트, 시프트 0, 표 폭 불변) / 접수폼 PageBanner(브레드크럼·헤더) 제거 / SubjectField의 학기 SegmentControl 제거 → 관리자 지정 현재 학기 과목만 RadioCards 노출(죽은 코드·import 정리) / 작품 설명 placeholder "작품 설명은 전시회 사이트에 사용됩니다."로 교체 / 사이드바 owner·system 그룹을 Dashboard 위로(권한 path+role 매핑 불변)
+### STEP 3 (단독 통합)
+- [x] **검증**: 네이티브 `<select>`·date 입력 0건(잔존 grep은 전부 주석) / 변경 9개 파일 신규 하드코딩 HEX 0건(색은 tokens 경유·reading.accent /10) / 표 레이아웃 불변 계약 유지(table-fixed+colgroup, 선택은 인덱스·CSS만 변경, 토스트 포털) / 하단 탭 고정 구조 확인 / 가운데점 나열: 이번 변경이 새로 만든 사용자 문구 0건(J2 상태줄 정비 완료). 잔존 `날짜·시간 선택`(관용 복합 라벨)·온보딩 스텝 desc는 기존 문구라 범위 밖 유지 / `npm run build` 성공(2033 modules), oxlint 변경 파일 경고 0(잔여는 vendor·기존 파일)
+- [ ] 잔여(육안·서버): 접수 시트 하단 탭 고정·다중 셀 드래그 복사·필터 시프트 0 실기기 확인 / DatePicker 연·월 점프 육안 / 접수폼 학기 UI 제거·과목 필터 / 어드민 전시회·공모전 편집 진입이 실제 수정 페이지로 이동 확인(로그인 필요) / 320~3840 가로 스크롤 0
+- [!] 관찰(범위 밖): 공모전 리스트(`Contests.jsx`)의 "카드에서 바로 외부 이동" 링크가 이제 의미상 접수가 아니라 전시 사이트다. 라벨·aria 점검은 그 파일 소유 별도 과제

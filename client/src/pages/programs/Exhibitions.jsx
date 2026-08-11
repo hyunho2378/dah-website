@@ -57,7 +57,7 @@ const GLASS_SURFACE =
 const CTA_SURFACE =
   'rounded-glass border border-glass-line bg-bg-elev shadow-glass'
 
-function FeaturedExhibition({ item, showSubmit }) {
+function FeaturedExhibition({ item }) {
   const { lang } = useLang()
   const fullTitle =
     (lang === 'en'
@@ -68,10 +68,6 @@ function FeaturedExhibition({ item, showSubmit }) {
   // J5: EN 모드 소개문 — intro_en 우선, 없으면 국문 intro + Korean only 뱃지
   const introText = lang === 'en' ? item.intro_en || item.intro : item.intro
   const introKoFallback = lang === 'en' && !item.intro_en && Boolean(item.intro)
-  // EN: cta_label_en 우선, 없으면 영문 풀네임(관리자 국문 cta_label이 EN에 새지 않게). KR: cta_label > 풀네임.
-  const ctaLabel =
-    lang === 'en' ? item.cta_label_en || fullTitle : item.cta_label || fullTitle
-  const hasCta = item.cta_show !== false
 
   return (
     <div className="relative isolate min-w-0">
@@ -117,41 +113,15 @@ function FeaturedExhibition({ item, showSubmit }) {
               {introKoFallback && <KoreanOnlyBadge />}
             </div>
           ) : null}
-          {/* Q2.2: 상단 고정(피처드)일 때만 CTA. 라벨=cta_label 우선(없으면 full_title), 링크=cta_url>site_url>상세 */}
-          {(hasCta || showSubmit || period) && (
-            <div className={`flex min-w-0 flex-col gap-20 p-24 md:p-32 ${CTA_SURFACE}`}>
-              {period && (
-                <div className="flex min-w-0 flex-col gap-8">
-                  <p className="text-small-m text-text-meta md:text-small-d">전시 기간</p>
-                  <p
-                    className={`min-w-0 text-h3-m font-bold leading-snug md:text-h3-d ${ACCENT.proper}`}
-                  >
-                    {period}
-                  </p>
-                </div>
-              )}
-              <div className="flex flex-wrap items-center gap-16">
-                {hasCta && (
-                  <Button
-                    variant="primary"
-                    href={item.cta_url || item.site_url || `/programs/exhibitions/${item.id}`}
-                    external={Boolean(item.cta_url || item.site_url)}
-                  >
-                    {ctaLabel}
-                  </Button>
-                )}
-                {/* Y2-5: 접수 버튼 옆에 접수 내역 확인·수정 진입 */}
-                {showSubmit && (
-                  <>
-                    <Button variant="primary" href="/submit">
-                      전시회 접수
-                    </Button>
-                    <Button variant="secondary" href="/submit/edit">
-                      접수 내역 확인·수정
-                    </Button>
-                  </>
-                )}
-              </div>
+          {/* 전시 기간만 노출 — 접수 진입은 헤더 CTA가 담당한다 */}
+          {period && (
+            <div className={`flex min-w-0 flex-col gap-8 p-24 md:p-32 ${CTA_SURFACE}`}>
+              <p className="text-small-m text-text-meta md:text-small-d">전시 기간</p>
+              <p
+                className={`min-w-0 text-h3-m font-bold leading-snug md:text-h3-d ${ACCENT.proper}`}
+              >
+                {period}
+              </p>
             </div>
           )}
         </div>
@@ -227,7 +197,7 @@ function Exhibitions() {
           <div className="mt-32 flex min-w-0 flex-col gap-64">
             {featured && (
               <Reveal className="min-w-0">
-                <FeaturedExhibition item={featured} showSubmit={showSubmit} />
+                <FeaturedExhibition item={featured} />
               </Reveal>
             )}
             {/* 피처드가 없어도 접수 진입은 노출한다 */}

@@ -8,7 +8,6 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import Button from '../../components/common/Button'
@@ -81,21 +80,6 @@ const NOTES = [
   '연락처는 010-0000-0000 형식으로만 입력됩니다.',
   '작품 설명은 최대 100자입니다.',
 ]
-
-function Banner() {
-  return (
-    <PageBanner
-      titleKo="전시회 접수"
-      titleEn="EXHIBITION SUBMIT"
-      breadcrumb={[
-        { label: '홈', to: '/' },
-        { label: '전시회 접수', to: '/submit' },
-      ]}
-      nebulaX="64%"
-      nebulaY="32%"
-    />
-  )
-}
 
 // P3 카드(bg.elev + hairline) — 글래스 중첩·blur 예산(동시 3개)을 피하려고 온보딩 본문은 비유리 패널
 function Panel({ title, children }) {
@@ -212,23 +196,18 @@ function ExhibitSubmit() {
 
   if (settingsLoading) {
     return (
-      <>
-        <Banner />
-        <Container as="section" className="py-section-m lg:py-section-d">
-          <p className="text-body-m text-text-meta md:text-body-d" aria-live="polite">
-            접수 일정 확인 중
-          </p>
-        </Container>
-      </>
+      <Container as="section" className="py-section-m lg:py-section-d">
+        <p className="text-body-m text-text-meta md:text-body-d" aria-live="polite">
+          접수 일정 확인 중
+        </p>
+      </Container>
     )
   }
 
   if (!submitOpenNow) {
     return (
-      <>
-        <Banner />
-        <Container as="section" className="py-section-m lg:py-section-d">
-          <GlassCard className="flex flex-col items-start gap-24 p-24 md:p-40">
+      <Container as="section" className="py-section-m lg:py-section-d">
+        <GlassCard className="flex flex-col items-start gap-24 p-24 md:p-40">
             <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
               접수 기간 아님
             </h2>
@@ -239,15 +218,13 @@ function ExhibitSubmit() {
             <Button variant="secondary" href="/submit/edit">
               접수 내역 확인·수정
             </Button>
-          </GlassCard>
-        </Container>
-      </>
+        </GlassCard>
+      </Container>
     )
   }
 
   return (
     <>
-      <Banner />
       {/* H2-1: 온보딩은 상단 여백을 줄여 첫 화면에 핵심 안내가 바로 들어오게 한다
           (38_UI_FIX_BATCH 이후 시작 버튼은 섹션 최하단에 있다) */}
       <Container
@@ -521,7 +498,7 @@ function ExhibitSubmit() {
                     value={form.workDesc}
                     onChange={set('workDesc')}
                     className={inputCls}
-                    placeholder="작품에 대한 간단한 설명"
+                    placeholder="작품 설명은 전시회 사이트에 사용됩니다."
                   />
                   <span
                     aria-live="polite"

@@ -7,7 +7,6 @@ import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
 import ImageFrame from '../../components/common/ImageFrame'
 import RichBody from '../../components/content/RichBody'
-import InlineEditBar from '../../components/content/InlineEditBar'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
@@ -115,9 +114,6 @@ function ExhibitionDetail() {
       {/* Y2-2(33_PHASE18): 상단 수직 여백 축소 — 첫 화면에서 헤드라인+포스터+핵심 정보가
           스크롤 없이 들어오도록 상단 패딩만 줄인다(하단 섹션 리듬은 유지). */}
       <Container as="section" className="pb-section-m pt-24 lg:pb-section-d lg:pt-32">
-        <div className="flex flex-wrap items-center justify-end gap-16">
-          <InlineEditBar type="exhibitions" manageTo="/admin/posts/exhibitions" />
-        </div>
         {loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : !item ? (
@@ -163,6 +159,13 @@ function ExhibitionDetail() {
                     </MetaRow>
                   )}
                 </dl>
+                {body ? (
+                  <RichBody body={body} />
+                ) : intro ? (
+                  <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
+                    {intro}
+                  </p>
+                ) : null}
                 <div className="flex flex-wrap items-center gap-16">
                   {item.site_url && (
                     <Button variant="secondary" href={item.site_url} external>
@@ -173,13 +176,6 @@ function ExhibitionDetail() {
                 </div>
               </div>
             </div>
-            {body ? (
-              <RichBody body={body} />
-            ) : intro ? (
-              <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
-                {intro}
-              </p>
-            ) : null}
             {galleries.map((g) => (
               <GallerySection
                 key={g.label}

@@ -26,8 +26,9 @@
 //       접수자 정보 탭(사람 단위 집계 + 과목 목록).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Download, RefreshCw } from 'lucide-react'
+import { Copy, Download, RefreshCw } from 'lucide-react'
 import ColumnFilter from '../../components/common/ColumnFilter'
+import { useToast } from '../../components/common/Toast'
 import { api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 
@@ -224,6 +225,7 @@ const SHEETS = [
 
 function EntriesSheet() {
   useTitle('접수 관리 시트')
+  const showToast = useToast()
 
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -233,7 +235,10 @@ function EntriesSheet() {
   const [sheet, setSheet] = useState('entries')
   const [filters, setFilters] = useState({})
   const [sort, setSort] = useState(null)
-  const [selected, setSelected] = useState(null)
+  // K3-2 다중 셀 선택 — anchor(드래그 시작)·focus(현재) 셀의 {r, c} 좌표.
+  // 좌표는 visibleRows·columns의 인덱스라 표 폭·위치에 영향을 주지 않는다(레이아웃 시프트 0).
+  const [range, setRange] = useState(null) // { anchor: {r,c}, focus: {r,c} } | null
+  const dragging = useRef(false)
 
   const load = useCallback(async () => {
     try {
@@ -385,18 +390,16 @@ function EntriesSheet() {
   }, [sourceRows, columns, filters, q, sort])
 
   // B1-4: 데이터가 적어도 빈 셀 그리드로 표 영역을 채운다.
-  // AR: 필요한 행 수는 래퍼 실측 높이에서 나온다. 행 높이는 렌더된 행에서 읽고(없으면 폴백),
-  // 뷰포트·글꼴 변화는 ResizeObserver가 잡는다. 관측 대상은 래퍼 하나뿐이라 비용이 없다.
+  // K3-1: 래퍼가 flex-1로 남은 세로를 항상 채우므로(콘텐츠에 맞춰 줄지 않음) 실측 clientHeight를
+  // 그대로 기준으로 삼는다 — 행 수가 답을 되먹이던 고정점 문제가 사라진다.
   const wrapRef = useRef(null)
   const [fitRows, setFitRows] = useState(MIN_ROWS)
   useEffect(() => {
-    // 기준은 래퍼의 실제 높이가 아니라 상한(max-h-[70dvh])이다. 래퍼는 콘텐츠에 맞춰
-    // 줄어들기 때문에, 실제 높이로 계산하면 "현재 행 수"가 그대로 답이 되는 고정점에 갇힌다.
     const measure = () => {
       const el = wrapRef.current
       if (!el) return
-      const cap = parseFloat(getComputedStyle(el).maxHeight)
-      if (!Number.isFinite(cap)) return
+      const cap = el.clientHeight
+      if (!Number.isFinite(cap) || cap <= 0) return
       const rowH = el.querySelector('tbody tr')?.getBoundingClientRect().height || FALLBACK_ROW_H
       const headH = el.querySelector('thead')?.getBoundingClientRect().height || rowH
       const need = Math.ceil((cap - headH) / rowH)
@@ -429,25 +432,93 @@ function EntriesSheet() {
     setSheet(next)
     setFilters({})
     setSort(null)
-    setSelected(null)
+    setRange(null)
   }
+
+  // K3-2 선택 범위 → TSV. 선택된 사각형을 visibleRows·columns 인덱스로 잘라
+  // 행은 개행, 셀은 탭으로 이어 붙인다(구글 시트 붙여넣기 계약).
+  // rangeBounds는 range에서만 파생되므로 memo로 참조를 고정한다(copyRange의 안정적 의존성).
+  const rangeBounds = useMemo(
+    () =>
+      range && {
+        r0: Math.min(range.anchor.r, range.focus.r),
+        r1: Math.max(range.anchor.r, range.focus.r),
+        c0: Math.min(range.anchor.c, range.focus.c),
+        c1: Math.max(range.anchor.c, range.focus.c),
+      },
+    [range]
+  )
+  const inRange = (r, c) =>
+    rangeBounds &&
+    r >= rangeBounds.r0 &&
+    r <= rangeBounds.r1 &&
+    c >= rangeBounds.c0 &&
+    c <= rangeBounds.c1
+
+  const copyRange = useCallback(() => {
+    if (!rangeBounds) return
+    const lines = []
+    for (let r = rangeBounds.r0; r <= rangeBounds.r1; r += 1) {
+      const row = visibleRows[r]
+      if (!row) continue
+      const cells = []
+      for (let c = rangeBounds.c0; c <= rangeBounds.c1; c += 1) {
+        cells.push(columns[c] ? columns[c].get(row) : '')
+      }
+      lines.push(cells.join('\t'))
+    }
+    const tsv = lines.join('\n')
+    if (!tsv) return
+    // 토스트는 포털+fixed라 표를 밀지 않는다(레이아웃 시프트 0).
+    navigator.clipboard?.writeText(tsv).then(
+      () => showToast('선택한 셀을 복사했습니다'),
+      () => showToast('복사에 실패했습니다')
+    )
+  }, [rangeBounds, visibleRows, columns, showToast])
+
+  // Cmd/Ctrl+C — 텍스트 드래그 선택이 있으면 네이티브 복사를 방해하지 않는다.
+  useEffect(() => {
+    const onCopy = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'c' || e.key === 'C')) {
+        if (!range) return
+        if (window.getSelection && String(window.getSelection())) return
+        copyRange()
+      }
+    }
+    window.addEventListener('keydown', onCopy)
+    return () => window.removeEventListener('keydown', onCopy)
+  }, [range, copyRange])
+
+  // 드래그 종료는 표 밖에서 놓아도 잡히도록 window에 건다.
+  useEffect(() => {
+    const stop = () => {
+      dragging.current = false
+    }
+    window.addEventListener('mouseup', stop)
+    return () => window.removeEventListener('mouseup', stop)
+  }, [])
 
   // iOS Safari 동적 툴바 대응: 100vh는 주소창·툴바 접힘/펼침에 따라 값이 바뀌어
   // 레이아웃이 흔들린다 — 뷰포트 실측값을 반영하는 100dvh로 대체
   return (
-    <div className="min-h-[100dvh] bg-reading-bg text-reading-text">
-      {/* 폭 상한 없음 + 표준 거터. 아래 모든 블록이 같은 좌우 마진선에 선다(B1-1·2). */}
-      <div className="flex w-full min-w-0 flex-col gap-16 px-gutter-m py-24 md:px-gutter-t lg:px-gutter-d">
+    <div className="flex h-[100dvh] flex-col bg-reading-bg text-reading-text">
+      {/* K3-1: 시트 컨테이너 높이를 뷰포트(100dvh)로 잡고 표는 내부 스크롤, 탭은 하단 고정.
+          폭 상한 없음 + 표준 거터. 아래 모든 블록이 같은 좌우 마진선에 선다(B1-1·2). */}
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-16 px-gutter-m py-24 md:px-gutter-t lg:px-gutter-d">
         {/* 제목 */}
         <div className="flex min-w-0 flex-col gap-4">
           <h1 className="text-h2-m font-bold text-reading-textStrong md:text-h2-d">
             접수 관리 시트
           </h1>
-          <p className="font-mono text-caption-m text-reading-textMeta">
+          {/* J2: 건수는 크게, 갱신 정보는 작은 보조 텍스트로 분리. 가운데점·마침표 나열 금지. */}
+          <p className="text-body-m text-reading-text">
             총 {sourceRows.length}
-            {isPeople ? '명' : '건'} · 표시 {visibleRows.length}
-            {isPeople ? '명' : '건'} · 20초마다 자동 새로고침
-            {updatedAt ? ` · 마지막 갱신 ${formatDateTime(updatedAt)}` : ''}
+            {isPeople ? '명' : '건'} 중 {visibleRows.length}
+            {isPeople ? '명' : '건'} 표시
+          </p>
+          <p className="font-mono text-caption-m text-reading-textMeta">
+            20초마다 자동 갱신
+            {updatedAt ? `, 마지막 갱신 ${formatDateTime(updatedAt)}` : ''}
           </p>
         </div>
 
@@ -462,6 +533,15 @@ function EntriesSheet() {
             className="h-40 w-full min-w-0 max-w-xs rounded-sm bg-reading-surface px-12 text-small-m text-reading-text outline-none transition-colors duration-fast ease-out placeholder:text-reading-textMeta focus:outline focus:outline-2 focus:outline-offset-[-2px] focus:outline-reading-accent md:flex-1"
           />
           <div className="ml-auto flex flex-wrap items-center justify-end gap-8">
+            <button
+              type="button"
+              onClick={copyRange}
+              disabled={!range}
+              className={`${BTN} disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              <Copy size={16} aria-hidden="true" />
+              복사
+            </button>
             <button type="button" onClick={load} className={BTN}>
               <RefreshCw size={16} aria-hidden="true" />
               새로고침
@@ -490,7 +570,7 @@ function EntriesSheet() {
             표는 항상 렌더한다: 필터를 전부 해제해도 thead·컬럼 필터는 남아야 되돌릴 수 있다(B1-8). */}
         <div
           ref={wrapRef}
-          className="max-h-[70dvh] w-full min-w-0 overflow-auto rounded-sm border border-reading-hairline bg-reading-surface"
+          className="min-h-0 w-full min-w-0 flex-1 overflow-auto rounded-sm border border-reading-hairline bg-reading-surface"
         >
           {/* colgroup 폭 합계를 최소폭으로 잡아 컬럼 폭을 고정한다. 래퍼가 더 넓으면
               남는 폭만 비례 분배되고(뷰포트 변화), 필터·선택에는 반응하지 않는다.
@@ -530,29 +610,42 @@ function EntriesSheet() {
               </tr>
             </thead>
             <tbody>
-              {visibleRows.map((row) => (
+              {visibleRows.map((row, r) => (
                 <tr key={row.id}>
-                  {columns.map((col) => {
+                  {columns.map((col, c) => {
                     const value = col.get(row)
-                    const cellId = `${row.id}:${col.key}`
-                    const on = selected === cellId
+                    const on = inRange(r, c)
                     return (
                       <td key={col.key} className={CELL}>
-                        {/* B1-5: 선택만 한다. 자동 복사 없음 — 드래그로 여러 셀을 잡아
-                            네이티브 Cmd/Ctrl+C로 복사하도록 select-text를 보장한다. */}
+                        {/* K3-2: 좌클릭 드래그로 여러 셀·행 범위를 선택한다. mousedown이
+                            anchor, mousedown 상태에서 지나간 셀이 focus가 되어 사각형이 커진다.
+                            선택은 인덱스만 바꾸므로 표 폭·위치는 불변(레이아웃 시프트 0). */}
                         <div
                           tabIndex={0}
                           title={value}
-                          onClick={() => setSelected(cellId)}
+                          onMouseDown={(e) => {
+                            // 텍스트 드래그(네이티브 복사)와 충돌하지 않도록 셀 선택은
+                            // 기본 텍스트 선택을 막고 범위 선택으로 전환한다.
+                            e.preventDefault()
+                            dragging.current = true
+                            setRange({ anchor: { r, c }, focus: { r, c } })
+                          }}
+                          onMouseEnter={() => {
+                            if (dragging.current) {
+                              setRange((prev) =>
+                                prev ? { ...prev, focus: { r, c } } : prev
+                              )
+                            }
+                          }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault()
-                              setSelected(cellId)
+                              setRange({ anchor: { r, c }, focus: { r, c } })
                             }
                           }}
-                          className={`block w-full cursor-cell select-text truncate px-12 py-8 text-left text-reading-text transition-colors duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-reading-accent ${
+                          className={`block w-full cursor-cell truncate px-12 py-8 text-left text-reading-text transition-colors duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-reading-accent ${
                             on
-                              ? 'outline outline-2 outline-offset-[-2px] outline-reading-accent'
+                              ? 'bg-reading-accent/10 outline outline-2 outline-offset-[-2px] outline-reading-accent'
                               : 'outline-none hover:bg-reading-subtle'
                           }`}
                         >

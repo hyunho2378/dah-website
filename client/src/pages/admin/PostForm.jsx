@@ -736,8 +736,8 @@ function PostForm() {
                 <DateInput value={form.event_end} onChange={setInput('event_end')} />
               </Field>
               <Field
-                label="외부 접수 URL"
-                hint={type === 'contest' ? '입력 시 카드에서 바로 외부로 이동합니다' : undefined}
+                label={type === 'contest' ? '전시 사이트 URL' : '외부 접수 URL'}
+                hint={type === 'contest' ? '새 탭으로 전시 사이트를 엽니다' : undefined}
               >
                 <Input type="url" value={form.external_url} onChange={setInput('external_url')} />
               </Field>

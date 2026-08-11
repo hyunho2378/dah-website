@@ -116,8 +116,8 @@ function ContestDetail() {
                 </dl>
                 <div className="flex flex-wrap items-center gap-16">
                   {item.external_url && (
-                    <Button variant="primary" href={item.external_url} external>
-                      {t('actions.applyExternal')}
+                    <Button variant="secondary" href={item.external_url} external>
+                      {t('actions.exhibitionSite')}
                     </Button>
                   )}
                   <ShareButton title={title} />
