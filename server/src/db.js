@@ -35,3 +35,35 @@ export async function query(text, params) {
   }
   return impl.query(text, params)
 }
+
+// 41_AUTH_CONTRACT: 공개(구글) 로그인이 의존하는 스키마를 부팅 시 멱등 보장한다.
+// 서버는 schema.sql·migrate-*.mjs를 부팅에 실행하지 않는다 — 그래서 migrate-phase41이
+// 배포 DB에 안 돌면 콜백이 "relation public_users does not exist"(42P01)로 죽었다.
+// 이 auth-critical 조각만 self-heal 한다(전부 IF NOT EXISTS / ADD COLUMN IF NOT EXISTS —
+// 비파괴·멱등). migrate-phase41.mjs와 동일 내용이라 재배포만으로 배포 DB가 스스로 낫는다.
+// 문장마다 독립 try — 한 문장이 실패해도(권한·선행 테이블 부재) 나머지는 진행하고,
+// 서버 기동 자체는 막지 않는다(읽기·/health는 계속 동작).
+export async function ensurePublicAuthSchema() {
+  const impl = injected || pool
+  if (!impl) return
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS public_users (
+       id            SERIAL PRIMARY KEY,
+       google_sub    TEXT UNIQUE NOT NULL,
+       email         TEXT NOT NULL,
+       name          TEXT,
+       created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+       last_login_at TIMESTAMPTZ
+     )`,
+    'ALTER TABLE exhibition_entries ADD COLUMN IF NOT EXISTS public_user_id INTEGER',
+    'ALTER TABLE showcase ADD COLUMN IF NOT EXISTS public_user_id INTEGER',
+    'ALTER TABLE exhibition_entries ALTER COLUMN pw_hash DROP NOT NULL',
+  ]
+  for (const sql of statements) {
+    try {
+      await impl.query(sql)
+    } catch (err) {
+      console.error('[schema] ensurePublicAuthSchema 문장 실패(계속 진행):', err.message)
+    }
+  }
+}
