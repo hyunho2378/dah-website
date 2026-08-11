@@ -17,11 +17,16 @@ import { RequireRole, useAuth } from '../../context/AuthContext'
 // About / 학사 안내 / 학과 행사 / 학생 활동 / 공지사항 / 자료실 순서와 각 그룹 하위 순서를 그대로 옮겼다.
 // 권한은 항목 단위로 유지한다 — 그룹을 IA로 다시 묶으면서 예전 그룹 role을 그대로 물려주면
 // 접근 범위가 바뀌므로, 각 항목이 원래 속했던 그룹의 role을 그대로 들고 간다(값 변경 0건).
-// 시스템·오너 전용(전시회 설정·사이트 설정·상담·사용자)은 IA에 없으므로 별도 그룹으로 두되, 대시보드보다 위에 올린다.
+// 상단 계정 영역(OWNER) 바로 아래 순서: 사용자 → 대시보드 → 전시회 설정·사이트 설정·상담(SYSTEM).
+// 시스템·오너 전용(전시회 설정·사이트 설정·상담·사용자)은 IA에 없으므로 별도 그룹으로 둔다.
 const NAV_GROUPS = [
   {
     label: 'OWNER',
     items: [{ to: '/admin/users', label: '사용자', role: 'owner' }],
+  },
+  {
+    label: 'DASHBOARD',
+    items: [{ to: '/admin', label: '대시보드', end: true, role: 'manager' }],
   },
   {
     label: 'SYSTEM',
@@ -30,10 +35,6 @@ const NAV_GROUPS = [
       { to: '/admin/settings', label: '사이트 설정', role: 'admin' },
       { to: '/admin/consultations', label: '상담 신청', role: 'admin' },
     ],
-  },
-  {
-    label: 'DASHBOARD',
-    items: [{ to: '/admin', label: '대시보드', end: true, role: 'manager' }],
   },
   {
     label: 'ABOUT',
