@@ -21,9 +21,14 @@ import {
   TextArea,
   Toggle,
   DateInput,
+  Select,
 } from '../../components/admin/FormControls'
 import { POST_TYPES } from './postTypes'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
+import {
+  CONTEST_CATEGORY,
+  CONTEST_CATEGORY_OPTIONS,
+} from '../../data/contestCategory'
 
 const ICON_BTN =
   'flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
@@ -344,6 +349,8 @@ function emptyForm(template, type) {
         base.host = ''
         base.semester_label = ''
         base.period = ''
+        base.category = ''
+        base.category_etc = ''
       }
       // Y3-5(33_PHASE18): 동아리 공식 사이트 URL — 상세 페이지 링크 버튼
       if (type === 'club') base.site_url = ''
@@ -427,6 +434,8 @@ function fromItem(template, item, type) {
         next.host = Array.isArray(hostRaw) ? hostRaw.join('\n') : hostRaw || ''
         next.semester_label = item.semester_label || ''
         next.period = item.period || ''
+        next.category = item.category || ''
+        next.category_etc = item.category_etc || ''
       }
       // Y3-5: 동아리 사이트 URL (레거시 external_url 폴백)
       if (type === 'club') next.site_url = item.site_url || item.external_url || ''
@@ -515,6 +524,10 @@ function toPayload(template, config, form, type) {
         payload.semester_label = nul(form.semester_label)
         payload.period = nul(form.period)
         payload.host = nul(form.host)
+        payload.category = nul(form.category)
+        // 직접 입력값은 '기타'일 때만 의미가 있다 — 다른 종류로 바꾸면 비운다
+        payload.category_etc =
+          form.category === CONTEST_CATEGORY.ETC ? nul(form.category_etc) : null
       }
       if (config.attachments) payload.attachments = form.attachments
       return payload
@@ -719,6 +732,26 @@ function PostForm() {
                   <TextArea rows={3} value={form.host} onChange={setInput('host')} />
                 </Field>
               </div>
+              <div className="md:col-span-2">
+                <Field label="종류" hint="공개 페이지에서 이 종류끼리 한 섹션으로 묶입니다">
+                  <Select
+                    value={form.category}
+                    options={CONTEST_CATEGORY_OPTIONS}
+                    placeholder="종류 선택"
+                    onChange={(e) => set('category')(e.target.value)}
+                  />
+                </Field>
+              </div>
+              {form.category === CONTEST_CATEGORY.ETC && (
+                <div className="md:col-span-2">
+                  <Field label="종류 직접 입력" hint="기타를 고른 경우에만 사용합니다">
+                    <Input
+                      value={form.category_etc}
+                      onChange={setInput('category_etc')}
+                    />
+                  </Field>
+                </div>
+              )}
               <Field label="학기 라벨" hint="예: 2026-1. 목록 정렬 기준">
                 <Input value={form.semester_label} onChange={setInput('semester_label')} />
               </Field>

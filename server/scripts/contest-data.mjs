@@ -12,6 +12,14 @@ const bookplate = (semester) => `/images/contests/bookplate-contest-${semester}.
 const DAH_HOST = '디지털인문예술전공 운영위원회'
 const LIBRARY_HOST = '한림대학교 도서관'
 
+// 52_CONTEST_CATEGORY: 공모전 종류. 공개 목록의 섹션 묶음 기준이자 어드민 드롭다운 값이다.
+// 클라이언트(client/src/data/contestCategory.js)와 같은 문자열을 쓴다 — 값이 어긋나면 섹션이 갈라진다.
+export const CONTEST_CATEGORY = {
+  POSTER: '디지털인문예술 프로젝트 전시회 포스터 공모전',
+  BOOKPLATE: '도서관 장서표 디자인 공모전',
+  ETC: '기타',
+}
+
 export const CONTEST_POSTS = [
   // 디지털인문예술 프로젝트 전시회 포스터 공모전
   {
@@ -19,6 +27,7 @@ export const CONTEST_POSTS = [
     semester_label: '2024-2',
     title_ko: '2024-2 디지털인문예술 프로젝트 전시회 포스터 공모전',
     title_en: 'DAH Project Exhibition Poster Contest',
+    category: CONTEST_CATEGORY.POSTER,
     poster_url: poster('2024-2'),
     host: DAH_HOST,
   },
@@ -27,6 +36,7 @@ export const CONTEST_POSTS = [
     semester_label: '2025-1',
     title_ko: '2025-1 디지털인문예술 프로젝트 전시회 포스터 공모전',
     title_en: 'DAH Project Exhibition Poster Contest',
+    category: CONTEST_CATEGORY.POSTER,
     poster_url: poster('2025-1'),
     host: DAH_HOST,
   },
@@ -35,6 +45,7 @@ export const CONTEST_POSTS = [
     semester_label: '2025-2',
     title_ko: '2025-2 디지털인문예술 프로젝트 전시회 포스터 공모전',
     title_en: 'DAH Project Exhibition Poster Contest',
+    category: CONTEST_CATEGORY.POSTER,
     poster_url: poster('2025-2'),
     host: DAH_HOST,
   },
@@ -43,6 +54,7 @@ export const CONTEST_POSTS = [
     semester_label: '2026-1',
     title_ko: '2026-1 디지털인문예술 프로젝트 전시회 포스터 공모전',
     title_en: 'DAH Project Exhibition Poster Contest',
+    category: CONTEST_CATEGORY.POSTER,
     poster_url: poster('2026-1'),
     host: DAH_HOST,
   },
@@ -53,6 +65,7 @@ export const CONTEST_POSTS = [
     semester_label: '2024-2',
     title_ko: '일송기념도서관 장서표 디자인 공모전',
     title_en: 'Library Bookplate Design Contest',
+    category: CONTEST_CATEGORY.BOOKPLATE,
     poster_url: bookplate('2024-2'),
     host: LIBRARY_HOST,
   },
@@ -61,6 +74,7 @@ export const CONTEST_POSTS = [
     semester_label: '2025-1',
     title_ko: '일송기념도서관 장서표 디자인 공모전',
     title_en: 'Library Bookplate Design Contest',
+    category: CONTEST_CATEGORY.BOOKPLATE,
     poster_url: bookplate('2025-1'),
     host: LIBRARY_HOST,
   },
@@ -69,6 +83,7 @@ export const CONTEST_POSTS = [
     semester_label: '2025-2',
     title_ko: '정선군립도서관 장서표 디자인 공모전',
     title_en: 'Library Bookplate Design Contest',
+    category: CONTEST_CATEGORY.BOOKPLATE,
     poster_url: bookplate('2025-2'),
     host: LIBRARY_HOST,
   },
@@ -77,6 +92,7 @@ export const CONTEST_POSTS = [
     semester_label: '2026-1',
     title_ko: '인제 기적의 도서관 장서표 디자인 공모전',
     title_en: 'Library Bookplate Design Contest',
+    category: CONTEST_CATEGORY.BOOKPLATE,
     poster_url: bookplate('2026-1'),
     host: LIBRARY_HOST,
   },

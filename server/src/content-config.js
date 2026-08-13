@@ -43,7 +43,7 @@ export const CONTENT_TYPES = {
   // 51_CONTEST_SPLIT: 회차 하나 = post 하나. 학기·기간·주최·사이트 URL을 행이 직접 들고 있고
   // 목록은 최신 학기 우선(라벨이 'YYYY-N' 고정 폭이라 문자열 정렬이 곧 학기 정렬)
   contest: postType('contest', 'manager', {
-    extra: ['semester_label', 'period', 'host', 'site_url'],
+    extra: ['semester_label', 'period', 'host', 'site_url', 'category', 'category_etc'],
     orderBy: 'semester_label DESC NULLS LAST, id DESC',
   }),
   // G1: 연도(tag) 내림차순 + 연도 내 원문 등장 순서(sort) 오름차순 = 화면이 원문과 1:1

@@ -11,6 +11,7 @@ import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
+import { semesterLabelOf } from '../../utils/format'
 
 function MetaRow({ label, children }) {
   return (
@@ -46,6 +47,8 @@ function ContestDetail() {
   // 분리 이전 묶음 post가 남아 있을 경우를 대비해 body.host만 폴백으로 읽는다.
   const host = hostText(item?.host ?? item?.body?.host)
   const posterUrl = item?.poster_url
+  // 학기는 목록 카드와 같은 규칙으로 산출한다(저장된 라벨 우선, 없으면 개최일에서)
+  const semester = semesterLabelOf(item)
 
   return (
     <>
@@ -108,9 +111,7 @@ function ContestDetail() {
                   </div>
                 )}
                 <dl className="border-t border-border-subtle">
-                  {item.semester_label && (
-                    <MetaRow label={t('meta.semester')}>{item.semester_label}</MetaRow>
-                  )}
+                  {semester && <MetaRow label={t('meta.semester')}>{semester}</MetaRow>}
                   {(item.period || start || end) && (
                     <MetaRow label={t('meta.period')}>
                       {item.period || (start && end ? `${start} ~ ${end}` : start || end)}

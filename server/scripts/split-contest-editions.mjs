@@ -37,7 +37,7 @@ async function main() {
   try {
     await client.query('BEGIN')
 
-    for (const col of ['semester_label', 'period', 'host']) {
+    for (const col of ['semester_label', 'period', 'host', 'category', 'category_etc']) {
       await client.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS ${col} TEXT`)
     }
     await client.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS seed_key TEXT')
@@ -61,8 +61,8 @@ async function main() {
     let inserted = 0
     for (const c of CONTEST_POSTS) {
       const res = await client.query(
-        `INSERT INTO posts (type, title_ko, title_en, semester_label, poster_url, period, host, external_url, seed_key, published)
-         VALUES ('contest', $1, $2, $3, $4, $5, $6, $7, $8, TRUE)
+        `INSERT INTO posts (type, title_ko, title_en, semester_label, poster_url, period, host, external_url, category, seed_key, published)
+         VALUES ('contest', $1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
          ON CONFLICT (seed_key) DO NOTHING
          RETURNING id`,
         [
@@ -73,6 +73,7 @@ async function main() {
           c.period ?? null,
           c.host ?? null,
           c.external_url ?? null,
+          c.category ?? null,
           c.seed_key,
         ]
       )

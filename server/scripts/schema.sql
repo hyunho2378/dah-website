@@ -268,6 +268,12 @@ ALTER TABLE posts ADD COLUMN IF NOT EXISTS semester_label TEXT;
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS period TEXT;
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS host TEXT;
 
+-- 52_CONTEST_CATEGORY: 공모전 종류. 공개 목록을 종류별 섹션으로 묶는 기준이다.
+-- category는 정해진 3종 중 하나('기타' 포함)이고, '기타'일 때만 category_etc에 직접 입력값을 담는다.
+-- 섹션 묶음은 category로만 하므로 category_etc가 달라도 같은 '기타' 섹션에 모인다.
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS category_etc TEXT;
+
 -- N1-5: CI(브랜드 아이덴티티) 단일 행 문서 (codesharing·nanodegree 동일 싱글턴 패턴. id=1 고정)
 -- body jsonb: { intro, elements:[{title,text,image}], logoGuide:[{title,image}], colors:[{name,hex}], downloads:[{label,url}] }
 CREATE TABLE IF NOT EXISTS ci (

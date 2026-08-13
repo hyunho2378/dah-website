@@ -12,6 +12,8 @@ import InlineEditBar from '../../components/content/InlineEditBar'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
+import { semesterLabelOf } from '../../utils/format'
+import { CONTEST_CATEGORY, CONTEST_CATEGORY_ORDER } from '../../data/contestCategory'
 
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
@@ -27,6 +29,9 @@ function periodText(item) {
 function ContestCard({ item, isEn }) {
   const title = (isEn && item.title_en) || item.title_ko || item.title
   const period = periodText(item)
+  // 학기는 제목 위 eyebrow 자리에 고정한다. 저장된 라벨이 없으면 개최일에서 산출해
+  // 모든 카드가 [학기 → 제목] 같은 구조를 갖게 한다(캐릭터 공모전 포함).
+  const semester = semesterLabelOf(item)
 
   return (
     <Link to={`/programs/contests/${item.id}`} className="group block h-full">
@@ -38,8 +43,8 @@ function ContestCard({ item, isEn }) {
           placeholder={item.semester_label || title}
         />
         <div className="flex min-w-0 flex-col gap-4">
-          {item.semester_label && (
-            <p className="font-mono text-caption-m text-text-meta">{item.semester_label}</p>
+          {semester && (
+            <p className="font-mono text-caption-m text-text-meta">{semester}</p>
           )}
           <h3 className="min-w-0 text-body-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-body-d">
             {title}
@@ -51,6 +56,20 @@ function ContestCard({ item, isEn }) {
   )
 }
 
+// 종류별 섹션 — 순서는 포스터 → 장서표 → 기타 고정.
+// category가 비어 있는 레거시 행은 기타로 모은다(섹션 밖으로 새어 화면에서 사라지지 않게).
+function groupByCategory(items) {
+  const buckets = new Map(CONTEST_CATEGORY_ORDER.map((c) => [c, []]))
+  for (const item of items) {
+    const key = buckets.has(item.category) ? item.category : CONTEST_CATEGORY.ETC
+    buckets.get(key).push(item)
+  }
+  return CONTEST_CATEGORY_ORDER.map((category) => ({
+    category,
+    items: buckets.get(category),
+  })).filter((section) => section.items.length > 0)
+}
+
 function Contests() {
   const { lang, t } = useLang()
   useTitle(t('titles.contests'))
@@ -60,6 +79,8 @@ function Contests() {
     params: { pageSize: 100 },
   })
   const items = data?.items ?? []
+  // 서버가 학기 내림차순으로 내려주므로 섹션 안 순서는 그대로가 최신순이다
+  const sections = groupByCategory(items)
 
   return (
     <>
@@ -85,15 +106,24 @@ function Contests() {
             {error && !offline ? t('common.error') : t('common.empty')}
           </p>
         ) : (
-          <ul className="mt-32 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
-            {items.map((item, index) => (
-              <li key={item.id} className="min-w-0">
-                <Reveal delay={staggerDelay(index)} className="h-full min-w-0">
-                  <ContestCard item={item} isEn={isEn} />
-                </Reveal>
-              </li>
+          <div className="mt-32 flex min-w-0 flex-col gap-48">
+            {sections.map((section) => (
+              <section key={section.category} className="flex min-w-0 flex-col gap-24">
+                <h2 className="min-w-0 text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
+                  {section.category}
+                </h2>
+                <ul className="grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
+                  {section.items.map((item, index) => (
+                    <li key={item.id} className="min-w-0">
+                      <Reveal delay={staggerDelay(index)} className="h-full min-w-0">
+                        <ContestCard item={item} isEn={isEn} />
+                      </Reveal>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ))}
-          </ul>
+          </div>
         )}
       </Container>
     </>
