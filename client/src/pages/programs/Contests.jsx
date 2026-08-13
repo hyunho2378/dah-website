@@ -17,6 +17,19 @@ import { CONTEST_CATEGORY, CONTEST_CATEGORY_ORDER } from '../../data/contestCate
 
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
+// 카드 제목 줄바꿈 — '도서관' 뒤에서 한 번 끊어 기관명과 공모전명이 각각 한 줄에 오게 한다.
+// DB 원문은 건드리지 않고 표시만 나눈다(문자열은 그대로, 렌더만 두 덩어리).
+// '도서관'이 없거나(포스터 공모전·영문 제목) 뒤에 남는 말이 없으면 한 줄 그대로 둔다.
+const LIBRARY = '도서관'
+function titleLines(title) {
+  const text = String(title ?? '')
+  const at = text.indexOf(LIBRARY)
+  if (at < 0) return [text]
+  const head = text.slice(0, at + LIBRARY.length)
+  const tail = text.slice(at + LIBRARY.length).trim()
+  return tail ? [head, tail] : [text]
+}
+
 function ContestCard({ item, isEn }) {
   const title = (isEn && item.title_en) || item.title_ko || item.title
   // 카드는 [학기 → 제목] 두 줄로만 통일한다. 상세 기간은 카드에 내지 않는다 —
@@ -37,7 +50,11 @@ function ContestCard({ item, isEn }) {
             <p className="font-mono text-caption-m text-text-meta">{semester}</p>
           )}
           <h3 className="min-w-0 text-body-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-body-d">
-            {title}
+            {titleLines(title).map((line) => (
+              <span key={line} className="block min-w-0">
+                {line}
+              </span>
+            ))}
           </h3>
         </div>
       </GlassCard>
