@@ -690,3 +690,12 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [x] **종료일 캘린더 시작 위치**: `DatePicker`에 `viewDate` prop 추가 — 자기 값이 비었을 때만 이 날짜의 연·월에서 열린다(값이 있으면 언제나 자기 값 우선). 종료일에 `viewDate={form.start_date}`를 물려, 2016년 아카이브 전시를 편집할 때도 종료일이 오늘(2026)이 아니라 시작일 달에서 열린다. `DateInput`은 `...props` 스프레드라 래퍼 수정 불필요
 - [x] **검증**: 클라 빌드 통과. 종료일 동기화 규칙 5케이스 자체 점검 통과(빈 값·이른 값·늦은 값·같은 값·시작일 삭제)
 - [!] **미검증(브라우저 도구 부재)**: 실제 폼에서 두 필드가 한 줄에 서는지, 종료일 캘린더가 시작일 달에서 열리는지 육안 확인은 못 했다. 빌드와 로직 점검만 확인했다
+
+## 45_CONTEST_SEED — 공모전 포스터 정적 배치 + 공모전 2종 시드
+- [x] **이미지 이동·리네임**: 루트의 PNG 8장을 `client/public/images/contests/`로 옮기고 규칙대로 리네임(poster-contest-YYYY-N / bookplate-contest-YYYY-N). 루트 잔존 0건, 빌드 산출물 `dist/images/contests/`에 8장 포함 확인
+- [x] **시드 스크립트**: `server/scripts/seed-contests.mjs` 신설. `seed_key`(contest-dah-poster / contest-library-bookplate) + `ON CONFLICT (seed_key) DO NOTHING`. DELETE 없음, CMS 작성분(seed_key NULL) 미변경. 재실행 시 "이미 존재해 건너뜀"으로 멱등 확인
+- [x] **시드 실행 결과**: 공모전 2건(id 175·176) 삽입, 회차 합계 8건. 공개 API `/content/contest` 응답의 편집션 8개 `poster_url`이 전부 `client/public` 실제 파일과 일치함을 대조 확인
+- [!] **"contests 테이블"은 존재하지 않는다**: 공모전은 `posts` 테이블의 `type='contest'` 행이고, 회차는 `body.editions` 배열에 담긴다(`Contests.jsx`의 렌더 계약: `{ semester_label, poster_url }`). 그래서 "2 공모전 x 4회차 = 8건"은 **posts 2행 + editions 8개**다. 별도 회차 행을 만들면 공개 페이지가 공모전 블록 8개로 쪼개져 렌더된다
+- [!] **기존 CMS 공모전 3건과 중복 노출 가능**: 시드 전부터 CMS 작성분 3건이 있었다(id 21 "2026-1 디지털인문예술 프로젝트 전시회 포스터 공모전", id 22 "도서관 장서표 디자인 공모전", id 23 "신규 캐릭터 공모전"). id 21·22는 이번에 시드한 두 공모전과 사실상 같은 대상이라 `/programs/contests`에 유사 블록이 나란히 보인다. 비파괴 원칙과 "사용자 원문 변경 금지"에 따라 **건드리지 않았다** — 정리 여부는 사용자 판단(어드민에서 id 21·22를 비공개 전환하거나 삭제하면 된다)
+- [!] **포스터 용량**: 8장 합계 약 18MB(최대 5MB 1장)로 전부 원본 PNG다. 정적 서빙이라 동작에는 문제가 없으나 첫 로드가 무겁다. `server/scripts/convert-posters-webp.mjs`와 같은 방식의 webp 변환이 후속 과제로 남는다
+- [!] **미검증(브라우저 도구 부재)**: `/programs/contests` 실제 렌더를 육안으로 확인하지 못했다. API 응답·파일 실재·빌드 산출물까지만 대조했다
