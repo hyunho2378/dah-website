@@ -2,7 +2,7 @@
 // 교수진·멘토단·교과목·운영위·진로 어드민이 공유. API: /admin/content/:type (B1 계약).
 
 import { useState } from 'react'
-import { Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ArrowUpDown, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useApi, api } from '../../hooks/useApi'
 import { DragHandle, useDragSort } from '../common/DragHandle'
 import ImageUpload from './ImageUpload'
@@ -178,6 +178,8 @@ function EntityCrud({
     params: { page: 1, pageSize: 100 },
   })
   const [editing, setEditing] = useState(null) // null | 'new' | id
+  // 정렬은 모드일 때만. 핸들 상시 노출을 없애고 사이트 전역 정렬 UX(정렬 버튼 토글)에 맞춘다.
+  const [sorting, setSorting] = useState(false)
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(0) // 진행 중 업로드 수 — 0보다 크면 저장 차단
@@ -299,6 +301,12 @@ function EntityCrud({
         actions={
           <>
             {headExtra}
+            {orderable && (
+              <GhostButton onClick={() => setSorting((v) => !v)} aria-pressed={sorting}>
+                <ArrowUpDown size={16} aria-hidden="true" />
+                {sorting ? '정렬 완료' : '정렬'}
+              </GhostButton>
+            )}
             <GhostButton onClick={openNew}>
               <Plus size={16} aria-hidden="true" />
               추가
@@ -306,6 +314,12 @@ function EntityCrud({
           </>
         }
       />
+
+      {sorting && (
+        <p className="font-mono text-caption-m text-text-meta">
+          핸들을 끌어 순서를 바꿉니다. 바뀐 순서는 바로 저장됩니다.
+        </p>
+      )}
 
       {error && <ErrorText>{error.message}</ErrorText>}
       {loading && <p className="font-mono text-caption-m text-text-meta">불러오는 중</p>}
@@ -325,7 +339,7 @@ function EntityCrud({
               )
             }
             const d = display(item)
-            const draggable = orderable && editing === null
+            const draggable = orderable && sorting && editing === null
             return (
               <li
                 key={item.id}
@@ -334,7 +348,7 @@ function EntityCrud({
                   dragIndex === i ? 'opacity-40' : ''
                 } ${overIndex === i && dragIndex !== null && dragIndex !== i ? 'bg-glass-bg' : ''}`}
               >
-                {orderable && <DragHandle />}
+                {draggable && <DragHandle />}
                 {d.thumb && (
                   <img
                     src={d.thumb}

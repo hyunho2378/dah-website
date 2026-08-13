@@ -12,7 +12,6 @@ import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { api, useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import SegmentControl from '../../components/common/SegmentControl'
-import { DragHandle } from '../../components/common/DragHandle'
 import { useToast } from '../../components/common/Toast'
 import {
   EmptyNote,
@@ -388,7 +387,6 @@ function CurriculumAdmin() {
                       dragId === item.id ? 'opacity-40' : ''
                     }`}
                   >
-                    {!coarsePointer && <DragHandle />}
                     {/* H3-1: 과목명 바로 옆에 편집·삭제 — 이름과 버튼 사이 간격 최소화 */}
                     <span className="min-w-0 truncate text-body-m text-text-pri md:text-body-d">
                       {item.name_ko}

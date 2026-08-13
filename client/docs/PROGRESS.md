@@ -668,3 +668,18 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [x] **권한 확장 경계 고정**: `PUT /admin/settings`는 사이트 전역 설정과 전시회 설정을 한 라우트에서 처리한다. 통째로 열면 매니저가 사이트 설정까지 쓰게 되므로 `MANAGER_SETTING_KEYS`(exhibitionSubjects·exhibitionOrdinal·exhibitionSemester) 밖의 키는 admin+ 403으로 막았다. `exhibition_settings` 테이블 갱신은 manager 허용
 - [x] **검증**: 클라 빌드 통과, 서버 테스트 12/12 통과(신규 3건 — manager 접수 목록 200, manager 전시회 일정·회차 저장 200, manager `contentVisibility` 저장 403)
 - [!] **미검증(브라우저 도구 부재)**: (a) 2페이지 편집 후 뒤로가기 (b) 연도 그리드 클릭 (c) 리치 필드 비노출 (d) 실제 매니저 계정 로그인 접근을 육안으로 확인하지 못했다. 빌드와 서버 테스트만 확인했다
+
+## 43_SORT_UX_UNIFY — 정렬 UX 전역 통일 (6점 핸들 상시 노출 제거)
+- [x] **전수 진단** — 순서 변경이 구현된 곳 5개. 이미 통일 규격이던 곳 3개, 위반 2개
+  - `pages/admin/PostList.jsx` (동아리·학생 성과 어드민 목록): PageHead "정렬" 토글 + 모드 중에만 핸들 — 기준 규격
+  - `pages/students/Clubs.jsx` (공개 동아리): InlineEditBar `sortable` 토글 + 모드 중에만 핸들 — 기준 규격
+  - `pages/students/Achievements.jsx` (공개 학생 성과, 연도별): InlineEditBar `sortable` 토글 + 모드 중에만 핸들 — 기준 규격
+  - `components/admin/EntityCrud.jsx` (교수진·멘토·취업 현황): **위반** — `orderable`이면 핸들 상시 노출, 정렬 토글 없음
+  - `pages/admin/CurriculumAdmin.jsx` (교과목): **위반** — `!coarsePointer`면 핸들 상시 노출
+- [x] **EntityCrud 정렬 모드화**: `sorting` 상태 추가, PageHead actions에 "정렬 / 정렬 완료" 토글(ArrowUpDown, 추가 버튼 왼쪽)을 `orderable`일 때만 노출. 드래그와 핸들 모두 `sorting`에 게이트. 모드 중 안내 문구 1줄. 저장은 드롭 즉시 PUT(기존 동작 유지, PostList·Clubs·Achievements와 동일)
+- [x] **CurriculumAdmin 핸들 제거**: 이 페이지의 좌→우 드래그는 순서 변경이 아니라 **복사**(과목을 학기 박스에 개설)다. 정렬이 아니므로 정렬 버튼을 붙이지 않고 6점 핸들만 걷어냈다. 행은 그대로 draggable이고, 같은 동작을 하는 행별 "추가" 버튼과 안내 문구가 이미 있어 진입 경로 손실 0
+- [x] **버튼 위치 통일**: 어드민은 PageHead actions(추가 옆), 공개 페이지는 InlineEditBar 안. 라벨·아이콘도 ArrowUpDown + "정렬"/"정렬 완료"로 전 페이지 동일
+- [x] **정렬 버튼 미노출 대상 확인**: 공지·자료실·특강·공모전·전시회·포트폴리오는 `POST_TYPES.sortable` 미지정이라 버튼이 뜨지 않는다(날짜순 자동). 운영위원회는 `orderable={false}`라 그대로 미노출
+- [x] **검증**: `<DragHandle` 렌더 지점 4곳 전부 정렬 모드 게이트(`draggable &&` 또는 `sorting &&`) 확인, 상시 노출 0건. 클라 빌드 통과
+- [!] **미검증(브라우저 도구 부재)**: 정렬 모드 토글·드래그 재정렬·저장 반영을 육안으로 확인하지 못했다. 빌드만 확인했다
+- [!] **범위 밖 관찰(고치지 않음)**: `postTypes.js`의 club 주석이 "어드민 목록에서 6점 핸들 드래그 정렬"이라고 적혀 있으나 PostList는 이전부터 정렬 모드에서만 핸들을 띄웠다. 이번 변경 이전부터 어긋난 주석이라 손대지 않았다
