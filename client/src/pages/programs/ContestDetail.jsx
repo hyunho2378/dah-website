@@ -125,6 +125,51 @@ function ContestDetail() {
               </div>
             </div>
             {item.body && <RichBody body={item.body} />}
+            {editions.length > 0 && (
+              <section className="flex flex-col gap-16">
+                <h2 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
+                  {t('sections.editions')}
+                </h2>
+                <ul className="grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
+                  {editions.map((ed, i) => (
+                    <li
+                      key={i}
+                      className="flex min-w-0 flex-col gap-12 rounded-glass border border-glass-line bg-glass-bg p-12 shadow-glass"
+                    >
+                      <ImageFrame
+                        src={ed.poster_url}
+                        alt={`${ed.title || title} 포스터`}
+                        ratio="2/3"
+                        placeholder={ed.semester_label || title}
+                      />
+                      <div className="flex min-w-0 flex-col gap-4">
+                        {ed.semester_label && (
+                          <p className="font-mono text-caption-m text-text-meta">
+                            {ed.semester_label}
+                          </p>
+                        )}
+                        <h3 className="min-w-0 text-body-m font-bold leading-snug text-text-pri md:text-body-d">
+                          {ed.title || title}
+                        </h3>
+                        {ed.period && (
+                          <p className="font-mono text-caption-m text-text-meta">{ed.period}</p>
+                        )}
+                        {ed.link && (
+                          <a
+                            href={ed.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-caption-m text-text-sec underline underline-offset-4 transition-colors duration-fast ease-out hover:text-text-pri"
+                          >
+                            {t('actions.detail')}
+                          </a>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             {gallery.length > 0 && (
               <section className="flex flex-col gap-16">
                 <h2 className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">

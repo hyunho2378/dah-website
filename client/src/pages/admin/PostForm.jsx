@@ -282,7 +282,7 @@ function GalleryField({ value = [], onChange, usage = 'exhibition', onUploadingC
   )
 }
 
-/** 공모전 회차 리피터 — body.editions [{ semester_label, poster_url, start_date, end_date, period, link }]
+/** 공모전 회차 리피터 — body.editions [{ title, semester_label, poster_url, start_date, end_date, period, link }]
  *
  * 기간은 DatePicker 시작~종료로 입력한다. 공개 페이지(Contests·ContestDetail)는 예전처럼
  * 문자열 `period`만 읽으므로, 날짜를 건드릴 때 period를 그 자리에서 파생해 둔다 —
@@ -324,7 +324,12 @@ function EditionsField({ value = [], onChange, onUploadingChange }) {
           </div>
           <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
             <div className="md:col-span-2">
-              <Field label="학기 라벨" hint="예: 2026-2">
+              <Field label="회차 제목" hint="공개 페이지 카드 제목. 비우면 공모전 제목과 학기로 대체">
+                <Input value={row.title || ''} onChange={(e) => setRow(i, 'title', e.target.value)} />
+              </Field>
+            </div>
+            <div className="md:col-span-2">
+              <Field label="학기 라벨" hint="예: 2026-1">
                 <Input
                   value={row.semester_label || ''}
                   onChange={(e) => setRow(i, 'semester_label', e.target.value)}

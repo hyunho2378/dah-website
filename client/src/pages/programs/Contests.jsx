@@ -28,13 +28,20 @@ function eventPeriod(item) {
   return s || e || null
 }
 
+// 회차 카드 제목 — edition.title이 원본이고, 없으면 공모전 제목 + 학기로 폴백
+function editionTitle(edition, contestTitle) {
+  if (edition.title) return edition.title
+  return edition.semester_label ? `${edition.semester_label} ${contestTitle}` : contestTitle
+}
+
 function EditionCard({ contestId, edition, title }) {
+  const label = editionTitle(edition, title)
   return (
     <Link to={`/programs/contests/${contestId}`} className="group block h-full">
       <GlassCard hover className="flex h-full flex-col gap-12 p-12">
         <ImageFrame
           src={edition.poster_url}
-          alt={`${title} 포스터`}
+          alt={`${label} 포스터`}
           ratio="2/3"
           placeholder={edition.semester_label || title}
         />
@@ -44,6 +51,9 @@ function EditionCard({ contestId, edition, title }) {
               {edition.semester_label}
             </p>
           )}
+          <h3 className="min-w-0 text-body-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-body-d">
+            {label}
+          </h3>
           {edition.period && (
             <p className="font-mono text-caption-m text-text-meta">{edition.period}</p>
           )}
@@ -57,10 +67,13 @@ function ContestBlock({ item }) {
   const { t } = useLang()
   const title = item.title_ko ?? item.title
   const host = hostText(item.body?.host)
-  // editions 없으면 공모전 자기 자신을 1회차로 취급
+  // editions 없으면 공모전 자기 자신을 1회차로 취급(캐릭터 공모전 등 단발성)
+  // 최신 학기가 맨 앞. 라벨이 'YYYY-N' 고정 폭이라 문자열 내림차순이 곧 학기 내림차순이다.
   const editions =
     Array.isArray(item.body?.editions) && item.body.editions.length
-      ? item.body.editions
+      ? [...item.body.editions].sort((a, b) =>
+          String(b.semester_label ?? '').localeCompare(String(a.semester_label ?? ''))
+        )
       : [
           {
             semester_label: item.semester_label,

@@ -64,6 +64,7 @@ export const en = {
     portfolio: 'Student Portfolios',
     members: 'Members',
     gallery: 'Gallery',
+    editions: 'Editions',
     subImages: 'Sub Images',
   },
   tracks: {

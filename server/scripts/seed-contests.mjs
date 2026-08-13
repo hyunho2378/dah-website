@@ -24,12 +24,13 @@ const pool = new pg.Pool({
   ssl: /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL) ? false : { rejectUnauthorized: false },
 })
 
-const SEMESTERS = ['2024-2', '2025-1', '2025-2', '2026-1']
-
-const editionsOf = (prefix) =>
-  SEMESTERS.map((s) => ({
-    semester_label: `${s}학기`,
-    poster_url: `/images/contests/${prefix}-contest-${s}.webp`,
+// 회차 제목은 학기마다 다르다(장서표는 주관 도서관이 매 학기 바뀐다) — 학기 라벨에서
+// 기계적으로 파생할 수 없으므로 원문 그대로 나열한다.
+const editionsOf = (prefix, rows) =>
+  rows.map(([semester_label, title]) => ({
+    semester_label,
+    title,
+    poster_url: `/images/contests/${prefix}-contest-${semester_label}.webp`,
   }))
 
 const CONTESTS = [
@@ -38,14 +39,24 @@ const CONTESTS = [
     title_ko: '디지털인문예술 프로젝트 전시회 포스터 공모전',
     title_en: 'DAH Project Exhibition Poster Contest',
     host: '디지털인문예술전공 운영위원회',
-    editions: editionsOf('poster'),
+    editions: editionsOf('poster', [
+      ['2024-2', '2024-2 디지털인문예술 프로젝트 전시회 포스터 공모전'],
+      ['2025-1', '2025-1 디지털인문예술 프로젝트 전시회 포스터 공모전'],
+      ['2025-2', '2025-2 디지털인문예술 프로젝트 전시회 포스터 공모전'],
+      ['2026-1', '2026-1 디지털인문예술 프로젝트 전시회 포스터 공모전'],
+    ]),
   },
   {
     seed_key: 'contest-library-bookplate',
     title_ko: '도서관 장서표 디자인 공모전',
     title_en: 'Library Bookplate Design Contest',
     host: '한림대학교 도서관',
-    editions: editionsOf('bookplate'),
+    editions: editionsOf('bookplate', [
+      ['2024-2', '일송기념도서관 장서표 디자인 공모전'],
+      ['2025-1', '일송기념도서관 장서표 디자인 공모전'],
+      ['2025-2', '정선군립도서관 장서표 디자인 공모전'],
+      ['2026-1', '인제 기적의 도서관 장서표 디자인 공모전'],
+    ]),
   },
 ]
 

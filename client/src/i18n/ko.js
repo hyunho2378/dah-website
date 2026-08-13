@@ -66,6 +66,7 @@ export const ko = {
     portfolio: '재학생 포트폴리오',
     members: '구성원',
     gallery: '갤러리',
+    editions: '회차',
     subImages: '서브 이미지',
   },
   // 트랙 표시명 v2 — 데이터 키(track-1~3/common)는 유지, 표시만 매핑
