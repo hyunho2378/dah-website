@@ -22,7 +22,6 @@ import Exhibitions from './pages/programs/Exhibitions'
 import ExhibitionDetail from './pages/programs/ExhibitionDetail'
 import Contests from './pages/programs/Contests'
 import ContestDetail from './pages/programs/ContestDetail'
-import ContestEditionDetail from './pages/programs/ContestEditionDetail'
 import Lectures from './pages/programs/Lectures'
 import LectureDetail from './pages/programs/LectureDetail'
 import Council from './pages/students/Council'
@@ -87,7 +86,9 @@ const PUBLIC_ROUTES = [
   { path: '/programs/exhibitions/:id', element: <ExhibitionDetail /> },
   { path: '/programs/contests', element: <Contests /> },
   { path: '/programs/contests/:id', element: <ContestDetail /> },
-  { path: '/programs/contests/:id/:edition', element: <ContestEditionDetail /> },
+  // 51_CONTEST_SPLIT: 회차가 곧 게시글이 되어 회차 상세 라우트는 폐지. 공유된 옛 URL이
+  // 404로 죽지 않게 목록으로 돌려보낸다(회차 id가 바뀌어 개별 매핑은 불가능하다).
+  { path: '/programs/contests/:id/:edition', element: <Navigate to="/programs/contests" replace /> },
   { path: '/programs/lectures', element: <Lectures /> },
   { path: '/programs/lectures/:id', element: <LectureDetail /> },
   { path: '/students/council', element: <Council /> },

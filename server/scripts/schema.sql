@@ -260,6 +260,14 @@ ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS ordinal INTEGER;
 -- Y3-5: 동아리 공식 사이트 URL. 상세 페이지의 "사이트 바로가기" 버튼(새 탭)에 사용.
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS site_url TEXT;
 
+-- ─── Phase 51 (51_CONTEST_SPLIT) ───────────────────────────────
+-- 공모전 1회차 = post 1건. 이전에는 한 post의 body.editions 배열에 회차를 묶어 두었으나,
+-- 회차마다 제목·주최·포스터가 달라 개별 게시글로 분리했다. 아래 3개는 그 분리로 회차가
+-- 직접 들고 있어야 하는 값이다(poster_url·title_en·external_url·site_url은 posts에 이미 있다).
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS semester_label TEXT;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS period TEXT;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS host TEXT;
+
 -- N1-5: CI(브랜드 아이덴티티) 단일 행 문서 (codesharing·nanodegree 동일 싱글턴 패턴. id=1 고정)
 -- body jsonb: { intro, elements:[{title,text,image}], logoGuide:[{title,image}], colors:[{name,hex}], downloads:[{label,url}] }
 CREATE TABLE IF NOT EXISTS ci (

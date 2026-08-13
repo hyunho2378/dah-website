@@ -748,3 +748,16 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [x] **아코디언은 인라인 구현**: 공용 Accordion 컴포넌트가 없고 기존 아코디언(ProgramShowcase·Header)도 각자 인라인이라 같은 관용구(ChevronDown + rotate-180)를 따랐다. 1회용 공용 컴포넌트를 새로 만들지 않았다
 - [x] **검증**: 클라 빌드 통과. id 176 저장 왕복 실측 — 4 → 저장 → **4 유지**, 원복 후 본문 JSON이 원본과 완전 동일
 - [!] **미검증(브라우저 도구 부재)**: 접힘·펼침 클릭 동작과 실제 행 높이는 육안 확인하지 못했다. 빌드·diff·저장 왕복까지만 대조했다
+
+## 51_CONTEST_SPLIT — 공모전 회차를 독립 게시글로 분리 (파운데이션)
+- [x] **데이터 모델 전환**: 공모전 1건 = post 1건. 이전에는 한 post의 `body.editions` 배열이 회차를 묶었으나, 회차마다 제목·주최·포스터가 달라 개별 게시글로 분리했다. 앞으로 새 공모전도 회차(=게시글) 단위로 만든다
+- [x] **스키마**: `posts`에 `semester_label`·`period`·`host` 추가(`ADD COLUMN IF NOT EXISTS`, DROP 없음). `poster_url`·`title_en`·`external_url`·`site_url`은 이미 있어 재사용. `schema.sql` + `migrate-phase51.mjs` 양쪽 반영
+- [x] **분리 마이그레이션**: `split-contest-editions.mjs` — 백업 → 회차 post 삽입(seed_key 멱등) → **회차 8건이 전부 자리 잡은 것을 확인한 뒤에만** 원본 묶음 post 삭제 → 최종 검증. 전 과정 단일 트랜잭션이라 중간에 어긋나면 아무것도 반영되지 않는다. `--dry-run`으로 미리보기 후 실행했다. 백업은 `server/scripts/backups/contests-<타임스탬프>.json`
+- [x] **원문 단일 출처**: `contest-data.mjs`에 회차 8건 원문을 두고 시드(`seed-contests.mjs`)와 분리 스크립트가 공유한다. 두 경로 결과가 어긋날 수 없다. seed_key는 `contest-<공모전>-<학기>` 형식이라 재시드해도 중복이 생기지 않는다
+- [x] **서버**: `content-config.js`의 contest에 `extra: ['semester_label','period','host','site_url']`와 `orderBy: 'semester_label DESC NULLS LAST, id DESC'` 지정. 컬럼 화이트리스트에 없으면 어드민 저장이 값을 버리므로 필수
+- [x] **어드민**: `EditionsField`(회차 리피터) 폐지. 공모전 폼은 주최·학기 라벨·기간을 평평한 필드로 갖는다. 목록 메타는 `N회차`에서 학기 라벨로 바뀌었고 최신 학기순으로 뜬다. "추가"로 새 공모전(=회차 하나) 생성 가능
+- [x] **공개 페이지**: `Contests.jsx`를 개별 post 목록 렌더로 재작성(공모전 블록 그룹핑 제거, 카드 그리드 단일). 정렬은 서버가 내려주는 순서를 그대로 쓴다. `ContestDetail.jsx`는 `host`·`semester_label`·`period` 컬럼을 읽고 회차 섹션·RichBody를 제거했다
+- [x] **라우트 정리**: `/programs/contests/:id/:edition` 폐지, `ContestEditionDetail.jsx` 삭제. 공유된 옛 URL이 404로 죽지 않게 목록으로 `<Navigate replace />` 리다이렉트(분리로 id가 새로 발급돼 개별 매핑은 불가능)
+- [x] **검증(전 항목 실측)**: 어드민 목록 **9건**, 공개 목록 **9건**(2026-1 → 2024-2 최신순, 포스터 누락 0건). 백업 대조 — 분리 전 회차 8개 전부 제목·학기·포스터가 동일하게 살아있고 **손실 0건**, 캐릭터 공모전(id 23) 보존. 개별 편집 격리 — id 192에 period 저장 후 **나머지 8건 완전 불변**, 원복까지 확인. 서버 스모크 12/12, 클라 빌드·린트 통과
+- [!] **배포 DB 반영 방법**: 로컬 `server/.env`가 배포 Neon을 가리키고 있어 **이미 운영 DB에 반영 완료**다(공모전 9건 상태). 새 환경이나 재구축 시에는 `node scripts/migrate-phase51.mjs` → `node scripts/seed-contests.mjs` 순으로 실행하면 된다. 별도 수동 SQL은 필요 없다
+- [!] **미검증(브라우저 도구 부재)**: 어드민 편집 화면과 공개 페이지의 실제 렌더는 육안 확인하지 못했다. API 응답·저장 왕복·백업 대조·빌드까지만 대조했다

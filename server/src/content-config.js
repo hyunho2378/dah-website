@@ -40,7 +40,12 @@ export const CONTENT_TYPES = {
   // 공지·자료실만 attachments(PDF·HWP 첨부) 허용 (13_CMS 1절: 자료실 "첨부(Blob) 허용")
   notice: postType('notice', 'manager', { attachments: true }),
   lecture: postType('lecture', 'manager'),
-  contest: postType('contest', 'manager'),
+  // 51_CONTEST_SPLIT: 회차 하나 = post 하나. 학기·기간·주최·사이트 URL을 행이 직접 들고 있고
+  // 목록은 최신 학기 우선(라벨이 'YYYY-N' 고정 폭이라 문자열 정렬이 곧 학기 정렬)
+  contest: postType('contest', 'manager', {
+    extra: ['semester_label', 'period', 'host', 'site_url'],
+    orderBy: 'semester_label DESC NULLS LAST, id DESC',
+  }),
   // G1: 연도(tag) 내림차순 + 연도 내 원문 등장 순서(sort) 오름차순 = 화면이 원문과 1:1
   // Y3-4: sortScope 'tag' — 신규 성과는 같은 연도 최소 sort - 1을 받아 그 연도 맨 위로 온다.
   achievement: postType('achievement', 'manager', {

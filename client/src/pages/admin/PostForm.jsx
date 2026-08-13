@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronDown, Paperclip, Plus, Trash2, X } from 'lucide-react'
+import { Paperclip, Plus, Trash2, X } from 'lucide-react'
 import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import RichEditor from '../../components/editor/RichEditor'
@@ -282,153 +282,6 @@ function GalleryField({ value = [], onChange, usage = 'exhibition', onUploadingC
   )
 }
 
-/** 공모전 회차 리피터 — body.editions [{ title, semester_label, poster_url, start_date, end_date, period, link }]
- *
- * 기간은 DatePicker 시작~종료로 입력한다. 공개 페이지(Contests·ContestDetail)는 예전처럼
- * 문자열 `period`만 읽으므로, 날짜를 건드릴 때 period를 그 자리에서 파생해 둔다 —
- * 공개 렌더 계약은 그대로 두고 어드민 입력만 바꾸는 방식이다.
- * 날짜가 없는 레거시 회차는 자유 입력 period 원문을 그대로 유지한다(날짜를 편집할 때만 대체).
- */
-function EditionsField({ value = [], onChange, onUploadingChange }) {
-  const rows = Array.isArray(value) ? value : []
-  // 카드가 길어 4회차가 세로로 묻히던 문제 — 기본 접힘 아코디언으로 회차 수가 한눈에 보이게 한다.
-  // 열림 상태는 순번으로 들고 있고(단일 열림), 삭제로 순번이 밀리면 그냥 닫는다.
-  const [openIndex, setOpenIndex] = useState(null)
-  const setRow = (i, key, v) =>
-    onChange(
-      rows.map((row, idx) => {
-        if (idx !== i) return row
-        const next = { ...row, [key]: v }
-        if (key === 'start_date' || key === 'end_date') {
-          const s = next.start_date || ''
-          const e = next.end_date || ''
-          next.period = s && e ? `${s} ~ ${e}` : s || e
-        }
-        return next
-      })
-    )
-  return (
-    <div className="flex flex-col gap-8">
-      {rows.map((row, i) => {
-        const isOpen = openIndex === i
-        return (
-          <div key={i} className="rounded-md border border-border-subtle">
-            {/* 접힌 헤더 — 순번·학기·제목 한 줄. 회차 수가 즉시 보이게 짧게 유지한다 */}
-            <div className="flex items-center gap-8 pr-8">
-              <button
-                type="button"
-                onClick={() => setOpenIndex(isOpen ? null : i)}
-                aria-expanded={isOpen}
-                className="flex min-w-0 flex-1 cursor-pointer items-center gap-12 rounded-md px-16 py-12 text-left transition-colors duration-fast ease-out hover:bg-glass-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
-              >
-                <span className="shrink-0 font-mono text-caption-m text-text-meta">{i + 1}</span>
-                {row.semester_label && (
-                  <span className="shrink-0 font-mono text-caption-m text-text-sec">
-                    {row.semester_label}
-                  </span>
-                )}
-                <span className="min-w-0 flex-1 truncate text-body-m text-text-pri">
-                  {row.title || '제목 없음'}
-                </span>
-                <ChevronDown
-                  size={16}
-                  aria-hidden="true"
-                  className={`shrink-0 text-text-meta transition-transform duration-fast ease-out ${
-                    isOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onChange(rows.filter((_, idx) => idx !== i))
-                  setOpenIndex(null)
-                }}
-                aria-label={`회차 ${i + 1} 제거`}
-                className={ICON_BTN}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-
-            {isOpen && (
-              <div className="grid grid-cols-1 gap-12 border-t border-border-subtle p-16 md:grid-cols-2">
-                <Field label="회차 제목" hint="비우면 공모전 제목과 학기로 대체">
-                  <Input
-                    value={row.title || ''}
-                    onChange={(e) => setRow(i, 'title', e.target.value)}
-                  />
-                </Field>
-                <Field label="회차 제목 (영문)" hint="비우면 국문 제목 + Korean only 뱃지">
-                  <Input
-                    value={row.title_en || ''}
-                    onChange={(e) => setRow(i, 'title_en', e.target.value)}
-                  />
-                </Field>
-                <Field label="학기 라벨" hint="예: 2026-1">
-                  <Input
-                    value={row.semester_label || ''}
-                    onChange={(e) => setRow(i, 'semester_label', e.target.value)}
-                  />
-                </Field>
-                <Field label="링크" hint="접수 안내 등 외부 링크">
-                  <Input
-                    type="url"
-                    value={row.link || ''}
-                    onChange={(e) => setRow(i, 'link', e.target.value)}
-                  />
-                </Field>
-                <Field label="시작일">
-                  <DateInput
-                    value={row.start_date || ''}
-                    onChange={(e) => setRow(i, 'start_date', e.target.value)}
-                  />
-                </Field>
-                <Field label="종료일">
-                  <DateInput
-                    value={row.end_date || ''}
-                    viewDate={row.start_date || ''}
-                    onChange={(e) => setRow(i, 'end_date', e.target.value)}
-                  />
-                </Field>
-                {/* 날짜 없이 문구만 있는 레거시 회차는 값을 잃지 않게 그대로 보여준다 */}
-                {row.period && !row.start_date && !row.end_date && (
-                  <div className="md:col-span-2">
-                    <p className="font-mono text-caption-m text-text-meta">
-                      기존 기간 표기: {row.period} (시작일·종료일을 고르면 대체됩니다)
-                    </p>
-                  </div>
-                )}
-                <div className="md:col-span-2">
-                  <Field label="포스터">
-                    <ImageUpload
-                      value={row.poster_url || ''}
-                      onChange={(v) => setRow(i, 'poster_url', v)}
-                      usage="poster"
-                      onUploadingChange={onUploadingChange}
-                    />
-                  </Field>
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      })}
-      <div>
-        <GhostButton
-          onClick={() => {
-            onChange([...rows, {}])
-            setOpenIndex(rows.length) // 새 회차는 펼친 상태로 시작
-          }}
-        >
-          <Plus size={16} aria-hidden="true" />
-          회차 추가
-        </GhostButton>
-      </div>
-    </div>
-  )
-}
-
 // ── 템플릿별 폼 상태 ↔ 페이로드 매핑 ─────────────────────────────
 
 function emptyForm(template, type) {
@@ -486,10 +339,11 @@ function emptyForm(template, type) {
         pinned: false,
         has_bg: false, // M1-1: 동아리 로고 배경 프레임
       }
-      // M1-3: 공모전 body = { host, editions } — 전용 폼 상태
+      // 51_CONTEST_SPLIT: 공모전은 회차 하나가 곧 게시글 — 학기·기간·주최를 행이 직접 갖는다
       if (type === 'contest') {
         base.host = ''
-        base.editions = []
+        base.semester_label = ''
+        base.period = ''
       }
       // Y3-5(33_PHASE18): 동아리 공식 사이트 URL — 상세 페이지 링크 버튼
       if (type === 'club') base.site_url = ''
@@ -566,11 +420,13 @@ function fromItem(template, item, type) {
         pinned: Boolean(item.pinned),
         has_bg: Boolean(item.has_bg),
       }
-      // M1-3: 공모전 body 프리필 — host는 문자열/배열 모두 허용(레거시 시드 방어)
+      // 51_CONTEST_SPLIT: 공모전 프리필. host는 컬럼이 원본이고, 분리 이전 묶음 post가
+      // 남아 있을 경우를 대비해 body.host(문자열·배열)도 폴백으로 읽는다.
       if (type === 'contest') {
-        const hostRaw = item.body?.host
+        const hostRaw = item.host ?? item.body?.host
         next.host = Array.isArray(hostRaw) ? hostRaw.join('\n') : hostRaw || ''
-        next.editions = Array.isArray(item.body?.editions) ? item.body.editions : []
+        next.semester_label = item.semester_label || ''
+        next.period = item.period || ''
       }
       // Y3-5: 동아리 사이트 URL (레거시 external_url 폴백)
       if (type === 'club') next.site_url = item.site_url || item.external_url || ''
@@ -640,7 +496,7 @@ function toPayload(template, config, form, type) {
         pinned: form.pinned,
         has_bg: form.has_bg, // M1-1: 동아리 로고 배경 프레임 (기타 유형은 기본 false)
       }
-      // R1: EN 본문 — contest는 구조화 body(host/editions)라 EN 본문 없음
+      // R1: EN 본문 — contest는 리치 본문을 쓰지 않는다
       if (type !== 'contest') payload.body_en = form.body_en
       if (template === 't2') {
         payload.poster_url = nul(form.poster_url)
@@ -653,9 +509,12 @@ function toPayload(template, config, form, type) {
         payload.poster_url = nul(form.poster_url)
         payload.site_url = nul(form.site_url)
       }
-      // M1-3: 공모전 body = { host, editions } (Tiptap doc 대신 구조화 저장)
+      // 51_CONTEST_SPLIT: 공모전은 전용 컬럼에 저장한다(body는 쓰지 않는다)
       if (type === 'contest') {
-        payload.body = { host: form.host, editions: form.editions }
+        payload.body = null
+        payload.semester_label = nul(form.semester_label)
+        payload.period = nul(form.period)
+        payload.host = nul(form.host)
       }
       if (config.attachments) payload.attachments = form.attachments
       return payload
@@ -852,7 +711,7 @@ function PostForm() {
             </>
           )}
 
-          {/* M1-3: 공모전 전용 — 주최(여러 줄) + 회차 리피터. body={host,editions}로 저장 */}
+          {/* 51_CONTEST_SPLIT: 공모전 전용 — 주최·학기·기간. 회차 리피터는 폐지됐다 */}
           {type === 'contest' && (
             <>
               <div className="md:col-span-2">
@@ -860,15 +719,12 @@ function PostForm() {
                   <TextArea rows={3} value={form.host} onChange={setInput('host')} />
                 </Field>
               </div>
-              <div className="md:col-span-2">
-                <Field label="회차" hint="회차별 학기 라벨·포스터·기간·링크">
-                  <EditionsField
-                    value={form.editions}
-                    onChange={set('editions')}
-                    onUploadingChange={onUploadingChange}
-                  />
-                </Field>
-              </div>
+              <Field label="학기 라벨" hint="예: 2026-1. 목록 정렬 기준">
+                <Input value={form.semester_label} onChange={setInput('semester_label')} />
+              </Field>
+              <Field label="기간" hint="예: 2026-03-02 ~ 2026-03-20">
+                <Input value={form.period} onChange={setInput('period')} />
+              </Field>
             </>
           )}
 
@@ -1055,7 +911,7 @@ function PostForm() {
           )}
         </div>
 
-        {/* 본문 — T1·T2. 전시회 템플릿은 여기 해당 없음, 공모전은 body={host,editions}. */}
+        {/* 본문 — T1·T2. 전시회·공모전 템플릿은 여기 해당 없음 */}
         {/* 성과는 전용 필드만(게시판 렌더 금지), 포트폴리오는 링크형 */}
         {(template === 't1' || (template === 't2' && type !== 'contest')) && (
           <Field label="본문">

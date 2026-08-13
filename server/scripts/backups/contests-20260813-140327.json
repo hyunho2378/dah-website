@@ -1,0 +1,135 @@
+[
+  {
+    "id": 23,
+    "type": "contest",
+    "title_ko": "디지털인문예술전공 신규 캐릭터 공모전",
+    "title_en": "DAH New Character Contest",
+    "body": {
+      "host": [
+        "디지털인문예술전공 제1대 운영위원회 LUCID"
+      ]
+    },
+    "tag": null,
+    "poster_url": "https://rhoalemrwz4acyjz.public.blob.vercel-storage.com/dah/poster/1783467638861-0c6ee24a.webp",
+    "gallery": [],
+    "external_url": "https://dah-new-character-contest.vercel.app/",
+    "event_start": "2026-03-23T00:00:00.000Z",
+    "event_end": "2026-04-30T00:00:00.000Z",
+    "published": true,
+    "pinned": false,
+    "created_by": null,
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "updated_at": "2026-07-07T23:43:10.709Z",
+    "attachments": null,
+    "seed_key": null,
+    "sort": null,
+    "has_bg": false,
+    "body_en": null,
+    "site_url": null,
+    "semester_label": null,
+    "period": null,
+    "host": null
+  },
+  {
+    "id": 175,
+    "type": "contest",
+    "title_ko": "디지털인문예술 프로젝트 전시회 포스터 공모전",
+    "title_en": "DAH Project Exhibition Poster Contest",
+    "body": {
+      "host": "디지털인문예술전공 운영위원회",
+      "editions": [
+        {
+          "title": "2024-2 디지털인문예술 프로젝트 전시회 포스터 공모전",
+          "poster_url": "/images/contests/poster-contest-2024-2.webp",
+          "semester_label": "2024-2"
+        },
+        {
+          "title": "2025-1 디지털인문예술 프로젝트 전시회 포스터 공모전",
+          "poster_url": "/images/contests/poster-contest-2025-1.webp",
+          "semester_label": "2025-1"
+        },
+        {
+          "title": "2025-2 디지털인문예술 프로젝트 전시회 포스터 공모전",
+          "poster_url": "/images/contests/poster-contest-2025-2.webp",
+          "semester_label": "2025-2"
+        },
+        {
+          "title": "2026-1 디지털인문예술 프로젝트 전시회 포스터 공모전",
+          "poster_url": "/images/contests/poster-contest-2026-1.webp",
+          "semester_label": "2026-1"
+        }
+      ]
+    },
+    "tag": null,
+    "poster_url": "/images/contests/poster-contest-2026-1.webp",
+    "gallery": null,
+    "external_url": null,
+    "event_start": null,
+    "event_end": null,
+    "published": true,
+    "pinned": false,
+    "created_by": null,
+    "created_at": "2026-08-13T01:34:27.842Z",
+    "updated_at": "2026-08-13T02:53:39.446Z",
+    "attachments": null,
+    "seed_key": "contest-dah-poster",
+    "sort": null,
+    "has_bg": false,
+    "body_en": null,
+    "site_url": null,
+    "semester_label": null,
+    "period": null,
+    "host": null
+  },
+  {
+    "id": 176,
+    "type": "contest",
+    "title_ko": "도서관 장서표 디자인 공모전",
+    "title_en": "Library Bookplate Design Contest",
+    "body": {
+      "host": "한림대학교 도서관",
+      "editions": [
+        {
+          "title": "일송기념도서관 장서표 디자인 공모전",
+          "poster_url": "/images/contests/bookplate-contest-2024-2.webp",
+          "semester_label": "2024-2"
+        },
+        {
+          "title": "일송기념도서관 장서표 디자인 공모전",
+          "poster_url": "/images/contests/bookplate-contest-2025-1.webp",
+          "semester_label": "2025-1"
+        },
+        {
+          "title": "정선군립도서관 장서표 디자인 공모전",
+          "poster_url": "/images/contests/bookplate-contest-2025-2.webp",
+          "semester_label": "2025-2"
+        },
+        {
+          "title": "인제 기적의 도서관 장서표 디자인 공모전",
+          "poster_url": "/images/contests/bookplate-contest-2026-1.webp",
+          "semester_label": "2026-1"
+        }
+      ]
+    },
+    "tag": null,
+    "poster_url": "/images/contests/bookplate-contest-2026-1.webp",
+    "gallery": [],
+    "external_url": null,
+    "event_start": null,
+    "event_end": null,
+    "published": true,
+    "pinned": false,
+    "created_by": null,
+    "created_at": "2026-08-13T01:34:27.842Z",
+    "updated_at": "2026-08-13T13:51:00.950Z",
+    "attachments": null,
+    "seed_key": "contest-library-bookplate",
+    "sort": null,
+    "has_bg": false,
+    "body_en": null,
+    "site_url": null,
+    "semester_label": null,
+    "period": null,
+    "host": null
+  }
+]
