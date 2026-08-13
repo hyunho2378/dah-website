@@ -22,6 +22,7 @@ import Exhibitions from './pages/programs/Exhibitions'
 import ExhibitionDetail from './pages/programs/ExhibitionDetail'
 import Contests from './pages/programs/Contests'
 import ContestDetail from './pages/programs/ContestDetail'
+import ContestEditionDetail from './pages/programs/ContestEditionDetail'
 import Lectures from './pages/programs/Lectures'
 import LectureDetail from './pages/programs/LectureDetail'
 import Council from './pages/students/Council'
@@ -86,6 +87,7 @@ const PUBLIC_ROUTES = [
   { path: '/programs/exhibitions/:id', element: <ExhibitionDetail /> },
   { path: '/programs/contests', element: <Contests /> },
   { path: '/programs/contests/:id', element: <ContestDetail /> },
+  { path: '/programs/contests/:id/:edition', element: <ContestEditionDetail /> },
   { path: '/programs/lectures', element: <Lectures /> },
   { path: '/programs/lectures/:id', element: <LectureDetail /> },
   { path: '/students/council', element: <Council /> },

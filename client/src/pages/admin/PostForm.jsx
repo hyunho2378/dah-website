@@ -329,6 +329,14 @@ function EditionsField({ value = [], onChange, onUploadingChange }) {
               </Field>
             </div>
             <div className="md:col-span-2">
+              <Field label="회차 제목 (영문)" hint="비우면 영문 페이지에 국문 제목 + Korean only 뱃지">
+                <Input
+                  value={row.title_en || ''}
+                  onChange={(e) => setRow(i, 'title_en', e.target.value)}
+                />
+              </Field>
+            </div>
+            <div className="md:col-span-2">
               <Field label="학기 라벨" hint="예: 2026-1">
                 <Input
                   value={row.semester_label || ''}

@@ -34,10 +34,17 @@ function editionTitle(edition, contestTitle) {
   return edition.semester_label ? `${edition.semester_label} ${contestTitle}` : contestTitle
 }
 
-function EditionCard({ contestId, edition, title }) {
+function EditionCard({ contestId, edition, title, index }) {
   const label = editionTitle(edition, title)
+  // 회차 키는 학기 라벨 우선. 라벨이 없을 때만 원본 배열 인덱스로 떨어진다
+  // (카드는 최신순으로 정렬해 보여주므로 정렬 후 순번을 쓰면 어긋난다).
+  const key = edition.semester_label || index
+  const to =
+    key === undefined || key === null || key === ''
+      ? `/programs/contests/${contestId}`
+      : `/programs/contests/${contestId}/${encodeURIComponent(key)}`
   return (
-    <Link to={`/programs/contests/${contestId}`} className="group block h-full">
+    <Link to={to} className="group block h-full">
       <GlassCard hover className="flex h-full flex-col gap-12 p-12">
         <ImageFrame
           src={edition.poster_url}
@@ -69,16 +76,22 @@ function ContestBlock({ item }) {
   const host = hostText(item.body?.host)
   // editions 없으면 공모전 자기 자신을 1회차로 취급(캐릭터 공모전 등 단발성)
   // 최신 학기가 맨 앞. 라벨이 'YYYY-N' 고정 폭이라 문자열 내림차순이 곧 학기 내림차순이다.
+  // index는 원본 배열 순번을 그대로 들고 간다 — 회차 상세 링크가 정렬에 흔들리지 않게 한다
   const editions =
     Array.isArray(item.body?.editions) && item.body.editions.length
-      ? [...item.body.editions].sort((a, b) =>
-          String(b.semester_label ?? '').localeCompare(String(a.semester_label ?? ''))
-        )
+      ? item.body.editions
+          .map((ed, index) => ({ ed, index }))
+          .sort((a, b) =>
+            String(b.ed.semester_label ?? '').localeCompare(String(a.ed.semester_label ?? ''))
+          )
       : [
           {
-            semester_label: item.semester_label,
-            poster_url: item.poster_url,
-            period: eventPeriod(item),
+            ed: {
+              semester_label: item.semester_label,
+              poster_url: item.poster_url,
+              period: eventPeriod(item),
+            },
+            index: null, // editions 없는 단발성 공모전 — 기존 공모전 상세로 보낸다
           },
         ]
 
@@ -100,9 +113,9 @@ function ContestBlock({ item }) {
         )}
       </div>
       <ul className="grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
-        {editions.map((ed, i) => (
+        {editions.map(({ ed, index }, i) => (
           <li key={i} className="min-w-0">
-            <EditionCard contestId={item.id} edition={ed} title={title} />
+            <EditionCard contestId={item.id} edition={ed} title={title} index={index} />
           </li>
         ))}
       </ul>
