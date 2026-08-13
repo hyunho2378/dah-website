@@ -699,3 +699,13 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [!] **기존 CMS 공모전 3건과 중복 노출 가능**: 시드 전부터 CMS 작성분 3건이 있었다(id 21 "2026-1 디지털인문예술 프로젝트 전시회 포스터 공모전", id 22 "도서관 장서표 디자인 공모전", id 23 "신규 캐릭터 공모전"). id 21·22는 이번에 시드한 두 공모전과 사실상 같은 대상이라 `/programs/contests`에 유사 블록이 나란히 보인다. 비파괴 원칙과 "사용자 원문 변경 금지"에 따라 **건드리지 않았다** — 정리 여부는 사용자 판단(어드민에서 id 21·22를 비공개 전환하거나 삭제하면 된다)
 - [!] **포스터 용량**: 8장 합계 약 18MB(최대 5MB 1장)로 전부 원본 PNG다. 정적 서빙이라 동작에는 문제가 없으나 첫 로드가 무겁다. `server/scripts/convert-posters-webp.mjs`와 같은 방식의 webp 변환이 후속 과제로 남는다
 - [!] **미검증(브라우저 도구 부재)**: `/programs/contests` 실제 렌더를 육안으로 확인하지 못했다. API 응답·파일 실재·빌드 산출물까지만 대조했다
+
+## 46_CONTEST_WEBP_DEDUPE — 공모전 포스터 WebP 변환 + 중복 공모전 정리
+- [x] **WebP 변환**: `client/public/images/contests/` PNG 8장을 sharp(0.33.5, 기설치)로 품질 80 · 최대 너비 1200(`withoutEnlargement`)로 변환하고 원본 PNG 삭제. PNG 잔존 0건
+  - 합계 **17.09MB → 2.16MB (87.4% 감소)**
+  - poster-2024-2 4.80MB→701KB / poster-2026-1 2.93MB→206KB / bookplate-2026-1 2.43MB→260KB(1024px 원본이라 리사이즈 없이 유지) / bookplate-2024-2 2.19MB→291KB / bookplate-2025-2 1.53MB→152KB / bookplate-2025-1 1.47MB→400KB / poster-2025-2 1.15MB→144KB / poster-2025-1 0.58MB→56KB
+  - 8장 중 7장은 원본이 1200px 초과라 1200px로 축소, bookplate-2026-1만 1024px 원본이라 그대로
+- [x] **경로 갱신**: `seed-contests.mjs`의 확장자를 `.webp`로, DB는 `seed_key`로 범위를 좁혀 id 175·176의 `body.editions[].poster_url`과 `poster_url`만 `.png → .webp` 치환. 다른 공모전·다른 타입 미변경
+- [x] **중복 공모전 삭제**: CMS 작성분 id 21(2026-1 포스터 공모전)·id 22(장서표 공모전) 삭제. 삭제 전 `seed_key IS NULL`·`editions=0`·`poster_url` 없음을 트랜잭션 안에서 검증하고 조건 불일치 시 롤백하도록 했으며, 삭제 행 원본은 JSON으로 덤프해 두었다(세션 스크래치패드). id 23(신규 캐릭터 공모전)은 미변경
+- [x] **검증**: 공개 API `/content/contest` 응답이 공모전 3건(포스터·장서표·캐릭터), 회차 포스터 8건 경로가 전부 `client/public` 실제 파일과 일치. 빌드 산출물 `dist/images/contests/`에 webp 8장, png 0장
+- [!] **미검증(브라우저 도구 부재)**: `/programs/contests` 실제 렌더와 이미지 로드를 육안으로 확인하지 못했다. API 응답·파일 실재·빌드 산출물까지만 대조했다

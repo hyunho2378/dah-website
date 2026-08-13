@@ -9,6 +9,7 @@
 // CMS에서 사람이 만든 행(seed_key NULL)은 어떤 경우에도 건드리지 않는다. DELETE 없음.
 //
 // 포스터는 Blob이 아니라 client/public 정적 파일이라 업로드 단계가 없다.
+// 원본 PNG는 WebP(품질 80, 최대 너비 1200)로 변환해 교체했다 — 17.1MB에서 2.2MB로 줄었다.
 // 실행: server/ 안에서 `node scripts/seed-contests.mjs`
 import 'dotenv/config'
 import pg from 'pg'
@@ -28,7 +29,7 @@ const SEMESTERS = ['2024-2', '2025-1', '2025-2', '2026-1']
 const editionsOf = (prefix) =>
   SEMESTERS.map((s) => ({
     semester_label: `${s}학기`,
-    poster_url: `/images/contests/${prefix}-contest-${s}.png`,
+    poster_url: `/images/contests/${prefix}-contest-${s}.webp`,
   }))
 
 const CONTESTS = [
