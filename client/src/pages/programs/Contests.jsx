@@ -17,20 +17,10 @@ import { CONTEST_CATEGORY, CONTEST_CATEGORY_ORDER } from '../../data/contestCate
 
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
-// 기간 표시 — period 컬럼이 원본이고, 없으면 게시글 일정(event_start~event_end)으로 폴백
-function periodText(item) {
-  if (item.period) return item.period
-  const s = (item.event_start ?? '').slice(0, 10)
-  const e = (item.event_end ?? '').slice(0, 10)
-  if (s && e) return `${s} ~ ${e}`
-  return s || e || null
-}
-
 function ContestCard({ item, isEn }) {
   const title = (isEn && item.title_en) || item.title_ko || item.title
-  const period = periodText(item)
-  // 학기는 제목 위 eyebrow 자리에 고정한다. 저장된 라벨이 없으면 개최일에서 산출해
-  // 모든 카드가 [학기 → 제목] 같은 구조를 갖게 한다(캐릭터 공모전 포함).
+  // 카드는 [학기 → 제목] 두 줄로만 통일한다. 상세 기간은 카드에 내지 않는다 —
+  // 일부 공모전만 날짜를 갖고 있어 카드마다 줄 수가 달라 보이던 문제를 없앤다(기간은 상세에서).
   const semester = semesterLabelOf(item)
 
   return (
@@ -49,7 +39,6 @@ function ContestCard({ item, isEn }) {
           <h3 className="min-w-0 text-body-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-body-d">
             {title}
           </h3>
-          {period && <p className="font-mono text-caption-m text-text-meta">{period}</p>}
         </div>
       </GlassCard>
     </Link>
