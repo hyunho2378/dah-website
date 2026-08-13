@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Paperclip, Plus, Trash2, X } from 'lucide-react'
+import { ChevronDown, Paperclip, Plus, Trash2, X } from 'lucide-react'
 import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import RichEditor from '../../components/editor/RichEditor'
@@ -291,6 +291,9 @@ function GalleryField({ value = [], onChange, usage = 'exhibition', onUploadingC
  */
 function EditionsField({ value = [], onChange, onUploadingChange }) {
   const rows = Array.isArray(value) ? value : []
+  // 카드가 길어 4회차가 세로로 묻히던 문제 — 기본 접힘 아코디언으로 회차 수가 한눈에 보이게 한다.
+  // 열림 상태는 순번으로 들고 있고(단일 열림), 삭제로 순번이 밀리면 그냥 닫는다.
+  const [openIndex, setOpenIndex] = useState(null)
   const setRow = (i, key, v) =>
     onChange(
       rows.map((row, idx) => {
@@ -305,90 +308,119 @@ function EditionsField({ value = [], onChange, onUploadingChange }) {
       })
     )
   return (
-    <div className="flex flex-col gap-16">
-      {rows.map((row, i) => (
-        <div key={i} className="flex flex-col gap-12 rounded-md border border-border-subtle p-16">
-          <div className="flex items-center justify-between gap-8">
-            <span className="font-mono text-caption-m text-text-meta">
-              회차 {i + 1}
-              {row.semester_label ? ` · ${row.semester_label}` : ''}
-            </span>
-            <button
-              type="button"
-              onClick={() => onChange(rows.filter((_, idx) => idx !== i))}
-              aria-label="회차 제거"
-              className={ICON_BTN}
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <Field label="회차 제목" hint="공개 페이지 카드 제목. 비우면 공모전 제목과 학기로 대체">
-                <Input value={row.title || ''} onChange={(e) => setRow(i, 'title', e.target.value)} />
-              </Field>
-            </div>
-            <div className="md:col-span-2">
-              <Field label="회차 제목 (영문)" hint="비우면 영문 페이지에 국문 제목 + Korean only 뱃지">
-                <Input
-                  value={row.title_en || ''}
-                  onChange={(e) => setRow(i, 'title_en', e.target.value)}
+    <div className="flex flex-col gap-8">
+      {rows.map((row, i) => {
+        const isOpen = openIndex === i
+        return (
+          <div key={i} className="rounded-md border border-border-subtle">
+            {/* 접힌 헤더 — 순번·학기·제목 한 줄. 회차 수가 즉시 보이게 짧게 유지한다 */}
+            <div className="flex items-center gap-8 pr-8">
+              <button
+                type="button"
+                onClick={() => setOpenIndex(isOpen ? null : i)}
+                aria-expanded={isOpen}
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-12 rounded-md px-16 py-12 text-left transition-colors duration-fast ease-out hover:bg-glass-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+              >
+                <span className="shrink-0 font-mono text-caption-m text-text-meta">{i + 1}</span>
+                {row.semester_label && (
+                  <span className="shrink-0 font-mono text-caption-m text-text-sec">
+                    {row.semester_label}
+                  </span>
+                )}
+                <span className="min-w-0 flex-1 truncate text-body-m text-text-pri">
+                  {row.title || '제목 없음'}
+                </span>
+                <ChevronDown
+                  size={16}
+                  aria-hidden="true"
+                  className={`shrink-0 text-text-meta transition-transform duration-fast ease-out ${
+                    isOpen ? 'rotate-180' : ''
+                  }`}
                 />
-              </Field>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onChange(rows.filter((_, idx) => idx !== i))
+                  setOpenIndex(null)
+                }}
+                aria-label={`회차 ${i + 1} 제거`}
+                className={ICON_BTN}
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
-            <div className="md:col-span-2">
-              <Field label="학기 라벨" hint="예: 2026-1">
-                <Input
-                  value={row.semester_label || ''}
-                  onChange={(e) => setRow(i, 'semester_label', e.target.value)}
-                />
-              </Field>
-            </div>
-            <Field label="시작일">
-              <DateInput
-                value={row.start_date || ''}
-                onChange={(e) => setRow(i, 'start_date', e.target.value)}
-              />
-            </Field>
-            <Field label="종료일">
-              <DateInput
-                value={row.end_date || ''}
-                viewDate={row.start_date || ''}
-                onChange={(e) => setRow(i, 'end_date', e.target.value)}
-              />
-            </Field>
-            {/* 날짜 없이 문구만 있는 레거시 회차는 값을 잃지 않게 그대로 보여준다 */}
-            {row.period && !row.start_date && !row.end_date && (
-              <div className="md:col-span-2">
-                <p className="font-mono text-caption-m text-text-meta">
-                  기존 기간 표기: {row.period} (시작일·종료일을 고르면 대체됩니다)
-                </p>
+
+            {isOpen && (
+              <div className="grid grid-cols-1 gap-12 border-t border-border-subtle p-16 md:grid-cols-2">
+                <Field label="회차 제목" hint="비우면 공모전 제목과 학기로 대체">
+                  <Input
+                    value={row.title || ''}
+                    onChange={(e) => setRow(i, 'title', e.target.value)}
+                  />
+                </Field>
+                <Field label="회차 제목 (영문)" hint="비우면 국문 제목 + Korean only 뱃지">
+                  <Input
+                    value={row.title_en || ''}
+                    onChange={(e) => setRow(i, 'title_en', e.target.value)}
+                  />
+                </Field>
+                <Field label="학기 라벨" hint="예: 2026-1">
+                  <Input
+                    value={row.semester_label || ''}
+                    onChange={(e) => setRow(i, 'semester_label', e.target.value)}
+                  />
+                </Field>
+                <Field label="링크" hint="접수 안내 등 외부 링크">
+                  <Input
+                    type="url"
+                    value={row.link || ''}
+                    onChange={(e) => setRow(i, 'link', e.target.value)}
+                  />
+                </Field>
+                <Field label="시작일">
+                  <DateInput
+                    value={row.start_date || ''}
+                    onChange={(e) => setRow(i, 'start_date', e.target.value)}
+                  />
+                </Field>
+                <Field label="종료일">
+                  <DateInput
+                    value={row.end_date || ''}
+                    viewDate={row.start_date || ''}
+                    onChange={(e) => setRow(i, 'end_date', e.target.value)}
+                  />
+                </Field>
+                {/* 날짜 없이 문구만 있는 레거시 회차는 값을 잃지 않게 그대로 보여준다 */}
+                {row.period && !row.start_date && !row.end_date && (
+                  <div className="md:col-span-2">
+                    <p className="font-mono text-caption-m text-text-meta">
+                      기존 기간 표기: {row.period} (시작일·종료일을 고르면 대체됩니다)
+                    </p>
+                  </div>
+                )}
+                <div className="md:col-span-2">
+                  <Field label="포스터">
+                    <ImageUpload
+                      value={row.poster_url || ''}
+                      onChange={(v) => setRow(i, 'poster_url', v)}
+                      usage="poster"
+                      onUploadingChange={onUploadingChange}
+                    />
+                  </Field>
+                </div>
               </div>
             )}
-            <div className="md:col-span-2">
-              <Field label="링크" hint="접수 안내 등 외부 링크">
-                <Input
-                  type="url"
-                  value={row.link || ''}
-                  onChange={(e) => setRow(i, 'link', e.target.value)}
-                />
-              </Field>
-            </div>
-            <div className="md:col-span-2">
-              <Field label="포스터">
-                <ImageUpload
-                  value={row.poster_url || ''}
-                  onChange={(v) => setRow(i, 'poster_url', v)}
-                  usage="poster"
-                  onUploadingChange={onUploadingChange}
-                />
-              </Field>
-            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
       <div>
-        <GhostButton onClick={() => onChange([...rows, {}])}>
+        <GhostButton
+          onClick={() => {
+            onChange([...rows, {}])
+            setOpenIndex(rows.length) // 새 회차는 펼친 상태로 시작
+          }}
+        >
           <Plus size={16} aria-hidden="true" />
           회차 추가
         </GhostButton>
