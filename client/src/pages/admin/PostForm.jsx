@@ -608,6 +608,17 @@ function PostForm() {
 
   const set = (key) => (v) => setForm((prev) => ({ ...prev, [key]: v }))
   const setInput = (key) => (e) => set(key)(e.target.value)
+
+  // 전시 기간: 시작일을 고르면 종료일이 비었거나 시작일보다 이르던 경우 시작일로 맞춘다.
+  // 'YYYY-MM-DD' 고정 폭이라 문자열 비교가 곧 날짜 비교다.
+  const setStartDate = (e) => {
+    const start = e.target.value
+    setForm((prev) => ({
+      ...prev,
+      start_date: start,
+      end_date: start && (!prev.end_date || prev.end_date < start) ? start : prev.end_date,
+    }))
+  }
   const backTo = `/admin/posts/${type}`
 
   // R1/U2-2: 발행 게이트 — enRequired 유형은 영문 제목 필수. achievement는 발행 시
@@ -831,16 +842,23 @@ function PostForm() {
               <Field label="학기 라벨" hint="예: 2026-2">
                 <Input value={form.semester_label} onChange={setInput('semester_label')} />
               </Field>
-              <Field label="전시 사이트 URL">
-                <Input type="url" value={form.site_url} onChange={setInput('site_url')} />
-              </Field>
-              {/* M1-2: 전시 기간. N1-3: 시작일 = 개최일 */}
+              {/* M1-2: 전시 기간. N1-3: 시작일 = 개최일. 시작일·종료일은 한 줄에 나란히 둔다 */}
               <Field label="시작일" hint="개최일">
-                <DateInput value={form.start_date} onChange={setInput('start_date')} />
+                <DateInput value={form.start_date} onChange={setStartDate} />
               </Field>
               <Field label="종료일">
-                <DateInput value={form.end_date} onChange={setInput('end_date')} />
+                {/* 종료일이 비어 있으면 시작일 달에서 열린다(viewDate) */}
+                <DateInput
+                  value={form.end_date}
+                  viewDate={form.start_date}
+                  onChange={setInput('end_date')}
+                />
               </Field>
+              <div className="md:col-span-2">
+                <Field label="전시 사이트 URL">
+                  <Input type="url" value={form.site_url} onChange={setInput('site_url')} />
+                </Field>
+              </div>
               <div className="md:col-span-2">
                 <Field label="소개">
                   <TextArea rows={3} value={form.intro} onChange={setInput('intro')} />

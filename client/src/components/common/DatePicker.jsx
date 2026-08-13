@@ -37,6 +37,8 @@ function parseValue(v) {
 function DatePicker({
   value,
   onChange,
+  // 값이 비었을 때 캘린더를 열 기준 날짜('YYYY-MM-DD'). 종료일이 시작일 달에서 열리게 한다.
+  viewDate,
   withTime = false,
   placeholder = withTime ? '날짜·시간 선택' : '날짜 선택',
   disabled = false,
@@ -53,16 +55,19 @@ function DatePicker({
   const [rect, setRect] = useState(null)
 
   const parsed = useMemo(() => parseValue(value), [value])
+  const hint = useMemo(() => parseValue(viewDate), [viewDate])
   const today = useMemo(() => new Date(), [])
   const [view, setView] = useState(() => ({
-    y: parsed?.y ?? today.getFullYear(),
-    m: parsed?.m ?? today.getMonth(),
+    y: parsed?.y ?? hint?.y ?? today.getFullYear(),
+    m: parsed?.m ?? hint?.m ?? today.getMonth(),
   }))
 
-  // 외부에서 값이 바뀌면(프리필 등) 보이는 달을 그 값의 달로 맞춘다
+  // 외부에서 값이 바뀌면(프리필 등) 보이는 달을 그 값의 달로 맞춘다.
+  // 자기 값이 없으면 viewDate를 따라간다 — 값이 있으면 언제나 자기 값이 우선이다.
   useEffect(() => {
-    if (parsed) setView({ y: parsed.y, m: parsed.m })
-  }, [parsed?.y, parsed?.m]) // eslint-disable-line react-hooks/exhaustive-deps
+    const base = parsed || hint
+    if (base) setView({ y: base.y, m: base.m })
+  }, [parsed?.y, parsed?.m, hint?.y, hint?.m]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const place = useCallback(() => {
     const el = btnRef.current
