@@ -13,6 +13,7 @@ import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import Button from '../../components/common/Button'
 import { api, useApi } from '../../hooks/useApi'
+import { exhibitionCopy } from '../../data/exhibitionCopy'
 import { useTitle } from '../../hooks/useTitle'
 import { usePublicAuth } from '../../hooks/usePublicAuth'
 import { isValidPhone } from '../../utils/format'
@@ -29,7 +30,6 @@ import {
 import {
   DESC_MAX,
   ENTRY_TYPE_LABEL,
-  WORK_TITLE_HINT,
   inputCls,
   formatKst,
   submitErrorMessage,
@@ -87,7 +87,7 @@ function toMembers(entry) {
  * @param {string} email     로그인 계정 이메일(항목에 이메일이 없을 때 표시용)
  * @param {boolean} showBack 목록으로 돌아가는 동선 노출 여부(접수 2건 이상)
  */
-function EntryForm({ entry, canEdit, exhibition, email, showBack, onBack, onSaved }) {
+function EntryForm({ entry, canEdit, exhibition, email, copy, showBack, onBack, onSaved }) {
   const [form, setForm] = useState(() => toForm(entry))
   const [members, setMembers] = useState(() => toMembers(entry))
   const [busy, setBusy] = useState(false)
@@ -257,7 +257,7 @@ function EntryForm({ entry, canEdit, exhibition, email, showBack, onBack, onSave
           <PhoneInput value={form.phone} onChange={setValue('phone')} />
         </Field>
 
-        <Field label="작품명" required hint={WORK_TITLE_HINT}>
+        <Field label="작품명" required hint={copy.workTitleHint}>
           <input
             type="text"
             required
@@ -303,6 +303,8 @@ function ExhibitEdit() {
   useTitle('전시회 접수 확인·수정')
   const { data: settingsRes, loading: settingsLoading } = useApi('/settings/public')
   const exhibition = settingsRes?.exhibition ?? null
+  // 53: 작품명 안내 등 편집 가능한 문구는 접수 폼과 같은 DB 값을 읽는다
+  const copy = exhibitionCopy(settingsRes?.settings?.exhibitionCopy, 'ko')
   // 공개 제출자 신원 — 스태프 로그인(useAuth)과 다른 신원 클래스다(41_AUTH_CONTRACT)
   const { user, loading: authLoading, logout } = usePublicAuth()
   // 본인 접수 목록. 비로그인 상태에서는 조회하지 않는다(path null)
@@ -410,6 +412,7 @@ function ExhibitEdit() {
                 </GlassCard>
               ) : selected ? (
                 <EntryForm
+                  copy={copy}
                   key={selected.id}
                   entry={selected}
                   canEdit={canEdit}

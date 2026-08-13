@@ -121,7 +121,13 @@ router.get(
 
 // manager가 만질 수 있는 site_settings 키 — 전시회 업무에 필요한 것만.
 // 사이트 전역 설정(contentVisibility 등)은 admin+ 전용으로 남는다.
-const MANAGER_SETTING_KEYS = ['exhibitionSubjects', 'exhibitionOrdinal', 'exhibitionSemester']
+const MANAGER_SETTING_KEYS = [
+  'exhibitionSubjects',
+  'exhibitionOrdinal',
+  'exhibitionSemester',
+  // 53: 접수 안내 문구도 전시회 담당(manager)이 고칠 수 있어야 한다
+  'exhibitionCopy',
+]
 
 router.put(
   '/admin/settings',

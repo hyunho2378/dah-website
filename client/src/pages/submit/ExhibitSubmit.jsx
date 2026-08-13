@@ -14,6 +14,7 @@ import Button from '../../components/common/Button'
 import RadioCards from '../../components/common/RadioCards'
 import { ACCENT } from '../../styles/accents'
 import { api, useApi } from '../../hooks/useApi'
+import { exhibitionCopy } from '../../data/exhibitionCopy'
 import { useTitle } from '../../hooks/useTitle'
 import { useAuth } from '../../context/AuthContext'
 import { usePublicAuth } from '../../hooks/usePublicAuth'
@@ -34,7 +35,6 @@ import {
 import {
   DESC_MAX,
   ENTRY_TYPE_LABEL,
-  WORK_TITLE_HINT,
   inputCls,
   formatKst,
   resolveCurrentSemester,
@@ -62,24 +62,8 @@ const ENTRY_TYPE_OPTIONS = [
   { value: 'team', label: ENTRY_TYPE_LABEL.team, desc: '둘 이상이 함께 출품합니다' },
 ]
 
-// Y2-3 온보딩 절차 안내 — 접수 시작 전에 전체 흐름을 먼저 보여준다
-const STEPS = [
-  { n: '01', title: '로그인', desc: '구글 계정으로 로그인해 접수자 신원을 확인합니다.' },
-  { n: '02', title: '작성', desc: '참가 유형·인적사항·과목·작품 정보를 입력합니다.' },
-  {
-    n: '03',
-    title: '수정',
-    desc: '수정 마감 전까지 같은 구글 계정으로 로그인해 접수 내용을 수정합니다.',
-  },
-]
-
-const NOTES = [
-  WORK_TITLE_HINT,
-  '접수 이메일은 로그인한 구글 계정 주소로 자동 입력됩니다.',
-  '참가 유형·과목·이메일은 접수 후 수정할 수 없습니다. 제출 전에 확인해 주세요.',
-  '연락처는 010-0000-0000 형식으로만 입력됩니다.',
-  '작품 설명은 최대 100자입니다.',
-]
+// 53: 온보딩·폼 문구는 site_settings.exhibitionCopy가 원본이고, 비어 있으면
+// data/exhibitionCopy.js의 기본값(분리 이전 코드 원문)으로 떨어진다.
 
 // P3 카드(bg.elev + hairline) — 글래스 중첩·blur 예산(동시 3개)을 피하려고 온보딩 본문은 비유리 패널
 function Panel({ title, children }) {
@@ -102,6 +86,8 @@ function ExhibitSubmit() {
   const { user, loading: authLoading, logout } = usePublicAuth()
   const [searchParams] = useSearchParams()
   const exhibition = settingsRes?.exhibition ?? null
+  // 53: 안내 문구는 DB 값 우선, 없으면 기본값 폴백
+  const copy = exhibitionCopy(settingsRes?.settings?.exhibitionCopy, 'ko')
   // Y2-4-8: 과목 목록은 어드민(Y3-1)이 등록한 값 — 아직 없으면 빈 배열 → 자유 입력 폴백
   const subjects = resolveSubjects(settingsRes)
   // H2-4: 과목 목록의 기본 학기 — 어드민이 전시회 설정에서 지정한 현재 접수 대상 학기
@@ -239,29 +225,31 @@ function ExhibitSubmit() {
           <div className="flex min-w-0 flex-col gap-24">
             <header className="flex min-w-0 flex-col gap-8">
               <p className="font-mono text-caption-m uppercase tracking-label text-text-meta md:text-caption-d">
-                접수 안내
+                {copy.onboardingEyebrow}
               </p>
               {/* H2-1: 스케일 한 단계 하향(displayL → h1) */}
               <h2 className="min-w-0 text-h1-m font-bold leading-tight tracking-display text-text-pri md:text-h1-d">
                 {exhibitionName}
               </h2>
-              <p className="text-body-m leading-relaxed text-text-sec md:text-body-d">
-                접수 대상 <span className={ACCENT.proper}>디지털인문예술전공 수강생</span> · 개인
-                또는 팀 단위로 출품합니다.
-              </p>
+              {copy.onboardingLead && (
+                <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
+                  {copy.onboardingLead}
+                </p>
+              )}
             </header>
 
             <ScheduleHighlight exhibition={exhibition} />
 
             <div className="grid min-w-0 gap-24 lg:grid-cols-2">
-              <Panel title="접수 절차">
+              <Panel title={copy.stepsTitle}>
                 <ol className="flex flex-col gap-16">
-                  {STEPS.map((s) => (
-                    <li key={s.n} className="flex min-w-0 gap-16">
+                  {copy.steps.map((s, i) => (
+                    <li key={s.title} className="flex min-w-0 gap-16">
+                      {/* 번호는 순서에서 파생한다 — 담당자가 단계를 늘려도 번호가 어긋나지 않는다 */}
                       <span
                         className={`shrink-0 font-mono text-caption-m font-bold md:text-caption-d ${ACCENT.index}`}
                       >
-                        {s.n}
+                        {String(i + 1).padStart(2, '0')}
                       </span>
                       <span className="flex min-w-0 flex-col gap-4">
                         <span className="text-body-m font-semibold text-text-pri md:text-body-d">
@@ -275,9 +263,9 @@ function ExhibitSubmit() {
                   ))}
                 </ol>
               </Panel>
-              <Panel title="유의사항">
+              <Panel title={copy.notesTitle}>
                 <ul className="flex flex-col gap-12">
-                  {NOTES.map((note) => (
+                  {copy.notes.map((note) => (
                     <li
                       key={note}
                       className="flex min-w-0 gap-12 text-small-m leading-relaxed text-text-sec md:text-small-d"
@@ -301,7 +289,7 @@ function ExhibitSubmit() {
                 onClick={() => setStep('form')}
                 className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed md:h-48 md:text-body-d"
               >
-                접수 시작하기
+                {copy.startLabel}
               </button>
               <Button variant="secondary" href="/submit/edit">
                 접수 내역 확인·수정
@@ -479,7 +467,7 @@ function ExhibitSubmit() {
                   defaultSemester={currentSemester}
                 />
 
-                <Field label="작품명" required hint={WORK_TITLE_HINT}>
+                <Field label="작품명" required hint={copy.workTitleHint}>
                   <input
                     type="text"
                     required
@@ -498,7 +486,7 @@ function ExhibitSubmit() {
                     value={form.workDesc}
                     onChange={set('workDesc')}
                     className={inputCls}
-                    placeholder="작품 설명은 전시회 사이트에 사용됩니다."
+                    placeholder={copy.workDescPlaceholder}
                   />
                   <span
                     aria-live="polite"

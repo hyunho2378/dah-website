@@ -11,6 +11,7 @@ import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import SegmentControl from '../../components/common/SegmentControl'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
+import { EXHIBITION_COPY_DEFAULT } from '../../data/exhibitionCopy'
 import {
   ErrorText,
   Field,
@@ -18,6 +19,7 @@ import {
   Input,
   PageHead,
   PrimaryButton,
+  TextArea,
   Toggle,
   DateInput,
 } from '../../components/admin/FormControls'
@@ -54,6 +56,11 @@ function ExhibitionAdmin() {
   // Y3-1: 접수 버튼 노출 + 과목 목록
   const [headerVisible, setHeaderVisible] = useState(true)
   const [buttonMode, setButtonMode] = useState('header')
+  // 53: 접수 안내 문구(온보딩·폼). 값이 비면 공개 화면이 기본값으로 떨어진다.
+  const [copy, setCopy] = useState(EXHIBITION_COPY_DEFAULT.ko)
+  const [copyBusy, setCopyBusy] = useState(false)
+  const [copySaved, setCopySaved] = useState(false)
+  const [copyError, setCopyError] = useState(null)
   const [subjects, setSubjects] = useState([])
   const [buttonBusy, setButtonBusy] = useState(false)
   const [buttonSaved, setButtonSaved] = useState(false)
@@ -83,6 +90,9 @@ function ExhibitionAdmin() {
       setButtonMode(exhibition.button_mode || 'header')
     }
     const remote = settings.data.settings?.exhibitionSubjects
+    // 53: 저장된 안내 문구가 있으면 채우고, 없으면 기본값(코드 원문) 그대로 둔다
+    const savedCopy = settings.data?.settings?.exhibitionCopy?.ko
+    if (savedCopy) setCopy({ ...EXHIBITION_COPY_DEFAULT.ko, ...savedCopy })
     setSubjects(
       Array.isArray(remote)
         ? remote.map((s) => ({ name: s?.name || '', semester: Number(s?.semester) === 2 ? 2 : 1 }))
@@ -147,6 +157,35 @@ function ExhibitionAdmin() {
       setButtonError(err.hint ? `${err.message} (${err.hint})` : err.message)
     } finally {
       setButtonBusy(false)
+    }
+  }
+
+  // 줄 단위 입력을 배열로, 배열을 줄 단위 문자열로 — 절차·유의사항은 항목 수가 유동적이다
+  const linesToArray = (text) =>
+    String(text ?? '')
+      .split('\n')
+      .map((v) => v.trim())
+      .filter((v) => v !== '')
+  const stepsToText = (steps) =>
+    (steps ?? []).map((st) => `${st.title} | ${st.desc}`).join('\n')
+  const textToSteps = (text) =>
+    linesToArray(text).map((line) => {
+      const [title, ...rest] = line.split('|')
+      return { title: title.trim(), desc: rest.join('|').trim() }
+    })
+
+  const saveCopy = async (e) => {
+    e.preventDefault()
+    setCopyBusy(true)
+    setCopyError(null)
+    try {
+      await api.put('/admin/settings', { settings: { exhibitionCopy: { ko: copy } } })
+      setCopySaved(true)
+      settings.refetch()
+    } catch (err) {
+      setCopyError(err.hint ? `${err.message} (${err.hint})` : err.message)
+    } finally {
+      setCopyBusy(false)
     }
   }
 
@@ -315,6 +354,90 @@ function ExhibitionAdmin() {
         <div>
           <PrimaryButton type="submit" disabled={roundBusy || !hydrated}>
             {roundBusy ? '저장 중' : '회차·학기 저장'}
+          </PrimaryButton>
+        </div>
+      </form>
+
+      {/* 53: 접수 안내 문구 — 온보딩·접수 폼이 이 값을 읽는다. 비우면 기본 문구로 표시된다 */}
+      <form onSubmit={saveCopy} className={PANEL}>
+        <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">접수 안내 문구</h3>
+        <p className="text-small-m text-text-sec">
+          공개 접수 페이지의 온보딩과 접수 폼에 그대로 나갑니다. 비워 두면 기본 문구가 표시됩니다.
+        </p>
+        <div className="grid grid-cols-1 gap-16 md:grid-cols-2">
+          <Field label="온보딩 라벨" hint="제목 위 작은 문구">
+            <Input
+              value={copy.onboardingEyebrow}
+              onChange={(e) => setCopy((p) => ({ ...p, onboardingEyebrow: e.target.value }))}
+            />
+          </Field>
+          <Field label="시작 버튼 라벨">
+            <Input
+              value={copy.startLabel}
+              onChange={(e) => setCopy((p) => ({ ...p, startLabel: e.target.value }))}
+            />
+          </Field>
+          <div className="md:col-span-2">
+            <Field label="온보딩 안내 본문" hint="접수 대상·범위 등. 줄바꿈이 그대로 보입니다">
+              <TextArea
+                rows={3}
+                value={copy.onboardingLead}
+                onChange={(e) => setCopy((p) => ({ ...p, onboardingLead: e.target.value }))}
+              />
+            </Field>
+          </div>
+          <Field label="절차 패널 제목">
+            <Input
+              value={copy.stepsTitle}
+              onChange={(e) => setCopy((p) => ({ ...p, stepsTitle: e.target.value }))}
+            />
+          </Field>
+          <Field label="유의사항 패널 제목">
+            <Input
+              value={copy.notesTitle}
+              onChange={(e) => setCopy((p) => ({ ...p, notesTitle: e.target.value }))}
+            />
+          </Field>
+          <div className="md:col-span-2">
+            <Field label="접수 절차" hint="한 줄에 한 단계. 형식은 제목 | 설명. 번호는 자동으로 붙습니다">
+              <TextArea
+                rows={4}
+                value={stepsToText(copy.steps)}
+                onChange={(e) => setCopy((p) => ({ ...p, steps: textToSteps(e.target.value) }))}
+              />
+            </Field>
+          </div>
+          <div className="md:col-span-2">
+            <Field label="유의사항" hint="한 줄에 한 항목">
+              <TextArea
+                rows={6}
+                value={(copy.notes ?? []).join('\n')}
+                onChange={(e) => setCopy((p) => ({ ...p, notes: linesToArray(e.target.value) }))}
+              />
+            </Field>
+          </div>
+          <div className="md:col-span-2">
+            <Field label="작품명 안내 문구" hint="접수 폼의 작품명 입력 아래에 표시됩니다">
+              <Input
+                value={copy.workTitleHint}
+                onChange={(e) => setCopy((p) => ({ ...p, workTitleHint: e.target.value }))}
+              />
+            </Field>
+          </div>
+          <div className="md:col-span-2">
+            <Field label="작품 설명 안내 문구" hint="작품 설명 입력칸의 placeholder">
+              <Input
+                value={copy.workDescPlaceholder}
+                onChange={(e) => setCopy((p) => ({ ...p, workDescPlaceholder: e.target.value }))}
+              />
+            </Field>
+          </div>
+        </div>
+        <ErrorText>{copyError}</ErrorText>
+        {copySaved && <p className="font-mono text-caption-m text-text-meta">저장 완료</p>}
+        <div>
+          <PrimaryButton type="submit" disabled={copyBusy}>
+            {copyBusy ? '저장 중' : '안내 문구 저장'}
           </PrimaryButton>
         </div>
       </form>
