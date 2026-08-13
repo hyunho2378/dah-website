@@ -31,7 +31,7 @@ const NAV_GROUPS = [
   {
     label: 'SYSTEM',
     items: [
-      { to: '/admin/exhibition', label: '전시회 설정', role: 'admin' },
+      { to: '/admin/exhibition', label: '전시회 설정', role: 'manager' },
       { to: '/admin/settings', label: '사이트 설정', role: 'admin' },
       { to: '/admin/consultations', label: '상담 신청', role: 'admin' },
     ],

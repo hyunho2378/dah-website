@@ -851,18 +851,8 @@ function PostForm() {
                   <TextArea rows={3} value={form.intro_en} onChange={setInput('intro_en')} />
                 </Field>
               </div>
-              {/* M1-2: 리치 인트로 — exhibitions.body(Tiptap doc) */}
-              <div className="md:col-span-2">
-                <Field label="소개(리치)" hint="전시 상세 리치 본문">
-                  <RichEditor value={form.body} onChange={set('body')} />
-                </Field>
-              </div>
-              {/* R1: 전시 상세 영문 리치 본문 — exhibitions.body_en(Tiptap doc) */}
-              <div className="md:col-span-2">
-                <Field label="본문 (영문)" hint="비우면 영문 페이지에 국문 본문 렌더">
-                  <RichEditor value={form.body_en} onChange={set('body_en')} />
-                </Field>
-              </div>
+              {/* 전시회 소개(리치)·소개 영문(리치)은 렌더하지 않는다. body·body_en 컬럼과
+                  프리필·저장 경로는 그대로 두므로 기존 값은 보존되고 다시 노출만 하면 복구된다. */}
               <div className="md:col-span-2">
                 <Field label="포스터">
                   <ImageUpload
@@ -960,7 +950,7 @@ function PostForm() {
           )}
         </div>
 
-        {/* 본문 — T1·T2. 전시회는 소개(리치)로 블록 내 렌더, 공모전은 body={host,editions}. */}
+        {/* 본문 — T1·T2. 전시회 템플릿은 여기 해당 없음, 공모전은 body={host,editions}. */}
         {/* 성과는 전용 필드만(게시판 렌더 금지), 포트폴리오는 링크형 */}
         {(template === 't1' || (template === 't2' && type !== 'contest')) && (
           <Field label="본문">

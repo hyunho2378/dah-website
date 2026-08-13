@@ -101,10 +101,11 @@ router.delete(
 )
 
 // 전시회 접수 현황 목록 — 어드민 대시보드·/admin/exhibition (pw_hash 제외)
+// 12_BACKEND 2절이 manager를 "관리 학생(전시회 담당 등)"으로 정의하므로 전시회 업무는 manager+.
 router.get(
   '/admin/exhibition/entries',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const p = Math.max(1, parseInt(req.query.page, 10) || 1)
     // Y3-2(33_PHASE18): 접수 관리 시트가 전량을 한 화면에서 정렬·검색하므로 상한 500

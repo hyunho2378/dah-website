@@ -52,7 +52,7 @@ export const ADMIN_ROUTES = [
   { path: 'ci', Component: CIAdmin, role: 'admin' },
   { path: 'council', Component: CouncilAdmin, role: 'admin' },
   { path: 'careers', Component: CareersAdmin, role: 'admin' },
-  { path: 'exhibition', Component: ExhibitionAdmin, role: 'admin' },
+  { path: 'exhibition', Component: ExhibitionAdmin, role: 'manager' },
   { path: 'settings', Component: SettingsAdmin, role: 'admin' },
   { path: 'consultations', Component: ConsultationsAdmin, role: 'admin' },
   { path: 'users', Component: UsersAdmin, role: 'owner' },
@@ -64,5 +64,5 @@ export const ADMIN_ROUTES = [
  * @type {Array<{ path: string, Component: Function, role: 'manager'|'admin'|'owner' }>}
  */
 export const ADMIN_FULLSCREEN_ROUTES = [
-  { path: 'exhibition-entries/sheet', Component: EntriesSheet, role: 'admin' },
+  { path: 'exhibition-entries/sheet', Component: EntriesSheet, role: 'manager' },
 ]

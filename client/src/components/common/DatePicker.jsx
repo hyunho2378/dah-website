@@ -47,7 +47,9 @@ function DatePicker({
   const btnRef = useRef(null)
   const panelRef = useRef(null)
   const [open, setOpen] = useState(false)
-  const [ymOpen, setYmOpen] = useState(false) // J1: 연/월 직접 선택 모드
+  // 패널 모드: null=일 그리드, 'year'=연 그리드, 'month'=월 그리드.
+  // 연·월은 각각 자기 그리드에서 바로 고른다(한 칸씩 넘기는 화살표 없음).
+  const [picker, setPicker] = useState(null)
   const [rect, setRect] = useState(null)
 
   const parsed = useMemo(() => parseValue(value), [value])
@@ -70,7 +72,7 @@ function DatePicker({
   }, [])
 
   useEffect(() => {
-    if (!open) setYmOpen(false)
+    if (!open) setPicker(null)
   }, [open])
 
   useEffect(() => {
@@ -128,8 +130,7 @@ function DatePicker({
       return { y: next.getFullYear(), m: next.getMonth() }
     })
   }
-  const shiftYear = (delta) => setView((v) => ({ ...v, y: v.y + delta }))
-  // J1: 목록에서 바로 고르기용. 보이는 연도 기준 앞 6·뒤 5년.
+  // 연 그리드 3x4 — 보이는 연도 기준 앞 6·뒤 5년. 이 범위 밖은 아래 연도 입력으로 간다.
   const yearList = Array.from({ length: 12 }, (_, i) => view.y - 6 + i)
 
   const label = parsed
@@ -140,6 +141,17 @@ function DatePicker({
 
   const navBtn =
     'flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-icon transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
+
+  const headBtn =
+    'cursor-pointer rounded-sm px-8 py-4 text-body-m font-semibold text-text-pri transition duration-fast ease-out hover:bg-glass-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
+
+  // 연·월·일 그리드 셀 공통. 선택된 칸만 보라 채움.
+  const cellBtn = (active) =>
+    `flex h-32 cursor-pointer items-center justify-center rounded-sm text-small-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus ${
+      active
+        ? 'bg-purple-primary font-semibold text-text-invert'
+        : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
+    }`
 
   return (
     <>
@@ -175,37 +187,66 @@ function DatePicker({
             className="fixed z-[110] w-[300px] rounded-md border border-glass-line bg-cosmos-depth1/[0.98] p-16 shadow-glass backdrop-blur-glass"
           >
             <div className="flex items-center justify-between gap-8">
-              <button
-                type="button"
-                onClick={() => (ymOpen ? shiftYear(-1) : shiftMonth(-1))}
-                aria-label={ymOpen ? '이전 해' : '이전 달'}
-                className={navBtn}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setYmOpen((o) => !o)}
-                aria-label="연·월 선택"
-                aria-expanded={ymOpen}
-                className="cursor-pointer rounded-sm px-8 py-4 text-body-m font-semibold text-text-pri transition duration-fast ease-out hover:bg-glass-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
-              >
-                {view.y}년 {view.m + 1}월
-              </button>
-              <button
-                type="button"
-                onClick={() => (ymOpen ? shiftYear(1) : shiftMonth(1))}
-                aria-label={ymOpen ? '다음 해' : '다음 달'}
-                className={navBtn}
-              >
-                <ChevronRight size={16} />
-              </button>
+              {picker === null ? (
+                <button type="button" onClick={() => shiftMonth(-1)} aria-label="이전 달" className={navBtn}>
+                  <ChevronLeft size={16} />
+                </button>
+              ) : (
+                <span aria-hidden="true" className="h-32 w-32 shrink-0" />
+              )}
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setPicker((p) => (p === 'year' ? null : 'year'))}
+                  aria-label="연도 선택"
+                  aria-expanded={picker === 'year'}
+                  className={headBtn}
+                >
+                  {view.y}년
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPicker((p) => (p === 'month' ? null : 'month'))}
+                  aria-label="월 선택"
+                  aria-expanded={picker === 'month'}
+                  className={headBtn}
+                >
+                  {view.m + 1}월
+                </button>
+              </div>
+              {picker === null ? (
+                <button type="button" onClick={() => shiftMonth(1)} aria-label="다음 달" className={navBtn}>
+                  <ChevronRight size={16} />
+                </button>
+              ) : (
+                <span aria-hidden="true" className="h-32 w-32 shrink-0" />
+              )}
             </div>
 
-            {ymOpen ? (
+            {picker === 'year' ? (
               <div className="mt-12 space-y-12">
-                <div className="flex items-center gap-8">
-                  <label htmlFor={`${id || 'dp'}-year`} className="font-mono text-label-m uppercase tracking-label text-text-meta">
+                <div className="grid grid-cols-3 gap-4">
+                  {yearList.map((y) => (
+                    <button
+                      key={y}
+                      type="button"
+                      onClick={() => {
+                        setView((v) => ({ ...v, y }))
+                        setPicker(null)
+                      }}
+                      aria-pressed={y === view.y || undefined}
+                      className={cellBtn(y === view.y)}
+                    >
+                      {y}
+                    </button>
+                  ))}
+                </div>
+                {/* 그리드 12년 밖으로는 여기서 이동한다 */}
+                <div className="flex items-center gap-8 border-t border-border-subtle pt-12">
+                  <label
+                    htmlFor={`${id || 'dp'}-year`}
+                    className="font-mono text-label-m uppercase tracking-label text-text-meta"
+                  >
                     연도
                   </label>
                   <input
@@ -220,43 +261,23 @@ function DatePicker({
                     className="w-96 rounded-sm border border-border-subtle bg-bg-panel px-8 py-4 text-center font-mono text-small-m text-text-pri outline-none focus:border-border-strong"
                   />
                 </div>
-                <div className="flex gap-4 overflow-x-auto pb-4">
-                  {yearList.map((y) => (
-                    <button
-                      key={y}
-                      type="button"
-                      onClick={() => setView((v) => ({ ...v, y }))}
-                      aria-pressed={y === view.y || undefined}
-                      className={`shrink-0 cursor-pointer rounded-sm px-8 py-4 font-mono text-small-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus ${
-                        y === view.y
-                          ? 'bg-purple-primary font-semibold text-text-invert'
-                          : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
-                      }`}
-                    >
-                      {y}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-3 gap-4 border-t border-border-subtle pt-12">
-                  {MONTHS.map((label, mi) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => {
-                        setView((v) => ({ ...v, m: mi }))
-                        setYmOpen(false)
-                      }}
-                      aria-pressed={mi === view.m || undefined}
-                      className={`flex h-32 cursor-pointer items-center justify-center rounded-sm text-small-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus ${
-                        mi === view.m
-                          ? 'bg-purple-primary font-semibold text-text-invert'
-                          : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+              </div>
+            ) : picker === 'month' ? (
+              <div className="mt-12 grid grid-cols-3 gap-4">
+                {MONTHS.map((label, mi) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      setView((v) => ({ ...v, m: mi }))
+                      setPicker(null)
+                    }}
+                    aria-pressed={mi === view.m || undefined}
+                    className={cellBtn(mi === view.m)}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             ) : (
             <div className="mt-12 grid grid-cols-7 gap-4">
@@ -298,7 +319,7 @@ function DatePicker({
             </div>
             )}
 
-            {withTime && !ymOpen && (
+            {withTime && picker === null && (
               <div className="mt-16 flex items-center gap-8 border-t border-border-subtle pt-16">
                 <span className="font-mono text-label-m uppercase tracking-label text-text-meta">
                   시간

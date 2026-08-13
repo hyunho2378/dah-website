@@ -81,8 +81,8 @@ function Dashboard() {
   const exhibition = settings.data?.exhibition
   const inPeriod = Boolean(exhibition?.is_submit_period || exhibition?.is_edit_period)
 
-  // 접수 현황 건수 — 기간 중 + admin 이상만 조회
-  const entries = useApi(hasRole('admin') && inPeriod ? '/admin/exhibition/entries' : null, {
+  // 접수 현황 건수 — 기간 중 + manager 이상만 조회(전시회는 매니저 담당 업무)
+  const entries = useApi(hasRole('manager') && inPeriod ? '/admin/exhibition/entries' : null, {
     params: { page: 1, pageSize: 1 },
   })
 
@@ -289,7 +289,7 @@ function Dashboard() {
         <div className={PANEL}>
           <div className="flex flex-wrap items-center justify-between gap-16">
             <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">전시회 접수 현황</h3>
-            {hasRole('admin') && (
+            {hasRole('manager') && (
               <Link
                 to="/admin/exhibition"
                 className="font-mono text-caption-m text-text-sec underline underline-offset-4 transition duration-fast ease-out hover:text-text-pri"
@@ -313,7 +313,7 @@ function Dashboard() {
                 ).slice(0, 10)}
               </dd>
             </div>
-            {hasRole('admin') && (
+            {hasRole('manager') && (
               <div>
                 <dt className="font-mono text-caption-m text-text-meta">누적 접수</dt>
                 <dd className="mt-4 font-mono text-body-m text-text-pri">

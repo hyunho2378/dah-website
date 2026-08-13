@@ -659,3 +659,12 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [x] **검증**: 네이티브 `<select>`·date 입력 0건(잔존 grep은 전부 주석) / 변경 9개 파일 신규 하드코딩 HEX 0건(색은 tokens 경유·reading.accent /10) / 표 레이아웃 불변 계약 유지(table-fixed+colgroup, 선택은 인덱스·CSS만 변경, 토스트 포털) / 하단 탭 고정 구조 확인 / 가운데점 나열: 이번 변경이 새로 만든 사용자 문구 0건(J2 상태줄 정비 완료). 잔존 `날짜·시간 선택`(관용 복합 라벨)·온보딩 스텝 desc는 기존 문구라 범위 밖 유지 / `npm run build` 성공(2033 modules), oxlint 변경 파일 경고 0(잔여는 vendor·기존 파일)
 - [ ] 잔여(육안·서버): 접수 시트 하단 탭 고정·다중 셀 드래그 복사·필터 시프트 0 실기기 확인 / DatePicker 연·월 점프 육안 / 접수폼 학기 UI 제거·과목 필터 / 어드민 전시회·공모전 편집 진입이 실제 수정 페이지로 이동 확인(로그인 필요) / 320~3840 가로 스크롤 0
 - [!] 관찰(범위 밖): 공모전 리스트(`Contests.jsx`)의 "카드에서 바로 외부 이동" 링크가 이제 의미상 접수가 아니라 전시 사이트다. 라벨·aria 점검은 그 파일 소유 별도 과제
+
+## 42_ADMIN_FIX — 어드민 4건 (목록 페이지 유지·연도 그리드·리치 숨김·매니저 권한)
+- [x] **목록 페이지 유지**: `PostList.jsx`의 `page`를 `useState`에서 URL 쿼리(`?page=2`)로 옮겼다. 상세 편집 후 뒤로 나오면 브라우저가 URL을 되돌려주므로 컴포넌트가 재마운트돼도 보던 페이지가 복원된다. localStorage 미사용. 1페이지면 쿼리를 붙이지 않아 기존 URL 형태 유지
+- [x] **연도 그리드**: `DatePicker.jsx`에서 연도 좌우 화살표(`shiftYear`)와 가로 스크롤 연도 스트립을 삭제했다. 헤더를 "연도 / 월" 두 버튼으로 나눠 각각 3x4 그리드를 연다(월 그리드 패턴 그대로). 그리드 12년 밖으로는 기존 연도 입력(1900~2200)으로 이동. 일 그리드의 월 이동 화살표는 통상 달력 동작이라 유지
+- [x] **전시회 리치 필드 숨김**: `PostForm.jsx`의 "소개(리치)"·"본문 (영문)" RichEditor 블록 2개를 렌더에서 제거. `body`·`body_en` 컬럼, 프리필, 저장 payload는 그대로라 기존 값이 보존되고 다시 노출만 하면 복구된다
+- [x] **매니저 전시회 권한**: 12_BACKEND 2절이 manager를 "관리 학생(전시회 담당 등)"으로 정의하는데 실제로는 admin 게이트였다. 클라 4곳(`admin/index.js`의 `exhibition`·`exhibition-entries/sheet` 라우트, `AdminLayout` 사이드바 전시회 설정, `Dashboard` 접수 현황 패널·링크)과 서버 2곳(`GET /admin/exhibition/entries`, `PUT /admin/settings`)을 manager+로 열었다
+- [x] **권한 확장 경계 고정**: `PUT /admin/settings`는 사이트 전역 설정과 전시회 설정을 한 라우트에서 처리한다. 통째로 열면 매니저가 사이트 설정까지 쓰게 되므로 `MANAGER_SETTING_KEYS`(exhibitionSubjects·exhibitionOrdinal·exhibitionSemester) 밖의 키는 admin+ 403으로 막았다. `exhibition_settings` 테이블 갱신은 manager 허용
+- [x] **검증**: 클라 빌드 통과, 서버 테스트 12/12 통과(신규 3건 — manager 접수 목록 200, manager 전시회 일정·회차 저장 200, manager `contentVisibility` 저장 403)
+- [!] **미검증(브라우저 도구 부재)**: (a) 2페이지 편집 후 뒤로가기 (b) 연도 그리드 클릭 (c) 리치 필드 비노출 (d) 실제 매니저 계정 로그인 접근을 육안으로 확인하지 못했다. 빌드와 서버 테스트만 확인했다

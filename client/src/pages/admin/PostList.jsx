@@ -2,7 +2,7 @@
 // 검색 + 페이지네이션(KPC 게시판 문법) + published 토글 + 수정·삭제.
 
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowUpDown, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { DragHandle, useDragSort } from '../../components/common/DragHandle'
 import { useApi, api } from '../../hooks/useApi'
@@ -28,7 +28,11 @@ function PostList() {
 
   const [keyword, setKeyword] = useState('')
   const [q, setQ] = useState('')
-  const [page, setPage] = useState(1)
+  // 페이지 번호는 URL이 원본이다. 상세 편집 후 뒤로 나오면 브라우저가 ?page=2를 되돌려주므로
+  // 컴포넌트가 재마운트돼도 보던 페이지가 유지된다(state로 들고 있으면 매번 1로 초기화됐다).
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = Math.max(1, parseInt(searchParams.get('page'), 10) || 1)
+  const setPage = (p) => setSearchParams(p > 1 ? { page: String(p) } : {})
   // Y3-4(33_PHASE18): 정렬 모드. 페이지 경계를 넘는 재정렬은 sort 값이 어긋나므로
   // 정렬 중에는 1페이지에 전량(100건)을 올려 놓고 조작한다.
   const [sorting, setSorting] = useState(false)

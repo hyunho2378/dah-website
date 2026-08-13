@@ -3,7 +3,7 @@
 // PUT /admin/settings — owner·admin. site_settings upsert + exhibition_settings 갱신
 import { Router } from 'express'
 import { query } from '../db.js'
-import { requireAuth, requireRole } from '../middleware/auth.js'
+import { requireAuth, requireRole, hasRole } from '../middleware/auth.js'
 import { wrap } from './content.js'
 
 const router = Router()
@@ -119,15 +119,27 @@ router.get(
   })
 )
 
+// manager가 만질 수 있는 site_settings 키 — 전시회 업무에 필요한 것만.
+// 사이트 전역 설정(contentVisibility 등)은 admin+ 전용으로 남는다.
+const MANAGER_SETTING_KEYS = ['exhibitionSubjects', 'exhibitionOrdinal', 'exhibitionSemester']
+
 router.put(
   '/admin/settings',
   requireAuth,
-  requireRole('admin'),
+  // 12_BACKEND 2절: manager는 전시회 담당이다. 전시회 일정·회차·과목은 manager+,
+  // 그 밖의 사이트 설정 키는 아래에서 admin+로 다시 막는다.
+  requireRole('manager'),
   wrap(async (req, res) => {
     const { settings, exhibition } = req.body || {}
     const result = { settings: {}, exhibition: null }
 
     if (settings && typeof settings === 'object' && !Array.isArray(settings)) {
+      if (!hasRole(req.user, 'admin')) {
+        const denied = Object.keys(settings).filter((k) => !MANAGER_SETTING_KEYS.includes(k))
+        if (denied.length > 0) {
+          return res.status(403).json({ error: 'insufficient role', required: 'admin', keys: denied })
+        }
+      }
       for (const [key, raw] of Object.entries(settings)) {
         // Y3-1·Y3-3·H2-2·H2-4: 과목·공개·회차·학기는 저장 시점에 정규화(허용 키·타입만 통과)
         const value =

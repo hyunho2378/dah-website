@@ -175,3 +175,45 @@ test('(추가) 허용 목록 외 :type 차단 → 404', async () => {
   assert.equal(res.status, 404)
   assert.equal(res.body.error, 'unknown content type')
 })
+
+// 전시회 업무는 manager+ (12_BACKEND 2절 "관리 학생, 전시회 담당 등").
+// 단 사이트 전역 설정 키는 manager에게 열리면 안 된다 — 권한 확장의 경계를 고정한다.
+const MANAGER = { id: 9, email: 'm@x.com', name: '매니저', role: 'manager' }
+
+test('(f) manager로 GET /admin/exhibition/entries → 200', async () => {
+  const app = createApp({
+    db: mockDb((text) => {
+      if (text.includes('COUNT(*)')) return { rows: [{ total: 0 }] }
+      return { rows: [] }
+    }),
+  })
+  const res = await request(app).get('/admin/exhibition/entries').set('Cookie', accessCookie(MANAGER))
+  assert.equal(res.status, 200)
+})
+
+test('(g) manager로 전시회 일정·회차 저장 → 200', async () => {
+  const app = createApp({
+    db: mockDb((text) => {
+      if (text.includes('INSERT INTO site_settings')) {
+        return { rows: [{ key: 'exhibitionOrdinal', value: 18 }] }
+      }
+      if (text.includes('UPDATE exhibition_settings')) return { rows: [{ id: 1 }] }
+      return { rows: [] }
+    }),
+  })
+  const res = await request(app)
+    .put('/admin/settings')
+    .set('Cookie', accessCookie(MANAGER))
+    .send({ settings: { exhibitionOrdinal: 18 }, exhibition: { header_visible: true } })
+  assert.equal(res.status, 200)
+})
+
+test('(h) manager로 사이트 전역 설정(contentVisibility) 저장 → 403', async () => {
+  const app = createApp({ db: mockDb(() => ({ rows: [] })) })
+  const res = await request(app)
+    .put('/admin/settings')
+    .set('Cookie', accessCookie(MANAGER))
+    .send({ settings: { contentVisibility: { notice: false } } })
+  assert.equal(res.status, 403)
+  assert.deepEqual(res.body.keys, ['contentVisibility'])
+})
