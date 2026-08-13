@@ -282,17 +282,37 @@ function GalleryField({ value = [], onChange, usage = 'exhibition', onUploadingC
   )
 }
 
-/** 공모전 회차 리피터 — body.editions [{ semester_label, poster_url, period, link }] (M1-3) */
+/** 공모전 회차 리피터 — body.editions [{ semester_label, poster_url, start_date, end_date, period, link }]
+ *
+ * 기간은 DatePicker 시작~종료로 입력한다. 공개 페이지(Contests·ContestDetail)는 예전처럼
+ * 문자열 `period`만 읽으므로, 날짜를 건드릴 때 period를 그 자리에서 파생해 둔다 —
+ * 공개 렌더 계약은 그대로 두고 어드민 입력만 바꾸는 방식이다.
+ * 날짜가 없는 레거시 회차는 자유 입력 period 원문을 그대로 유지한다(날짜를 편집할 때만 대체).
+ */
 function EditionsField({ value = [], onChange, onUploadingChange }) {
   const rows = Array.isArray(value) ? value : []
   const setRow = (i, key, v) =>
-    onChange(rows.map((row, idx) => (idx === i ? { ...row, [key]: v } : row)))
+    onChange(
+      rows.map((row, idx) => {
+        if (idx !== i) return row
+        const next = { ...row, [key]: v }
+        if (key === 'start_date' || key === 'end_date') {
+          const s = next.start_date || ''
+          const e = next.end_date || ''
+          next.period = s && e ? `${s} ~ ${e}` : s || e
+        }
+        return next
+      })
+    )
   return (
     <div className="flex flex-col gap-16">
       {rows.map((row, i) => (
         <div key={i} className="flex flex-col gap-12 rounded-md border border-border-subtle p-16">
           <div className="flex items-center justify-between gap-8">
-            <span className="font-mono text-caption-m text-text-meta">회차 {i + 1}</span>
+            <span className="font-mono text-caption-m text-text-meta">
+              회차 {i + 1}
+              {row.semester_label ? ` · ${row.semester_label}` : ''}
+            </span>
             <button
               type="button"
               onClick={() => onChange(rows.filter((_, idx) => idx !== i))}
@@ -303,22 +323,44 @@ function EditionsField({ value = [], onChange, onUploadingChange }) {
             </button>
           </div>
           <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
-            <Field label="학기 라벨" hint="예: 2026-2">
-              <Input
-                value={row.semester_label || ''}
-                onChange={(e) => setRow(i, 'semester_label', e.target.value)}
+            <div className="md:col-span-2">
+              <Field label="학기 라벨" hint="예: 2026-2">
+                <Input
+                  value={row.semester_label || ''}
+                  onChange={(e) => setRow(i, 'semester_label', e.target.value)}
+                />
+              </Field>
+            </div>
+            <Field label="시작일">
+              <DateInput
+                value={row.start_date || ''}
+                onChange={(e) => setRow(i, 'start_date', e.target.value)}
               />
             </Field>
-            <Field label="기간" hint="예: 11.02 - 11.13">
-              <Input value={row.period || ''} onChange={(e) => setRow(i, 'period', e.target.value)} />
-            </Field>
-            <Field label="링크">
-              <Input
-                type="url"
-                value={row.link || ''}
-                onChange={(e) => setRow(i, 'link', e.target.value)}
+            <Field label="종료일">
+              <DateInput
+                value={row.end_date || ''}
+                viewDate={row.start_date || ''}
+                onChange={(e) => setRow(i, 'end_date', e.target.value)}
               />
             </Field>
+            {/* 날짜 없이 문구만 있는 레거시 회차는 값을 잃지 않게 그대로 보여준다 */}
+            {row.period && !row.start_date && !row.end_date && (
+              <div className="md:col-span-2">
+                <p className="font-mono text-caption-m text-text-meta">
+                  기존 기간 표기: {row.period} (시작일·종료일을 고르면 대체됩니다)
+                </p>
+              </div>
+            )}
+            <div className="md:col-span-2">
+              <Field label="링크" hint="접수 안내 등 외부 링크">
+                <Input
+                  type="url"
+                  value={row.link || ''}
+                  onChange={(e) => setRow(i, 'link', e.target.value)}
+                />
+              </Field>
+            </div>
             <div className="md:col-span-2">
               <Field label="포스터">
                 <ImageUpload

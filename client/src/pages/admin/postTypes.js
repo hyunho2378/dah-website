@@ -61,6 +61,11 @@ export function titleOf(item) {
 
 /** 리스트 행 메타(mono) */
 export function metaOf(item) {
+  // 공모전은 한 행이 여러 회차(body.editions)를 품는다 — 날짜보다 회차 수가 식별에 쓸모 있다
+  if (item.type === 'contest') {
+    const n = Array.isArray(item.body?.editions) ? item.body.editions.length : 0
+    return n ? `${n}회차` : ''
+  }
   const date = item.event_start || item.start_date || item.held_at || item.created_at || item.year
   if (!date) return ''
   return String(date).slice(0, 10)
