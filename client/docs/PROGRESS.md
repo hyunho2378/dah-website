@@ -775,3 +775,18 @@ git log·vendor 소스 추적으로 실제 원인 1건을 확정. 색상·레이
 - [!] **미검증(브라우저 도구 부재)**: 실제 화면의 섹션 분리와 카드 정렬은 육안 확인하지 못했다. API 응답에 렌더 로직을 재현한 대조와 빌드까지만 확인했다
 - [x] **52 후속 — 카드 기간 줄 제거**: 공개 목록 카드에서 기간 표시를 없앴다. period나 개최일을 가진 공모전(캐릭터 등)만 제목 아래 날짜 줄이 붙어 카드마다 줄 수가 달라 보였다. 이제 전 카드가 [학기 → 제목] 두 줄로 동일하다. 기간은 상세 페이지에서만 보여준다. 카드 전용이던 `periodText` 헬퍼는 우리 변경이 만든 고아라 함께 제거했다
 - [x] **52 후속 — 장서표 카드 제목 2줄 분할**: 카드 제목을 '도서관' 뒤에서 한 번 끊어 기관명과 공모전명이 각각 한 줄에 오게 했다(인제 기적의 도서관 / 장서표 디자인 공모전). DB 원문은 그대로 두고 렌더만 두 덩어리로 나눈다 — `<br>`을 문자열에 넣지 않고 `block` span 두 개로 그려, 폭이 좁아지면 각 줄이 정상적으로 다시 줄바꿈된다. '도서관'이 없는 포스터·캐릭터 공모전과 영문 제목은 한 줄 그대로다
+
+## 39_FORM_BUILDER — 구글 폼 대체 자체 폼 시스템 (단독 → 병렬3 → 단독)
+- [x] **STEP 1 스키마**: `custom_forms`(slug·제목·안내문 국영·category·fields jsonb·settings jsonb·published·seed_key) + `custom_form_responses`(form_id·data jsonb·public_user_id·google_email). `CREATE TABLE IF NOT EXISTS`만 사용, 기존 테이블 DROP 없음. `schema.sql` + `migrate-phase39.mjs` 양쪽 반영 후 운영 DB 적용 완료
+- [x] **STEP 1 API**: `routes/forms.js` — 공개 `GET /forms/:slug`·`POST /forms/:slug/submit`·`GET /forms/:slug/mine`·`PUT /forms/:slug/responses/:id`, 어드민 `GET/POST /admin/forms`·`PUT/DELETE /admin/forms/:id`·`GET /admin/forms/:id/responses`·`.../export`(UTF-8 BOM CSV). 필드 검증(required·phone·email·studentid·date·maxLength·보기 위조)과 기간 판정은 전부 서버가 최종 권한이다. 정의에 없는 키는 저장 전에 버린다
+- [x] **STEP 1 FormRenderer**: 10개 타입 전부 커스텀 컴포넌트로 렌더(select→Select, date→DatePicker, radio→RadioCards, checkbox→자체 카드형). 네이티브 UI 0건이며 체크박스의 실제 input만 sr-only로 남겨 키보드·폼 시맨틱을 보존한다
+- [x] **STEP 2 P1 어드민**: 사이드바 SYSTEM에 "행사 설정" 추가, 폼 목록(분류·기간·공개·응답 수), 폼 편집기(기본 정보 + 설정 + 필드 편집기 + FormRenderer 미리보기). 공개 토글은 저장을 눌러야 반영된다
+- [x] **STEP 2 P2 공개 폼**: `/forms/:slug`. 접수 전·중·후 3상태를 서버 window 값으로 분기하고, 구글 로그인 게이트 → FormRenderer → 제출 → 완료. 수정은 `?mode=edit`로 같은 라우트에서 처리해 로그인 복귀 경로가 유지된다. 서버 검증 오류를 필드별 인라인 문구로 매핑
+- [x] **STEP 2 P3 응답 시트**: `/admin/forms/:id/responses/sheet` 전체화면. EntriesSheet와 같은 규격(컬럼 필터·셀 복사·드래그 선택·행 펼치기·자동 새로고침·하단 탭). **컬럼은 form.fields에서 자동 생성**되어 필드를 추가·삭제하면 시트가 코드 수정 없이 따라간다
+- [x] **STEP 3 S1 헤더 버튼**: 공개 `GET /forms` 신설 — 공개 상태 + 헤더 노출 + **접수 기간 중**인 폼만 내린다. 헤더 데스크탑 유틸과 모바일 시트 양쪽에 버튼을 달았고 둘 이상이면 최신 1건만 띄운다
+- [x] **STEP 3 `require_google_auth` 실동작**: 초안은 제출 라우트에 무조건 `requirePublicAuth`가 걸려 있어 어드민 편집기의 스위치가 거짓말이 되는 상태였다. 폼 설정을 먼저 읽고 조건부로 게이트하는 `googleGate`로 바꿨다. 조회·수정은 신원으로 본인을 찾는 동작이라 언제나 로그인이 필요하다
+- [x] **STEP 3 S3 시드 표본 대조(독립 검증)**: 종강총회 6필드·신입부원 11필드. 안내문 2건이 39번 원문 코드펜스와 **바이트 단위 완전 일치**(377자·475자), 필드 라벨·힌트·보기 문자열 **44개 전건이 원문에 그대로 존재**. 재실행 시 `ON CONFLICT DO NOTHING`으로 건너뜀
+- [x] **STEP 3 S4 검증**: 임시 폼으로 검증 계층 실측 — 필수 누락·학번 형식·연락처 형식·보기 위조·체크박스 위조·글자수 초과 **6종 전부 차단**, 정상 제출 201 저장, 본인 조회 1건, **정의에 없는 키 주입 차단** 확인 후 임시 폼 삭제. 신규 5개 파일에 네이티브 select·date·radio 0건, 하드코딩 hex 0건, localStorage 0건, em dash 0건. 클라 빌드·서버 스모크 12/12 통과
+- [!] **비밀번호 방식은 구현하지 않았다**: 39번 원안의 `edit_password_hash`·"비밀번호 1234 초기화"·"이메일+비밀번호 조회"는 41_GOOGLE_AUTH_PUBLIC이 공개 제출자 비밀번호를 폐지하면서 무효가 됐다. 본인 확인은 구글 계정이고 소유 판정은 `public_user_id`(레거시 대비 `google_email` 병행)다. 이번 세션 지시문에도 "구글 OAuth는 기존 public_users 재사용"이 있어 그쪽을 따랐다
+- [!] **시드 폼 2건은 접수 기간이 이미 지났다**(2026-05-28 ~ 06-01, 2026-01-23 ~ 01-30). 공개 페이지에서 "접수 마감"으로 뜨고 헤더 버튼도 나오지 않는다. 실제 사용 시 어드민에서 기간을 새로 지정해야 한다
+- [!] **미검증(브라우저 도구 부재)**: 편집기 드래그 정렬·미리보기 패널, 공개 폼 3상태 화면, 시트 상호작용, 구글 로그인 왕복은 육안 확인하지 못했다. API 왕복·검증 계층·시드 대조·빌드까지만 확인했다

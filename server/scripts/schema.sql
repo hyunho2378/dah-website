@@ -325,3 +325,41 @@ CREATE UNIQUE INDEX IF NOT EXISTS semester_offerings_unique_idx
   ON semester_offerings (year, term, curriculum_id);
 CREATE INDEX IF NOT EXISTS semester_offerings_semester_idx
   ON semester_offerings (year DESC, term DESC);
+
+-- ─── Phase 39 (39_FORM_BUILDER) ────────────────────────────────
+-- 구글 폼 대체 자체 폼. 폼 정의(제목·안내문·필드)는 전부 DB에 둔다 — 내년 담당자가
+-- 코드를 고치지 않고 내용만 바꿔 쓸 수 있어야 한다는 것이 이 테이블의 존재 이유다.
+-- fields: [{ id, label_ko, label_en, type, required, hint_ko, options, validation, order }]
+-- settings: { accept_start, accept_end, edit_end, require_google_auth, max_responses,
+--             show_button_in_header, button_label_ko, button_label_en }
+CREATE TABLE IF NOT EXISTS custom_forms (
+  id              SERIAL PRIMARY KEY,
+  slug            TEXT UNIQUE NOT NULL,
+  title_ko        TEXT NOT NULL,
+  title_en        TEXT,
+  description_ko  TEXT,
+  description_en  TEXT,
+  category        TEXT NOT NULL DEFAULT 'other',
+  fields          JSONB NOT NULL DEFAULT '[]'::jsonb,
+  settings        JSONB NOT NULL DEFAULT '{}'::jsonb,
+  published       BOOLEAN NOT NULL DEFAULT FALSE,
+  seed_key        TEXT,
+  created_by      INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_custom_forms_seed_key ON custom_forms (seed_key);
+
+-- 응답. 본인 확인은 구글 로그인(public_users)이다 — 41_GOOGLE_AUTH_PUBLIC에서 공개 제출자
+-- 비밀번호 방식을 폐지했으므로 수정용 비밀번호 컬럼은 두지 않는다.
+CREATE TABLE IF NOT EXISTS custom_form_responses (
+  id             SERIAL PRIMARY KEY,
+  form_id        INTEGER NOT NULL REFERENCES custom_forms(id) ON DELETE CASCADE,
+  data           JSONB NOT NULL DEFAULT '{}'::jsonb,
+  public_user_id INTEGER,
+  google_email   TEXT,
+  submitted_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_form_responses_form ON custom_form_responses (form_id, submitted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_form_responses_user ON custom_form_responses (form_id, public_user_id);

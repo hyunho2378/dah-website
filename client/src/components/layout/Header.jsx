@@ -43,6 +43,10 @@ function Header() {
   const exhibitionState = pub?.exhibition
   const showSubmit = exhibitionState?.show_button === true
   const submitMode = exhibitionState?.button_mode || 'header'
+  // S1(39_FORM_BUILDER): 헤더 노출을 켠 자체 폼. 서버가 공개·기간까지 판정해 내려주므로
+  // 여기서는 목록 유무만 본다. 둘 이상이면 가장 최근에 수정된 하나만 띄운다.
+  const { data: headerForms } = useApi('/forms')
+  const formCta = headerForms?.items?.[0] ?? null
 
   // 스크롤 rAF 스로틀 (80px 이후 높이 72→56)
   useEffect(() => {
@@ -261,6 +265,15 @@ function Header() {
               {t('actions.submitExhibition')}
             </Link>
           )}
+          {formCta && (
+            <Link
+              to={`/forms/${formCta.slug}`}
+              className="hidden h-32 items-center gap-8 rounded-sm border border-border-subtle px-16 text-small-m font-semibold text-text-pri transition-colors duration-fast ease-out hover:border-border-strong md:text-small-d lg:mr-8 lg:inline-flex"
+            >
+              <CalendarCheck size={16} aria-hidden="true" />
+              {lang === 'en' ? formCta.button_label_en : formCta.button_label_ko}
+            </Link>
+          )}
           {/* KR/EN 토글은 데스크탑 유틸만 — lg 미만은 시트 상단에 노출 */}
           <span className="hidden lg:block">
             <LangToggle />
@@ -352,6 +365,19 @@ function Header() {
                 >
                   <CalendarCheck size={18} aria-hidden="true" />
                   {t('actions.submitExhibition')}
+                </Link>
+              </div>
+            )}
+
+            {formCta && (
+              <div className="border-b border-border-subtle px-gutter-m py-16 md:px-gutter-t">
+                <Link
+                  to={`/forms/${formCta.slug}`}
+                  onClick={closeSheet}
+                  className="flex h-48 w-full cursor-pointer items-center justify-center gap-8 rounded-sm border border-border-subtle px-24 text-body-m font-semibold text-text-pri transition-colors duration-fast ease-out hover:border-border-strong"
+                >
+                  <CalendarCheck size={18} aria-hidden="true" />
+                  {lang === 'en' ? formCta.button_label_en : formCta.button_label_ko}
                 </Link>
               </div>
             )}

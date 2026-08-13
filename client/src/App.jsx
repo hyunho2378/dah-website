@@ -34,6 +34,7 @@ import ShowcaseDetail from './pages/showcase/ShowcaseDetail'
 import ShowcaseSubmit from './pages/showcase/ShowcaseSubmit'
 import ExhibitSubmit from './pages/submit/ExhibitSubmit'
 import ExhibitEdit from './pages/submit/ExhibitEdit'
+import FormPage from './pages/forms/FormPage'
 import Consult from './pages/Consult'
 import News from './pages/News'
 import NewsDetail from './pages/NewsDetail'
@@ -146,6 +147,8 @@ function App() {
               <Route path="/showcase/submit" element={<ShowcaseSubmit />} />
               <Route path="/submit" element={<ExhibitSubmit />} />
               <Route path="/submit/edit" element={<ExhibitEdit />} />
+              {/* 39_FORM_BUILDER P2: 자체 폼(공개). 제목·안내문·필드는 전부 DB */}
+              <Route path="/forms/:slug" element={<FormPage />} />
 
               {/* 관리 (지연 로드, 라우트별 RequireRole은 AdminRoutes 내부) */}
               <Route

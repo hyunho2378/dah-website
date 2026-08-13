@@ -31,6 +31,9 @@ import CouncilAdmin from './CouncilAdmin'
 import CareersAdmin from './CareersAdmin'
 import ExhibitionAdmin from './ExhibitionAdmin'
 import EntriesSheet from './EntriesSheet'
+import FormsAdmin from './FormsAdmin'
+import FormEditor from './FormEditor'
+import FormResponsesSheet from './FormResponsesSheet'
 import SettingsAdmin from './SettingsAdmin'
 import ConsultationsAdmin from './ConsultationsAdmin'
 import UsersAdmin from './UsersAdmin'
@@ -53,6 +56,9 @@ export const ADMIN_ROUTES = [
   { path: 'council', Component: CouncilAdmin, role: 'admin' },
   { path: 'careers', Component: CareersAdmin, role: 'admin' },
   { path: 'exhibition', Component: ExhibitionAdmin, role: 'manager' },
+  { path: 'forms', Component: FormsAdmin, role: 'admin' },
+  { path: 'forms/new', Component: FormEditor, role: 'admin' },
+  { path: 'forms/:id/edit', Component: FormEditor, role: 'admin' },
   { path: 'settings', Component: SettingsAdmin, role: 'admin' },
   { path: 'consultations', Component: ConsultationsAdmin, role: 'admin' },
   { path: 'users', Component: UsersAdmin, role: 'owner' },
@@ -65,4 +71,5 @@ export const ADMIN_ROUTES = [
  */
 export const ADMIN_FULLSCREEN_ROUTES = [
   { path: 'exhibition-entries/sheet', Component: EntriesSheet, role: 'manager' },
+  { path: 'forms/:id/responses/sheet', Component: FormResponsesSheet, role: 'admin' },
 ]
