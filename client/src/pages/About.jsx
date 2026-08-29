@@ -192,26 +192,27 @@ function About() {
           <Reveal>
             <SectionLabel index="01" text="OVERVIEW" />
           </Reveal>
-          {/* 12컬럼 위에 제목 5칸 + 본문 7칸을 바로 붙여 놓는다. 2등분(grid-cols-2)이면
-              제목 컬럼 절반이 비어 가운데가 433px씩 벌어졌다 → 314px.
-              본문을 6칸이 아니라 7칸으로 둔 것은 12번째 칸이 남아 본문 오른쪽 끝이
-              컨테이너보다 100px 짧아지기 때문이다(가운데 간격은 6칸일 때와 같다).
-              items-baseline: 제목의 밑줄·pb를 빼고 첫 줄 baseline끼리 맞춘다
-              (top 정렬이면 글자 크기 차이만큼 본문 첫 줄이 위로 뜬다). */}
-          <Reveal className="mt-40 grid gap-24 md:mt-48 md:grid-cols-12 md:items-baseline md:gap-32">
-            <div className="min-w-0 md:col-span-5">
+          {/* 지그재그의 핵심은 제목이 양 끝에 번갈아 붙는 것이다. 2등분 + gap-32면
+              본문 컬럼이 592px(가독 폭 520~600 안)이고, What은 제목이 좌측 경계에
+              본문이 우측 경계에 각각 딱 맞는다. 가운데는 의도적으로 비운다.
+              items-start: 제목(36px)과 본문(17px)의 첫 줄 상단을 맞춘다
+              (baseline 정렬이면 글자 크기 차이만큼 본문 첫 줄이 아래로 내려간다). */}
+          <Reveal className="mt-40 grid gap-24 md:mt-48 md:grid-cols-2 md:items-start md:gap-32">
+            <div className="min-w-0">
               <SectionHeading>What is DAH</SectionHeading>
             </div>
-            <p className="min-w-0 text-body-l-m leading-[1.8] text-text-sec md:col-span-7 md:text-body-l-d">
+            <p className="min-w-0 text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
               <Highlight text={copy.what} keywords={copy.whatKeywords} />
             </p>
           </Reveal>
-          {/* 지그재그: Why는 헤딩이 오른쪽. 모바일은 헤딩이 먼저 오도록 order로 되돌린다 */}
-          <Reveal className="mt-48 grid gap-24 border-t border-border-subtle pt-32 md:mt-64 md:grid-cols-12 md:items-baseline md:gap-32 md:pt-48">
-            <div className="min-w-0 md:order-2 md:col-span-5">
+          {/* 지그재그: Why는 제목이 오른쪽 경계에 붙는다. md:text-right가 inline-block인
+              제목을 컬럼 우측 끝으로 밀고 밑줄도 함께 따라간다(밑줄은 제목 폭이라).
+              모바일은 1열이라 제목이 먼저 오고 좌측 정렬로 되돌아간다(order·text-right 둘 다 md 이상). */}
+          <Reveal className="mt-48 grid gap-24 border-t border-border-subtle pt-32 md:mt-64 md:grid-cols-2 md:items-start md:gap-32 md:pt-48">
+            <div className="min-w-0 md:order-2 md:text-right">
               <SectionHeading>Why DAH</SectionHeading>
             </div>
-            <div className="flex min-w-0 flex-col gap-24 md:order-1 md:col-span-7">
+            <div className="flex min-w-0 flex-col gap-24 md:order-1">
               <p className="text-h3-m font-medium leading-snug text-text-pri md:text-h3-d">
                 {copy.whyStatement}
               </p>
