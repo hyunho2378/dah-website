@@ -95,6 +95,7 @@ export const ko = {
     submitShowcase: '쇼케이스 제출',
     submitExhibition: '전시회 접수',
     exhibitionSite: '전시 사이트',
+    clubSite: '웹사이트',
     applyExternal: '접수 페이지',
     applyLecture: '신청 페이지',
     contestPage: '대회 페이지',

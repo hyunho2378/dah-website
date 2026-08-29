@@ -21,7 +21,9 @@ const variants = {
     'text-button-ghostText hover:bg-button-ghostHover active:opacity-90',
 }
 
-function Button({ variant = 'primary', href, external = false, children }) {
+// arrow: external 링크의 ArrowUpRight 표시 여부(P5 기본 true).
+// 라벨 자체가 목적지를 말하는 버튼(전시 사이트 등)에서만 false로 끈다.
+function Button({ variant = 'primary', href, external = false, arrow = true, children }) {
   const className = `${base} ${variants[variant] || variants.primary}`
 
   if (external) {
@@ -33,7 +35,7 @@ function Button({ variant = 'primary', href, external = false, children }) {
         className={className}
       >
         {children}
-        <ArrowUpRight size={16} />
+        {arrow && <ArrowUpRight size={16} />}
       </a>
     )
   }

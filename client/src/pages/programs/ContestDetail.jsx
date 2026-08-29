@@ -77,15 +77,27 @@ function ContestDetail() {
         ) : (
           <article className="flex min-w-0 flex-col gap-64">
             <div className="grid gap-32 lg:grid-cols-3 lg:gap-48">
-              <figure className="w-full lg:col-span-1">
-                <ImageFrame
-                  src={posterUrl}
-                  alt={`${title} 포스터`}
-                  ratio="2/3"
-                  loading="eager"
-                  placeholder={title}
-                />
-              </figure>
+              {/* 액션 버튼은 포스터 바로 아래 고정 — 전시회 상세와 동일 구조.
+                  우측 정보 영역에 두면 본문 길이에 따라 버튼 위치가 글마다 달라진다. */}
+              <div className="flex min-w-0 flex-col gap-16 lg:col-span-1">
+                <figure className="w-full">
+                  <ImageFrame
+                    src={posterUrl}
+                    alt={`${title} 포스터`}
+                    ratio="2/3"
+                    loading="eager"
+                    placeholder={title}
+                  />
+                </figure>
+                <div className="flex flex-wrap items-center gap-12">
+                  {item.external_url && (
+                    <Button variant="secondary" href={item.external_url} external arrow={false}>
+                      {t('actions.exhibitionSite')}
+                    </Button>
+                  )}
+                  <ShareButton title={title} />
+                </div>
+              </div>
               <div className="flex min-w-0 flex-col gap-24 lg:col-span-2">
                 <div className="flex flex-wrap items-start justify-between gap-16">
                   <div className="flex min-w-0 flex-col gap-12">
@@ -110,7 +122,7 @@ function ContestDetail() {
                     </p>
                   </div>
                 )}
-                <dl className="border-t border-border-subtle">
+                <dl className="w-max max-w-full border-t border-border-subtle">
                   {semester && <MetaRow label={t('meta.semester')}>{semester}</MetaRow>}
                   {(item.period || start || end) && (
                     <MetaRow label={t('meta.period')}>
@@ -118,14 +130,6 @@ function ContestDetail() {
                     </MetaRow>
                   )}
                 </dl>
-                <div className="flex flex-wrap items-center gap-16">
-                  {item.external_url && (
-                    <Button variant="secondary" href={item.external_url} external>
-                      {t('actions.exhibitionSite')}
-                    </Button>
-                  )}
-                  <ShareButton title={title} />
-                </div>
               </div>
             </div>
             {gallery.length > 0 && (

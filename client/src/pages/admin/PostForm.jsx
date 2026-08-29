@@ -688,7 +688,7 @@ function PostForm() {
                   />
                 </Field>
               </div>
-              {/* Y3-5: 동아리 사이트 — 상세 페이지의 "사이트 바로가기" 버튼(새 탭) */}
+              {/* Y3-5: 동아리 사이트 — 상세 페이지 로고 아래 "웹사이트" 버튼(새 탭) */}
               <div className="md:col-span-2">
                 <Field label="사이트 URL" hint="상세 페이지에 새 탭 링크 버튼으로 노출됩니다">
                   <Input type="url" value={form.site_url} onChange={setInput('site_url')} />

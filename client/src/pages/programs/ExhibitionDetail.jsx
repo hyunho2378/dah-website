@@ -11,6 +11,7 @@ import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
+import { exhibitionSiteLabel } from '../../data/exhibitionTitle'
 
 // gallery jsonb 정규화: 배열 → 단일 갤러리, 객체 → 현장·작품 구분 섹션
 const GALLERY_LABELS = {
@@ -126,16 +127,28 @@ function ExhibitionDetail() {
         ) : (
           <article className="flex min-w-0 flex-col gap-48">
             <div className="grid gap-24 lg:grid-cols-3 lg:gap-40">
-              {/* 모바일에서 2:3 포스터가 화면을 다 먹지 않게 폭 상한 — 헤드라인·메타와 함께 보이게 */}
-              <figure className="w-full max-w-[240px] lg:col-span-1 lg:max-w-none">
-                <ImageFrame
-                  src={item.poster_url}
-                  alt={`${item.title} 포스터`}
-                  ratio="2/3"
-                  loading="eager"
-                  placeholder={item.semester_label || item.title}
-                />
-              </figure>
+              {/* 액션 버튼은 포스터 바로 아래 고정 — 우측 정보 영역에 두면 본문 길이에 따라
+                  버튼 위치가 전시회마다 달라진다(공모전 상세도 같은 구조로 통일). */}
+              <div className="flex min-w-0 flex-col gap-16 lg:col-span-1">
+                {/* 모바일에서 2:3 포스터가 화면을 다 먹지 않게 폭 상한 — 헤드라인·메타와 함께 보이게 */}
+                <figure className="w-full max-w-[240px] lg:max-w-none">
+                  <ImageFrame
+                    src={item.poster_url}
+                    alt={`${item.title} 포스터`}
+                    ratio="2/3"
+                    loading="eager"
+                    placeholder={item.semester_label || item.title}
+                  />
+                </figure>
+                <div className="flex flex-wrap items-center gap-12">
+                  {item.site_url && (
+                    <Button variant="secondary" href={item.site_url} external arrow={false}>
+                      {exhibitionSiteLabel(item.semester_label) || t('actions.exhibitionSite')}
+                    </Button>
+                  )}
+                  <ShareButton title={item.title} />
+                </div>
+              </div>
               <div className="flex min-w-0 flex-col gap-16 lg:col-span-2">
                 <div className="flex flex-wrap items-start justify-between gap-16">
                   <div className="flex min-w-0 flex-col gap-8">
@@ -149,7 +162,7 @@ function ExhibitionDetail() {
                     to={`/admin/posts/exhibitions/${id}/edit`}
                   />
                 </div>
-                <dl className="border-t border-border-subtle">
+                <dl className="w-max max-w-full border-t border-border-subtle">
                   {item.semester_label && (
                     <MetaRow label={t('meta.semester')}>{item.semester_label}</MetaRow>
                   )}
@@ -166,14 +179,6 @@ function ExhibitionDetail() {
                     {intro}
                   </p>
                 ) : null}
-                <div className="flex flex-wrap items-center gap-16">
-                  {item.site_url && (
-                    <Button variant="secondary" href={item.site_url} external>
-                      {t('actions.exhibitionSite')}
-                    </Button>
-                  )}
-                  <ShareButton title={item.title} />
-                </div>
               </div>
             </div>
             {galleries.map((g) => (

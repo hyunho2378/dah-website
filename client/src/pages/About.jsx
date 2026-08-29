@@ -18,6 +18,8 @@ const COPY = {
     whyStatement: '앞으로는 한 전문 영역의 경계를 넘어 다방면의 지식을 통섭할 수 있어야 합니다.',
     whyLead: '디지털인문예술에서는 개개인의 삶의 질을 높이고 사회의 발전을 이끌고자 인문사회학적 지성에 기술과 디자인을 융합하여 혁신을 창안하는 역량을 키우고자 합니다.',
     missionKr: '인간에 대한 깊은 이해와 창의적인 디지털 역량을 결합하여, 세상에 없던 새로운 가치를 창조한다.',
+    whatKeywords: ['디지털·정보통신기술', '디자인', '인문사회학적 소양'],
+    whyKeywords: ['인문사회학적 지성', '기술과 디자인', '혁신'],
     vision: [
       {
         title: '미래를 디자인하는 창의적 리더 양성',
@@ -38,6 +40,8 @@ const COPY = {
     whyStatement: 'The coming era demands the ability to reach beyond a single specialty and integrate knowledge across disciplines.',
     whyLead: 'Digital Arts and Humanities builds the capacity to create innovation by fusing technology and design with humanistic intelligence, raising the quality of individual life and advancing society.',
     missionKr: 'We combine a deep understanding of people with creative digital capability to create value the world has not seen.',
+    whatKeywords: ['digital and information technologies', 'human-centered value', 'humanistic insight'],
+    whyKeywords: ['technology and design', 'humanistic intelligence'],
     vision: [
       {
         title: 'Educating creative leaders who design the future',
@@ -56,6 +60,35 @@ const COPY = {
 }
 
 const MISSION_EN = 'We combine human insight and digital creativity to build a better future.'
+
+// 원문은 한 글자도 바꾸지 않고, 지정 구절만 <strong>으로 감싸 위계만 준다.
+// 문자열을 자르지 않고 split의 캡처 그룹으로 나누므로 원문 순서·문자가 그대로 보존된다.
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+function Highlight({ text, keywords = [] }) {
+  if (!text || keywords.length === 0) return text
+  const parts = text.split(new RegExp(`(${keywords.map(escapeRe).join('|')})`, 'g'))
+  return parts.map((part, i) =>
+    keywords.includes(part) ? (
+      <strong key={i} className="font-semibold text-text-pri">
+        {part}
+      </strong>
+    ) : (
+      part
+    )
+  )
+}
+
+// 레퍼런스 이식분: 큰 밑줄 헤딩 + What/Why 좌우 지그재그.
+// 색·폰트는 우리 토큰 그대로 — 레퍼런스의 흰 배경·검정 텍스트는 가져오지 않는다.
+// 밑줄은 CI 4.5 1단계 강조색(Primary Purple) 2px 한 줄로만 쓴다(면적 최소).
+function SectionHeading({ children }) {
+  return (
+    <h2 className="inline-block border-b-2 border-purple-primary pb-12 text-h1-m font-extrabold leading-tight tracking-display text-text-pri md:text-h1-d">
+      {children}
+    </h2>
+  )
+}
 
 // K2-8 미션·비전 아이콘 3종 — 모노크롬 스트로크(인라인 SVG, 장식용 aria-hidden)
 // 공통: viewBox 24, fill none, stroke currentColor 1.5, 렌더 48px, 색은 텍스트 토큰만
@@ -154,22 +187,32 @@ function About() {
       />
 
       <div className="pb-section-m md:pb-section-d">
-        {/* 01 개요 — G12: 리드 문단(크게, 행간 1.8, max-w 720) → 소섹션(WHY) 위계 */}
+        {/* 01 개요 — What is DAH / Why DAH를 좌우 번갈아 배치. 원문 재배치만이고 문구 추가·삭제 없음 */}
         <Container as="section" className="pt-section-m md:pt-section-d">
           <Reveal>
             <SectionLabel index="01" text="OVERVIEW" />
-            {/* K2-5: 리드·문단 max-w 720 → 960(가독 상한) — 절반 꺾임 해소 */}
-            <p className="mt-32 max-w-[960px] text-h3-m font-medium leading-[1.8] text-text-pri md:mt-40 md:text-h3-d">
-              {copy.what}
+          </Reveal>
+          <Reveal className="mt-40 grid gap-24 md:mt-48 md:grid-cols-2 md:gap-64">
+            <div>
+              <SectionHeading>What is DAH</SectionHeading>
+            </div>
+            <p className="text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
+              <Highlight text={copy.what} keywords={copy.whatKeywords} />
             </p>
           </Reveal>
-          <Reveal className="mt-64 border-t border-border-subtle pt-48 md:mt-96 md:pt-64">
-            <h2 className="max-w-[960px] text-h2-m font-bold leading-snug tracking-display text-text-pri md:text-h2-d">
-              {copy.whyStatement}
-            </h2>
-            <p className="mt-24 max-w-[960px] text-body-l-m leading-[1.8] text-text-sec md:mt-32 md:text-body-l-d">
-              {copy.whyLead}
-            </p>
+          {/* 지그재그: Why는 헤딩이 오른쪽. 모바일은 헤딩이 먼저 오도록 order로 되돌린다 */}
+          <Reveal className="mt-64 grid gap-24 border-t border-border-subtle pt-48 md:mt-96 md:grid-cols-2 md:gap-64 md:pt-64">
+            <div className="md:order-2">
+              <SectionHeading>Why DAH</SectionHeading>
+            </div>
+            <div className="flex flex-col gap-24 md:order-1">
+              <p className="text-h3-m font-medium leading-snug text-text-pri md:text-h3-d">
+                {copy.whyStatement}
+              </p>
+              <p className="text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
+                <Highlight text={copy.whyLead} keywords={copy.whyKeywords} />
+              </p>
+            </div>
           </Reveal>
         </Container>
 
@@ -181,7 +224,9 @@ function About() {
               <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
                 Mission
               </p>
-              <h2 className="mt-16 max-w-4xl text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:text-h2-d">
+              {/* 폭 상한(max-w-4xl=896px)이 "better" 뒤를 끊고 있었다 — 상한을 풀어
+                  데스크탑에서 한 줄로 흐르게 하고 좁은 화면에서만 자연 줄바꿈되게 한다 */}
+              <h2 className="mt-16 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:text-h2-d">
                 {MISSION_EN}
               </h2>
               {lang !== 'en' && (

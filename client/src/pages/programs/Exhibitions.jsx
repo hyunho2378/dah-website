@@ -115,7 +115,7 @@ function FeaturedExhibition({ item }) {
           ) : null}
           {/* 전시 기간만 노출 — 접수 진입은 헤더 CTA가 담당한다 */}
           {period && (
-            <div className={`flex min-w-0 flex-col gap-8 p-24 md:p-32 ${CTA_SURFACE}`}>
+            <div className={`flex min-w-0 flex-col gap-8 self-start p-24 md:p-32 ${CTA_SURFACE}`}>
               <p className="text-small-m text-text-meta md:text-small-d">전시 기간</p>
               <p
                 className={`min-w-0 text-h3-m font-bold leading-snug md:text-h3-d ${ACCENT.proper}`}

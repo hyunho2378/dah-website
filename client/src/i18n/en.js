@@ -92,6 +92,7 @@ export const en = {
     submitShowcase: 'Submit Work',
     submitExhibition: 'Exhibition Entry',
     exhibitionSite: 'Exhibition Site',
+    clubSite: 'Website',
     applyExternal: 'Apply',
     applyLecture: 'Register',
     contestPage: 'Contest Page',

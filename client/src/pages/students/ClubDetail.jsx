@@ -3,12 +3,11 @@
 // 데이터: GET /content/club/:id. 오프라인·미존재 시 data/clubs.js 원문 폴백(id 매칭).
 // 원문 보존 — 소개·활동·추천 대상 문장은 시드 원문 그대로 렌더한다.
 import { useParams } from 'react-router-dom'
-import { ArrowUpRight } from 'lucide-react'
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
-import Tag from '../../components/common/Tag'
+import Button from '../../components/common/Button'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
@@ -111,16 +110,11 @@ function ClubDetail() {
                   }
                 />
               </GlassCard>
+              {/* site_url이 있을 때만 노출된다(없으면 버튼 자체를 렌더하지 않음) */}
               {club.siteUrl && (
-                <a
-                  href={club.siteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-11 items-center justify-center gap-8 rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed md:h-48 md:text-body-d"
-                >
-                  사이트 바로가기
-                  <ArrowUpRight size={16} aria-hidden="true" />
-                </a>
+                <Button variant="primary" href={club.siteUrl} external>
+                  {t('actions.clubSite')}
+                </Button>
               )}
             </div>
 
@@ -128,14 +122,20 @@ function ClubDetail() {
             <div className="flex min-w-0 flex-col gap-32">
               <div className="flex flex-col gap-12">
                 <div className="flex items-start justify-between gap-12">
-                  <h1 className="min-w-0 text-h1-m font-bold leading-tight text-text-pri md:text-h1-d">
-                    {club.title}
-                  </h1>
+                  <div className="flex min-w-0 flex-col gap-8">
+                    {club.field && (
+                      <p className="font-mono text-label-m uppercase tracking-label text-text-meta md:text-label-d">
+                        {club.field}
+                      </p>
+                    )}
+                    <h1 className="min-w-0 text-h1-m font-bold leading-tight text-text-pri md:text-h1-d">
+                      {club.title}
+                    </h1>
+                  </div>
                   {club.isRemote && (
                     <EditPencil type="club" to={`/admin/posts/club/${club.id}/edit`} />
                   )}
                 </div>
-                {club.field && <Tag>{club.field}</Tag>}
                 {club.intro && (
                   <p className="break-keep text-body-m leading-relaxed text-text-sec md:text-body-d">
                     {club.intro}
