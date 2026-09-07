@@ -4,8 +4,7 @@ import Container from './Container'
 import logoUrl from '../../assets/logo.svg'
 
 // K2-10 최종 조정 — 좌: 로고 + "한림대학교 디지털인문예술전공" 한 줄(영문 병기·주소 제거).
-// 우: 정책 링크 줄(개인정보처리방침 | 이용약관 | 상담 신청) / TEL / 메일. 최하단 저작권 유지.
-// /consult 라우트는 통합자가 연결(K1이 페이지 생성 중) — 여기서는 LangLink 배치만.
+// 우: 정책 링크 줄(개인정보처리방침 | 이용약관) / TEL / 메일. 최하단 저작권 유지.
 // 상단 1px 헤어라인 + 불투명 배경(bg-bg-elev)으로 우주 배경(성운) 푸터 영역 제외.
 function Footer() {
   const { t } = useLang()
@@ -43,15 +42,6 @@ function Footer() {
                 className="transition-colors duration-fast ease-out hover:text-text-pri"
               >
                 {t('footer.terms')}
-              </Link>
-              <span aria-hidden="true" className="text-text-meta">|</span>
-              <Link
-                to="/consult"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors duration-fast ease-out hover:text-text-pri"
-              >
-                {t('footer.consult')}
               </Link>
             </div>
             <p className="text-small-m text-text-meta md:text-small-d">TEL 033-248-3556</p>

@@ -21,8 +21,8 @@ import { RequireRole, useAuth } from '../../context/AuthContext'
 // 시스템·오너 전용(전시회 설정·사이트 설정·상담·사용자)은 IA에 없으므로 별도 그룹으로 둔다.
 const NAV_GROUPS = [
   {
-    label: 'OWNER',
-    items: [{ to: '/admin/users', label: '사용자', role: 'owner' }],
+    label: 'USERS',
+    items: [{ to: '/admin/users', label: '사용자', role: 'manager' }],
   },
   {
     label: 'DASHBOARD',
@@ -32,25 +32,24 @@ const NAV_GROUPS = [
     label: 'SYSTEM',
     items: [
       { to: '/admin/exhibition', label: '전시회 설정', role: 'manager' },
-      { to: '/admin/forms', label: '행사 설정', role: 'admin' },
-      { to: '/admin/settings', label: '사이트 설정', role: 'admin' },
-      { to: '/admin/consultations', label: '상담 신청', role: 'admin' },
+      { to: '/admin/forms', label: '행사 설정', role: 'manager' },
+      { to: '/admin/settings', label: '사이트 설정', role: 'manager' },
     ],
   },
   {
     label: 'ABOUT',
     items: [
-      { to: '/admin/professors', label: '교수진', role: 'admin' },
-      { to: '/admin/mentors', label: '멘토', role: 'admin' },
-      { to: '/admin/ci', label: 'CI', role: 'admin' },
+      { to: '/admin/professors', label: '교수진', role: 'manager' },
+      { to: '/admin/mentors', label: '멘토', role: 'manager' },
+      { to: '/admin/ci', label: 'CI', role: 'manager' },
     ],
   },
   {
     label: 'ACADEMICS',
     items: [
-      { to: '/admin/curriculum', label: '교과목', role: 'admin' },
-      { to: '/admin/codesharing', label: '코드쉐어링', role: 'admin' },
-      { to: '/admin/nanodegree', label: '나노디그리', role: 'admin' },
+      { to: '/admin/curriculum', label: '교과목', role: 'manager' },
+      { to: '/admin/codesharing', label: '코드쉐어링', role: 'manager' },
+      { to: '/admin/nanodegree', label: '나노디그리', role: 'manager' },
     ],
   },
   {
@@ -64,11 +63,11 @@ const NAV_GROUPS = [
   {
     label: 'STUDENT LIFE',
     items: [
-      { to: '/admin/council', label: '운영위원회', role: 'admin' },
+      { to: '/admin/council', label: '운영위원회', role: 'manager' },
       { to: '/admin/posts/club', label: '동아리', role: 'manager' },
       { to: '/admin/posts/achievement', label: '학생 성과', role: 'manager' },
       { to: '/admin/showcase', label: '웹&앱 쇼케이스', role: 'manager' },
-      { to: '/admin/careers', label: '취업 현황', role: 'admin' },
+      { to: '/admin/careers', label: '취업 현황', role: 'manager' },
       { to: '/admin/posts/portfolios', label: '포트폴리오', role: 'manager' },
     ],
   },

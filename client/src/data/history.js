@@ -8,6 +8,7 @@
  * @property {string} textEn - 내용 (영문)
  */
 export const history = [
+  { date: '2026.09.01.', text: '전공주임교수 한수미 교수 취임', textEn: 'Prof. Su Mi Han appointed as Head of Department' },
   { date: '2017.03.01.', text: '한림대학교 디지털인문예술전공 설립', textEn: 'Digital Arts & Humanities established at Hallym University' },
   { date: '2017.03.01.', text: '전공주임교수 김용수 교수 취임', textEn: 'Prof. Yong Soo Kim appointed as founding Head of Department' },
   { date: '2017.03.01.', text: '한수미 교수 부임', textEn: 'Prof. Su Mi Han joined the faculty' },

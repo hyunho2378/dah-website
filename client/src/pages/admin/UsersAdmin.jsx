@@ -1,5 +1,5 @@
-// UsersAdmin.jsx — 사용자 관리 (13_CMS_SPEC 6절, owner 전용)
-// 이메일·롤 사전 등록(must_set_pw=TRUE → 첫 로그인 시 비밀번호 설정) + 리셋 플래그 + 롤 변경.
+// UsersAdmin.jsx — 사용자 관리 (manager+)
+// manager: manager만 등록·초기화, 삭제 불가 / admin: manager·admin 등록·초기화·삭제 / owner: 전체.
 // API: /admin/users (server/src/routes/adminExtra.js — 8절 계약 외 확장)
 
 import { useState } from 'react'
@@ -26,6 +26,12 @@ const ROLE_OPTIONS = [
   { value: 'owner', label: 'owner (전체 관리)' },
 ]
 
+function manageableRoles(role) {
+  if (role === 'owner') return ['manager', 'admin', 'owner']
+  if (role === 'admin') return ['manager', 'admin']
+  return ['manager']
+}
+
 function UsersAdmin() {
   useTitle('사용자 관리')
   const { user: me } = useAuth()
@@ -37,6 +43,8 @@ function UsersAdmin() {
   const [listError, setListError] = useState(null)
 
   const items = data?.items || []
+  const allowedRoles = manageableRoles(me?.role)
+  const roleOptions = ROLE_OPTIONS.filter((option) => allowedRoles.includes(option.value))
 
   const create = async (e) => {
     e.preventDefault()
@@ -119,7 +127,7 @@ function UsersAdmin() {
             <Select
               value={form.role}
               onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
-              options={ROLE_OPTIONS}
+              options={roleOptions}
             />
           </Field>
         </div>
@@ -142,6 +150,11 @@ function UsersAdmin() {
         <ul className="grid grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => {
             const isMe = me?.id === item.id
+            const canManage = !isMe && allowedRoles.includes(item.role)
+            const canDelete = canManage && me?.role !== 'manager'
+            const itemRoleOptions = canManage
+              ? roleOptions
+              : ROLE_OPTIONS.filter((option) => option.value === item.role)
             return (
               <li
                 key={item.id}
@@ -167,15 +180,15 @@ function UsersAdmin() {
                   <Select
                     value={item.role}
                     onChange={(e) => changeRole(item, e.target.value)}
-                    disabled={isMe}
+                    disabled={!canManage || me?.role === 'manager'}
                     aria-label={`${item.email} 롤`}
-                    options={ROLE_OPTIONS.map((o) => ({ value: o.value, label: o.value }))}
+                    options={itemRoleOptions.map((o) => ({ value: o.value, label: o.value }))}
                     className="min-w-0 flex-1"
                   />
                   <button
                     type="button"
                     onClick={() => reset(item)}
-                    disabled={isMe}
+                    disabled={!canManage}
                     aria-label={`${item.email} 비밀번호 리셋`}
                     title="비밀번호 리셋"
                     className={ICON_BTN}
@@ -185,7 +198,7 @@ function UsersAdmin() {
                   <button
                     type="button"
                     onClick={() => remove(item)}
-                    disabled={isMe}
+                    disabled={!canDelete}
                     aria-label={`${item.email} 삭제`}
                     title="계정 삭제"
                     className={ICON_BTN}

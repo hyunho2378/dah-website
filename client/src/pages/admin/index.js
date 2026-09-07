@@ -35,7 +35,6 @@ import FormsAdmin from './FormsAdmin'
 import FormEditor from './FormEditor'
 import FormResponsesSheet from './FormResponsesSheet'
 import SettingsAdmin from './SettingsAdmin'
-import ConsultationsAdmin from './ConsultationsAdmin'
 import UsersAdmin from './UsersAdmin'
 
 export { AdminLayout }
@@ -47,21 +46,20 @@ export const ADMIN_ROUTES = [
   { path: 'posts/:type/new', Component: PostForm, role: 'manager' },
   { path: 'posts/:type/:id/edit', Component: PostForm, role: 'manager' },
   { path: 'showcase', Component: ShowcaseQueue, role: 'manager' },
-  { path: 'professors', Component: ProfessorsAdmin, role: 'admin' },
-  { path: 'mentors', Component: MentorsAdmin, role: 'admin' },
-  { path: 'curriculum', Component: CurriculumAdmin, role: 'admin' },
-  { path: 'codesharing', Component: CodeSharingAdmin, role: 'admin' },
-  { path: 'nanodegree', Component: NanodegreeAdmin, role: 'admin' },
-  { path: 'ci', Component: CIAdmin, role: 'admin' },
-  { path: 'council', Component: CouncilAdmin, role: 'admin' },
-  { path: 'careers', Component: CareersAdmin, role: 'admin' },
+  { path: 'professors', Component: ProfessorsAdmin, role: 'manager' },
+  { path: 'mentors', Component: MentorsAdmin, role: 'manager' },
+  { path: 'curriculum', Component: CurriculumAdmin, role: 'manager' },
+  { path: 'codesharing', Component: CodeSharingAdmin, role: 'manager' },
+  { path: 'nanodegree', Component: NanodegreeAdmin, role: 'manager' },
+  { path: 'ci', Component: CIAdmin, role: 'manager' },
+  { path: 'council', Component: CouncilAdmin, role: 'manager' },
+  { path: 'careers', Component: CareersAdmin, role: 'manager' },
   { path: 'exhibition', Component: ExhibitionAdmin, role: 'manager' },
-  { path: 'forms', Component: FormsAdmin, role: 'admin' },
-  { path: 'forms/new', Component: FormEditor, role: 'admin' },
-  { path: 'forms/:id/edit', Component: FormEditor, role: 'admin' },
-  { path: 'settings', Component: SettingsAdmin, role: 'admin' },
-  { path: 'consultations', Component: ConsultationsAdmin, role: 'admin' },
-  { path: 'users', Component: UsersAdmin, role: 'owner' },
+  { path: 'forms', Component: FormsAdmin, role: 'manager' },
+  { path: 'forms/new', Component: FormEditor, role: 'manager' },
+  { path: 'forms/:id/edit', Component: FormEditor, role: 'manager' },
+  { path: 'settings', Component: SettingsAdmin, role: 'manager' },
+  { path: 'users', Component: UsersAdmin, role: 'manager' },
 ]
 
 /**
@@ -71,5 +69,5 @@ export const ADMIN_ROUTES = [
  */
 export const ADMIN_FULLSCREEN_ROUTES = [
   { path: 'exhibition-entries/sheet', Component: EntriesSheet, role: 'manager' },
-  { path: 'forms/:id/responses/sheet', Component: FormResponsesSheet, role: 'admin' },
+  { path: 'forms/:id/responses/sheet', Component: FormResponsesSheet, role: 'manager' },
 ]

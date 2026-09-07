@@ -61,7 +61,7 @@ router.get(
 router.post(
   '/admin/offerings',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const sem = parseSemester(req.body)
     if (!sem) return res.status(400).json({ error: 'year(2000-2100)와 term(1|2)이 필요합니다' })
@@ -93,7 +93,7 @@ router.post(
 router.delete(
   '/admin/offerings/:id',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const id = parseInt(req.params.id, 10)
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' })

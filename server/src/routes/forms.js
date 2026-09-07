@@ -329,7 +329,7 @@ function pickFormBody(body) {
 router.get(
   '/admin/forms',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const { rows } = await query(
       `SELECT f.*, (SELECT COUNT(*)::int FROM custom_form_responses r WHERE r.form_id = f.id) AS response_count
@@ -342,7 +342,7 @@ router.get(
 router.get(
   '/admin/forms/:id',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const { rows } = await query('SELECT * FROM custom_forms WHERE id = $1', [req.params.id])
     if (!rows[0]) return res.status(404).json({ error: 'not found' })
@@ -353,7 +353,7 @@ router.get(
 router.post(
   '/admin/forms',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const data = pickFormBody(req.body || {})
     if (!data.slug || !data.title_ko) {
@@ -373,7 +373,7 @@ router.post(
 router.put(
   '/admin/forms/:id',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const data = pickFormBody(req.body || {})
     const cols = Object.keys(data)
@@ -391,7 +391,7 @@ router.put(
 router.delete(
   '/admin/forms/:id',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const { rowCount } = await query('DELETE FROM custom_forms WHERE id = $1', [req.params.id])
     if (!rowCount) return res.status(404).json({ error: 'not found' })
@@ -402,7 +402,7 @@ router.delete(
 router.get(
   '/admin/forms/:id/responses',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const { rows: formRows } = await query('SELECT * FROM custom_forms WHERE id = $1', [req.params.id])
     const form = formRows[0]
@@ -426,7 +426,7 @@ function csvCell(v) {
 router.get(
   '/admin/forms/:id/responses/export',
   requireAuth,
-  requireRole('admin'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const { rows: formRows } = await query('SELECT * FROM custom_forms WHERE id = $1', [req.params.id])
     const form = formRows[0]

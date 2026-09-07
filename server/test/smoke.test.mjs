@@ -43,14 +43,19 @@ test('(a) 비로그인 POST /admin/content/notice → 401', async () => {
   assert.equal(res.status, 401)
 })
 
-test('(b) manager 토큰으로 admin 전용(professors) 작성 → 403', async () => {
-  const app = createApp({ db: mockDb(() => ({ rows: [] })) })
+test('(b) manager 토큰으로 교수진 작성 → 201', async () => {
+  const app = createApp({
+    db: mockDb((text) => {
+      if (text.startsWith('INSERT INTO professors')) return { rows: [{ id: 1, name_ko: '테스트 교수' }] }
+      return { rows: [] }
+    }),
+  })
   const res = await request(app)
     .post('/admin/content/professors')
     .set('Cookie', [accessCookie({ id: 2, email: 'manager@test.dev', name: 'M', role: 'manager' })])
     .send({ name_ko: '테스트 교수' })
-  assert.equal(res.status, 403)
-  assert.equal(res.body.required, 'admin')
+  assert.equal(res.status, 201)
+  assert.equal(res.body.item.name_ko, '테스트 교수')
 })
 
 test('(b-보강) manager 토큰으로 notice 작성 → 201 (권한 매트릭스 상행 확인)', async () => {
@@ -176,8 +181,7 @@ test('(추가) 허용 목록 외 :type 차단 → 404', async () => {
   assert.equal(res.body.error, 'unknown content type')
 })
 
-// 전시회 업무는 manager+ (12_BACKEND 2절 "관리 학생, 전시회 담당 등").
-// 단 사이트 전역 설정 키는 manager에게 열리면 안 된다 — 권한 확장의 경계를 고정한다.
+// manager 이상은 전시회·행사·사이트 설정을 모두 관리한다.
 const MANAGER = { id: 9, email: 'm@x.com', name: '매니저', role: 'manager' }
 
 test('(f) manager로 GET /admin/exhibition/entries → 200', async () => {
@@ -208,12 +212,59 @@ test('(g) manager로 전시회 일정·회차 저장 → 200', async () => {
   assert.equal(res.status, 200)
 })
 
-test('(h) manager로 사이트 전역 설정(contentVisibility) 저장 → 403', async () => {
-  const app = createApp({ db: mockDb(() => ({ rows: [] })) })
+test('(h) manager로 사이트 전역 설정(contentVisibility) 저장 → 200', async () => {
+  const app = createApp({
+    db: mockDb((text) => {
+      if (text.includes('INSERT INTO site_settings')) {
+        return { rows: [{ key: 'contentVisibility', value: { notice: false } }] }
+      }
+      return { rows: [] }
+    }),
+  })
   const res = await request(app)
     .put('/admin/settings')
     .set('Cookie', accessCookie(MANAGER))
     .send({ settings: { contentVisibility: { notice: false } } })
-  assert.equal(res.status, 403)
-  assert.deepEqual(res.body.keys, ['contentVisibility'])
+  assert.equal(res.status, 200)
+  assert.deepEqual(res.body.settings.contentVisibility, { notice: false })
+})
+
+test('(i) manager는 manager만 등록·초기화하고 사용자 삭제는 할 수 없다', async () => {
+  const manager = { id: 9, email: 'm@x.com', name: '매니저', role: 'manager' }
+  const app = createApp({
+    db: mockDb((text, params) => {
+      if (text.startsWith('INSERT INTO users')) {
+        return { rows: [{ id: 10, email: params[0], name: params[1], role: params[2], must_set_pw: true }] }
+      }
+      if (text.startsWith('SELECT id, email, name, role, must_set_pw, created_at FROM users WHERE id')) {
+        return { rows: [{ id: 10, email: 'new@x.com', name: '새 매니저', role: 'manager', must_set_pw: false }] }
+      }
+      if (text.startsWith('UPDATE users SET')) {
+        return { rows: [{ id: 10, email: 'new@x.com', name: '새 매니저', role: 'manager', must_set_pw: true }] }
+      }
+      return { rows: [] }
+    }),
+  })
+  const createManager = await request(app)
+    .post('/admin/users')
+    .set('Cookie', accessCookie(manager))
+    .send({ email: 'new@x.com', name: '새 매니저', role: 'manager' })
+  assert.equal(createManager.status, 201)
+
+  const createAdmin = await request(app)
+    .post('/admin/users')
+    .set('Cookie', accessCookie(manager))
+    .send({ email: 'admin@x.com', name: '새 어드민', role: 'admin' })
+  assert.equal(createAdmin.status, 403)
+
+  const resetManager = await request(app)
+    .put('/admin/users/10')
+    .set('Cookie', accessCookie(manager))
+    .send({ reset: true })
+  assert.equal(resetManager.status, 200)
+
+  const removeManager = await request(app)
+    .delete('/admin/users/10')
+    .set('Cookie', accessCookie(manager))
+  assert.equal(removeManager.status, 403)
 })

@@ -1,8 +1,7 @@
 // src/routes/admin.js — 어드민 콘텐츠 CRUD (12_BACKEND.md 8절 + 13_CMS_SPEC.md 1절 권한 매트릭스)
 // POST/PUT/DELETE /admin/content/:type(/:id)
 // GET은 8절 계약 외 확장: 어드민 대시보드(13_CMS 6절)가 미공개·pending 큐를 조회해야 해서 추가.
-// 삭제: admin+ 전부, manager는 posts 계열 자기 글(created_by)만. 소유자 추적이 없는
-// 독립 테이블은 manager 삭제 불가(403).
+// manager 이상은 모든 관리 콘텐츠를 생성·수정·삭제한다.
 import { Router } from 'express'
 import { query } from '../db.js'
 import { requireAuth, hasRole } from '../middleware/auth.js'
@@ -176,18 +175,6 @@ router.delete(
     if (cfg.singleton) return res.status(405).json({ error: 'singleton document cannot be deleted' })
     const id = parseId(req, res)
     if (id === null) return
-
-    // manager는 자기 글만 삭제 (13_CMS 1절). 소유자 컬럼이 없는 테이블은 admin+ 전용
-    if (!hasRole(req.user, 'admin')) {
-      if (!cfg.postType) {
-        return res.status(403).json({ error: 'delete requires admin role for this type' })
-      }
-      const { rows } = await query('SELECT created_by FROM posts WHERE id = $1 AND type = $2', [id, cfg.postType])
-      if (!rows[0]) return res.status(404).json({ error: 'not found' })
-      if (rows[0].created_by !== req.user.id) {
-        return res.status(403).json({ error: 'managers can only delete their own posts' })
-      }
-    }
 
     const params = [id]
     const where = ['id = $1']

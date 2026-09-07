@@ -28,11 +28,11 @@ const COUNT_TARGETS = [
   { type: 'club', label: '동아리', to: '/admin/posts/club', role: 'manager' },
   { type: 'portfolios', label: '포트폴리오', to: '/admin/posts/portfolios', role: 'manager' },
   { type: 'showcase', label: '쇼케이스', to: '/admin/showcase', role: 'manager' },
-  { type: 'professors', label: '교수진', to: '/admin/professors', role: 'admin' },
-  { type: 'mentors', label: '멘토', to: '/admin/mentors', role: 'admin' },
-  { type: 'curriculum', label: '교과목', to: '/admin/curriculum', role: 'admin' },
-  { type: 'council', label: '운영위원회', to: '/admin/council', role: 'admin' },
-  { type: 'careers', label: '취업 현황', to: '/admin/careers', role: 'admin' },
+  { type: 'professors', label: '교수진', to: '/admin/professors', role: 'manager' },
+  { type: 'mentors', label: '멘토', to: '/admin/mentors', role: 'manager' },
+  { type: 'curriculum', label: '교과목', to: '/admin/curriculum', role: 'manager' },
+  { type: 'council', label: '운영위원회', to: '/admin/council', role: 'manager' },
+  { type: 'careers', label: '취업 현황', to: '/admin/careers', role: 'manager' },
 ]
 
 const PANEL =

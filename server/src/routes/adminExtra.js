@@ -1,6 +1,6 @@
 // src/routes/adminExtra.js — 8절 계약 외 확장 (13_CMS_SPEC.md 6절 어드민 대시보드)
-// 사용자 관리(owner): GET/POST /admin/users, PUT /admin/users/:id(이름·롤 변경, 비밀번호 리셋 플래그),
-//                     DELETE /admin/users/:id. 온보딩은 12_BACKEND 3절: 등록 시 must_set_pw=TRUE.
+// 사용자 관리(manager+): 화면은 모두 열되 역할별 대상 범위는 다르다.
+// manager: manager만 등록·초기화, 삭제 불가 / admin: manager·admin 등록·초기화·삭제 / owner: 전체.
 // 접수 현황(admin+): GET /admin/exhibition/entries — exhibition_entries 목록 (pw_hash 제외).
 import { Router } from 'express'
 import { query } from '../db.js'
@@ -12,10 +12,20 @@ const router = Router()
 const ROLES = ['manager', 'admin', 'owner']
 const USER_COLS = 'id, email, name, role, must_set_pw, created_at'
 
+function manageableRoles(user) {
+  if (user.role === 'owner') return ROLES
+  if (user.role === 'admin') return ['manager', 'admin']
+  return ['manager']
+}
+
+function canManageRole(user, role) {
+  return manageableRoles(user).includes(role)
+}
+
 router.get(
   '/admin/users',
   requireAuth,
-  requireRole('owner'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const { rows } = await query(`SELECT ${USER_COLS} FROM users ORDER BY id ASC`, [])
     res.json({ items: rows, total: rows.length })
@@ -25,13 +35,16 @@ router.get(
 router.post(
   '/admin/users',
   requireAuth,
-  requireRole('owner'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const email = String(req.body?.email || '').trim().toLowerCase()
     const name = String(req.body?.name || '').trim()
     const role = req.body?.role
     if (!email || !name) return res.status(400).json({ error: 'email and name required' })
     if (!ROLES.includes(role)) return res.status(400).json({ error: 'invalid role', allowed: ROLES })
+    if (!canManageRole(req.user, role)) {
+      return res.status(403).json({ error: 'cannot create this role', allowed: manageableRoles(req.user) })
+    }
     try {
       const { rows } = await query(
         `INSERT INTO users (email, name, role, must_set_pw) VALUES ($1, $2, $3, TRUE)
@@ -50,7 +63,7 @@ router.post(
 router.put(
   '/admin/users/:id',
   requireAuth,
-  requireRole('owner'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const id = parseInt(req.params.id, 10)
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' })
@@ -61,6 +74,16 @@ router.put(
     // 자기 계정 롤 강등·리셋 방지 — owner 부재 상태 차단
     if (id === req.user.id && (role !== undefined || reset)) {
       return res.status(400).json({ error: 'cannot change own role or reset own password' })
+    }
+
+    const targetRes = await query(`SELECT ${USER_COLS} FROM users WHERE id = $1`, [id])
+    const target = targetRes.rows[0]
+    if (!target) return res.status(404).json({ error: 'not found' })
+    if (!canManageRole(req.user, target.role)) {
+      return res.status(403).json({ error: 'cannot manage this user' })
+    }
+    if (role !== undefined && !canManageRole(req.user, role)) {
+      return res.status(403).json({ error: 'cannot assign this role', allowed: manageableRoles(req.user) })
     }
 
     const sets = []
@@ -89,11 +112,18 @@ router.put(
 router.delete(
   '/admin/users/:id',
   requireAuth,
-  requireRole('owner'),
+  requireRole('manager'),
   wrap(async (req, res) => {
     const id = parseInt(req.params.id, 10)
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' })
     if (id === req.user.id) return res.status(400).json({ error: 'cannot delete own account' })
+    if (req.user.role === 'manager') return res.status(403).json({ error: 'managers cannot delete users' })
+    const targetRes = await query(`SELECT ${USER_COLS} FROM users WHERE id = $1`, [id])
+    const target = targetRes.rows[0]
+    if (!target) return res.status(404).json({ error: 'not found' })
+    if (!canManageRole(req.user, target.role)) {
+      return res.status(403).json({ error: 'cannot delete this user' })
+    }
     const { rows } = await query('DELETE FROM users WHERE id = $1 RETURNING id', [id])
     if (!rows[0]) return res.status(404).json({ error: 'not found' })
     res.json({ ok: true, id: rows[0].id })

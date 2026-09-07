@@ -35,7 +35,6 @@ import ShowcaseSubmit from './pages/showcase/ShowcaseSubmit'
 import ExhibitSubmit from './pages/submit/ExhibitSubmit'
 import ExhibitEdit from './pages/submit/ExhibitEdit'
 import FormPage from './pages/forms/FormPage'
-import Consult from './pages/Consult'
 import News from './pages/News'
 import NewsDetail from './pages/NewsDetail'
 import Resources from './pages/Resources'
@@ -105,9 +104,6 @@ const PUBLIC_ROUTES = [
   { path: '/resources/:id', element: <ResourceDetail /> },
   { path: '/privacy', element: <Privacy /> },
   { path: '/terms', element: <Terms /> },
-  // H2-5(37_SHEET_ROADMAP): 상담 신청이 영문 지원 대상이 되어 /en 미러에 포함한다.
-  // (이전에는 국문 전용 standalone 라우트였다 — localizeTo 제외 목록에서도 함께 해제)
-  { path: '/consult', element: <Consult /> },
 ]
 
 function App() {

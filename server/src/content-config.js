@@ -66,7 +66,7 @@ export const CONTENT_TYPES = {
   // ── 독립 테이블 계열 ──
   professors: {
     table: 'professors',
-    minRole: 'admin',
+    minRole: 'manager',
     columns: ['name_ko', 'name_en', 'title_ko', 'title_en', 'email', 'photo_url', 'links', 'sort', 'active', 'has_bg'],
     jsonb: ['links'],
     required: ['name_ko'],
@@ -76,7 +76,7 @@ export const CONTENT_TYPES = {
   },
   mentors: {
     table: 'mentors',
-    minRole: 'admin',
+    minRole: 'manager',
     columns: ['name', 'company', 'title', 'link', 'sort', 'active'],
     jsonb: [],
     required: ['name'],
@@ -86,7 +86,7 @@ export const CONTENT_TYPES = {
   },
   curriculum: {
     table: 'curriculum',
-    minRole: 'admin',
+    minRole: 'manager',
     columns: ['grade', 'semester', 'track', 'name_ko', 'name_en', 'credit', 'sort'],
     jsonb: [],
     required: ['grade', 'track', 'name_ko'],
@@ -95,7 +95,7 @@ export const CONTENT_TYPES = {
   },
   codesharing: {
     table: 'codesharing',
-    minRole: 'admin',
+    minRole: 'manager',
     singleton: true, // 단일 문서 (id=1 고정, POST·PUT 모두 upsert)
     columns: ['body', 'depts', 'hwp_url'],
     jsonb: ['body', 'depts'],
@@ -105,7 +105,7 @@ export const CONTENT_TYPES = {
   },
   nanodegree: {
     table: 'nanodegree',
-    minRole: 'admin',
+    minRole: 'manager',
     singleton: true, // 단일 문서 (id=1 고정, codesharing과 동일 패턴)
     columns: ['body'],
     jsonb: ['body'],
@@ -117,7 +117,7 @@ export const CONTENT_TYPES = {
   // body jsonb: { intro, elements:[{title,text,image}], logoGuide:[{title,image}], colors:[{name,hex}], downloads:[{label,url}] }
   ci: {
     table: 'ci',
-    minRole: 'admin',
+    minRole: 'manager',
     singleton: true,
     columns: ['body'],
     jsonb: ['body'],
@@ -127,7 +127,7 @@ export const CONTENT_TYPES = {
   },
   council: {
     table: 'council',
-    minRole: 'admin',
+    minRole: 'manager',
     columns: ['ordinal', 'name', 'logo_url', 'intro', 'members', 'year_label', 'sort', 'has_bg'],
     jsonb: ['members'],
     required: ['name'],
@@ -165,7 +165,7 @@ export const CONTENT_TYPES = {
   },
   careers: {
     table: 'careers',
-    minRole: 'admin', // 13_CMS: 취업 현황 admin+
+    minRole: 'manager',
     columns: ['grad_name', 'majors', 'company', 'company_url', 'position', 'year', 'sort'],
     jsonb: [],
     required: ['grad_name'],
