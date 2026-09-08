@@ -12,7 +12,8 @@ import Button from '../components/common/Button'
 import RichBody from '../components/content/RichBody'
 import { EditPencil } from '../components/content/EditControls'
 import { useApi, itemOf } from '../hooks/useApi'
-import { useTitle } from '../hooks/useTitle'
+import { useSeo, plainText } from '../hooks/useSeo'
+import { breadcrumbJsonLd, SITE_NAME } from '../data/seo'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 
 // 첨부 줄 — 파일명 + 미리보기(새 탭) + 다운로드 (NewsDetail과 동일한 밝은 읽기 표면 토큰)
@@ -56,7 +57,22 @@ function ResourceDetail() {
   const date = post?.date ?? (post?.created_at ?? '').slice(0, 10)
   const attachments = (post?.attachments ?? post?.files ?? []).filter((f) => f && f.url)
   const gallery = (Array.isArray(post?.gallery) ? post.gallery : []).filter(Boolean)
-  useTitle(title || t('titles.resources'))
+  useSeo({
+    title: title ? `${title} | 한림대학교 디지털인문예술전공 자료실` : undefined,
+    description: post ? plainText(body) || `${title} 관련 한림대학교 디지털인문예술전공 자료입니다.` : null,
+    image: post?.poster_url,
+    jsonLd: post ? [
+      {
+        '@context': 'https://schema.org', '@type': 'Article', headline: title,
+        datePublished: date || undefined, dateModified: (post.updated_at || '').slice(0, 10) || undefined,
+        publisher: { '@type': 'EducationalOrganization', name: SITE_NAME },
+      },
+      breadcrumbJsonLd([
+        { name: '홈', path: '/' }, { name: '자료실', path: '/resources' },
+        { name: title || '자료 상세', path: `/resources/${id}` },
+      ]),
+    ] : null,
+  })
 
   return (
     <>

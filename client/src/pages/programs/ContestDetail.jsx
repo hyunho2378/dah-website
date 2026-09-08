@@ -9,7 +9,8 @@ import ImageFrame from '../../components/common/ImageFrame'
 import Tag from '../../components/common/Tag'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
-import { useTitle } from '../../hooks/useTitle'
+import { useSeo, plainText } from '../../hooks/useSeo'
+import { breadcrumbJsonLd, SITE_NAME } from '../../data/seo'
 import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 import { semesterLabelOf } from '../../utils/format'
 
@@ -38,8 +39,6 @@ function ContestDetail() {
   const isEn = lang === 'en'
   const title = (isEn && item?.title_en) || item?.title_ko || item?.title
   const koFallback = isEn && item && !item.title_en
-  useTitle(title ?? t('titles.contests'))
-
   const start = (item?.event_start ?? '').slice(0, 10)
   const end = (item?.event_end ?? '').slice(0, 10)
   const gallery = Array.isArray(item?.gallery) ? item.gallery : []
@@ -49,6 +48,24 @@ function ContestDetail() {
   const posterUrl = item?.poster_url
   // 학기는 목록 카드와 같은 규칙으로 산출한다(저장된 라벨 우선, 없으면 개최일에서)
   const semester = semesterLabelOf(item)
+  const description = item
+    ? `${semester ? `${semester} ` : ''}${title || '공모전'} 관련 한림대학교 디지털인문예술전공 공모전 정보입니다. ${plainText(item.body)}`
+    : null
+  const event = item && start && (!end || end >= start)
+    ? {
+        '@context': 'https://schema.org', '@type': 'Event', name: title, startDate: start,
+        ...(end ? { endDate: end } : {}), image: posterUrl || undefined,
+        organizer: { '@type': 'EducationalOrganization', name: host || SITE_NAME },
+      }
+    : null
+  useSeo({
+    title: title ? `${title} | 한림대학교 디지털인문예술전공 공모전` : undefined,
+    description, image: posterUrl,
+    jsonLd: item ? [event, breadcrumbJsonLd([
+      { name: '홈', path: '/' }, { name: '공모전', path: '/programs/contests' },
+      { name: title || '공모전 상세', path: `/programs/contests/${id}` },
+    ])].filter(Boolean) : null,
+  })
 
   return (
     <>

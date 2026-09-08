@@ -1,6 +1,4 @@
-import { useEffect } from 'react';
-
-const BASE_TITLE = '디지털인문예술전공';
+import { useSeo } from './useSeo'
 
 /**
  * useTitle — 페이지별 document.title 갱신 훅
@@ -9,7 +7,5 @@ const BASE_TITLE = '디지털인문예술전공';
  * @param {string} [title] - 페이지명
  */
 export function useTitle(title) {
-  useEffect(() => {
-    document.title = title ? `${BASE_TITLE} - ${title}` : BASE_TITLE;
-  }, [title]);
+  useSeo({ title: title ? `한림대학교 디지털인문예술전공 | ${title}` : undefined })
 }

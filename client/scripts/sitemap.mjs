@@ -7,8 +7,8 @@
 // 관리한다. 미설정 시 실제 배포 도메인(https://dah-hallym.vercel.app, 사용자 확정값)으로
 // 폴백해 최소한 정확한 URL이 나가도록 한다.
 //
-// 동적 콘텐츠(개별 공지·전시회 상세 등 :id 라우트)는 이번 스코프에서 제외 — 정적 주요
-// 페이지만(App.jsx PUBLIC_ROUTES 기준, 어드민·접수·상담 폼 등 비콘텐츠 라우트도 제외).
+// 공개 상세 콘텐츠도 사이트맵에 포함한다. 게시물의 제목·본문은 페이지에서 API로 렌더하므로,
+// 목록 URL을 명시해 검색엔진이 전시·공지·공모전 등의 개별 페이지를 발견할 수 있게 한다.
 import { writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -71,6 +71,18 @@ const PAGE_VISIBILITY = {
   '/resources': ['resource'],
 }
 
+// type은 공개 API의 content-config 키, path는 App.jsx의 실제 상세 라우트다.
+// 학생 성과는 현재 목록 내 확장 UI이고 별도 상세 라우트가 없으므로 넣지 않는다.
+const DYNAMIC_ROUTES = [
+  { type: 'notice', path: '/news' },
+  { type: 'exhibitions', path: '/programs/exhibitions' },
+  { type: 'contest', path: '/programs/contests' },
+  { type: 'lecture', path: '/programs/lectures' },
+  { type: 'resource', path: '/resources' },
+  { type: 'club', path: '/students/clubs' },
+  { type: 'showcase', path: '/showcase' },
+]
+
 async function fetchVisibility() {
   const api = (env.VITE_API_URL || '').trim().replace(/\/+$/, '')
   if (!api) return null
@@ -99,12 +111,48 @@ if (droppedPages.length > 0) {
   console.log(`[sitemap] 비공개 유형 ${droppedPages.length}개 경로 제외: ` + droppedPages.map((p) => p.path).join(', '))
 }
 
-const urls = visiblePages.map(
+async function fetchDynamicPages() {
+  const api = (env.VITE_API_URL || '').trim().replace(/\/+$/, '')
+  if (!api) {
+    console.warn('[sitemap] VITE_API_URL 미설정 — 동적 상세 URL은 생성하지 않습니다.')
+    return []
+  }
+
+  const eligible = DYNAMIC_ROUTES.filter((route) => isPublicType(route.type))
+  const results = await Promise.all(
+    eligible.map(async (route) => {
+      try {
+        const res = await fetch(`${api}/content/${route.type}?pageSize=100`, {
+          signal: AbortSignal.timeout(12000),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const items = Array.isArray(json?.items) ? json.items : []
+        return items
+          .filter((item) => Number.isInteger(Number(item?.id)))
+          .map((item) => ({
+            path: `${route.path}/${item.id}`,
+            // 서버가 관리하는 수정 시각만 lastmod로 쓴다. 임의 날짜를 만들지 않는다.
+            lastmod: (item.updated_at || item.created_at || '').slice(0, 10) || null,
+          }))
+      } catch (err) {
+        console.warn(`[sitemap] ${route.type} 상세 URL을 불러오지 못했습니다: ${err.message}`)
+        return []
+      }
+    })
+  )
+  return results.flat()
+}
+
+const dynamicPages = await fetchDynamicPages()
+
+const urls = [...visiblePages, ...dynamicPages].map(
   (p) =>
     `  <url>\n` +
     `    <loc>${SITE_URL}${p.path}</loc>\n` +
-    `    <changefreq>${p.changefreq}</changefreq>\n` +
-    `    <priority>${p.priority}</priority>\n` +
+    (p.lastmod ? `    <lastmod>${p.lastmod}</lastmod>\n` : '') +
+    (p.changefreq ? `    <changefreq>${p.changefreq}</changefreq>\n` : '') +
+    (p.priority ? `    <priority>${p.priority}</priority>\n` : '') +
     `  </url>`
 ).join('\n')
 
@@ -124,5 +172,5 @@ const robotsTxt =
 writeFileSync(resolve(CLIENT_DIR, 'public/sitemap.xml'), sitemapXml)
 writeFileSync(resolve(CLIENT_DIR, 'public/robots.txt'), robotsTxt)
 
-console.log(`[sitemap] public/sitemap.xml 생성 완료 (${visiblePages.length}개 URL, SITE_URL=${SITE_URL})`)
+console.log(`[sitemap] public/sitemap.xml 생성 완료 (${visiblePages.length + dynamicPages.length}개 URL, SITE_URL=${SITE_URL})`)
 console.log('[sitemap] public/robots.txt 생성 완료')

@@ -10,7 +10,8 @@ import ImageFrame from '../../components/common/ImageFrame'
 import Button from '../../components/common/Button'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
-import { useTitle } from '../../hooks/useTitle'
+import { useSeo } from '../../hooks/useSeo'
+import { breadcrumbJsonLd } from '../../data/seo'
 import { useLang } from '../../i18n/LangContext'
 import { clubs as staticClubs, clubFieldEn } from '../../data/clubs'
 
@@ -68,7 +69,15 @@ function ClubDetail() {
   const fallback = staticClubs?.find((c) => c.id === id) || null
   const club = normalize(remote || fallback, isEn)
 
-  useTitle(club?.title || t('titles.clubs'))
+  useSeo({
+    title: club?.title ? `${club.title} | 한림대학교 디지털인문예술전공 동아리` : undefined,
+    description: club?.intro || null,
+    image: club?.logo,
+    jsonLd: club ? breadcrumbJsonLd([
+      { name: '홈', path: '/' }, { name: '학생 동아리', path: '/students/clubs' },
+      { name: club.title, path: `/students/clubs/${id}` },
+    ]) : null,
+  })
 
   return (
     <>

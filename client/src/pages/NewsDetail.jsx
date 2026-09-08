@@ -12,7 +12,8 @@ import Button from '../components/common/Button'
 import RichBody from '../components/content/RichBody'
 import { EditPencil } from '../components/content/EditControls'
 import { useApi, itemOf } from '../hooks/useApi'
-import { useTitle } from '../hooks/useTitle'
+import { useSeo, plainText } from '../hooks/useSeo'
+import { breadcrumbJsonLd, SITE_NAME } from '../data/seo'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 import { notices } from '../data/notices'
 
@@ -59,7 +60,23 @@ function NewsDetail() {
   const attachments = (post?.attachments ?? post?.files ?? []).filter((f) => f && f.url)
   // K2-3 데이터 계약: posts.gallery = 이미지 URL 배열 → 본문 아래 갤러리
   const gallery = (Array.isArray(post?.gallery) ? post.gallery : []).filter(Boolean)
-  useTitle(title || t('titles.notices'))
+  useSeo({
+    title: title ? `${title} | 한림대학교 디지털인문예술전공` : undefined,
+    description: post ? plainText(body) || `${title} 관련 한림대학교 디지털인문예술전공 공지사항입니다.` : null,
+    image: post?.poster_url,
+    jsonLd: post ? [
+      {
+        '@context': 'https://schema.org', '@type': 'Article', headline: title,
+        datePublished: date || undefined, dateModified: (post.updated_at || '').slice(0, 10) || undefined,
+        image: post.poster_url || undefined,
+        publisher: { '@type': 'EducationalOrganization', name: SITE_NAME },
+      },
+      breadcrumbJsonLd([
+        { name: '홈', path: '/' }, { name: '공지사항', path: '/news' },
+        { name: title || '공지 상세', path: `/news/${id}` },
+      ]),
+    ] : null,
+  })
 
   return (
     <>

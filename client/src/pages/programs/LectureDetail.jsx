@@ -8,7 +8,8 @@ import Tag from '../../components/common/Tag'
 import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
-import { useTitle } from '../../hooks/useTitle'
+import { useSeo, plainText } from '../../hooks/useSeo'
+import { breadcrumbJsonLd, SITE_NAME } from '../../data/seo'
 import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 
 function MetaRow({ label, children }) {
@@ -30,11 +31,25 @@ function LectureDetail() {
   const title = (isEn && item?.title_en) || item?.title_ko || item?.title
   const body = isEn && item?.body_en ? item.body_en : item?.body
   const koFallback = isEn && item && (!item.title_en || !item.body_en)
-  useTitle(title ?? t('titles.lectures'))
-
   const start = (item?.event_start ?? '').slice(0, 10)
   const end = (item?.event_end ?? '').slice(0, 10)
   const gallery = Array.isArray(item?.gallery) ? item.gallery : []
+  const event = item && start && (!end || end >= start)
+    ? {
+        '@context': 'https://schema.org', '@type': 'Event', name: title, startDate: start,
+        ...(end ? { endDate: end } : {}), image: item.poster_url || undefined,
+        organizer: { '@type': 'EducationalOrganization', name: SITE_NAME },
+      }
+    : null
+  useSeo({
+    title: title ? `${title} | 한림대학교 디지털인문예술전공 특강` : undefined,
+    description: item ? plainText(body) || `${title} 관련 한림대학교 디지털인문예술전공 특강 정보입니다.` : null,
+    image: item?.poster_url,
+    jsonLd: item ? [event, breadcrumbJsonLd([
+      { name: '홈', path: '/' }, { name: '특강', path: '/programs/lectures' },
+      { name: title || '특강 상세', path: `/programs/lectures/${id}` },
+    ])].filter(Boolean) : null,
+  })
 
   return (
     <>

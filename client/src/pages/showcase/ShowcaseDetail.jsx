@@ -8,7 +8,8 @@ import Button from '../../components/common/Button'
 import Tag from '../../components/common/Tag'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
-import { useTitle } from '../../hooks/useTitle'
+import { useSeo } from '../../hooks/useSeo'
+import { breadcrumbJsonLd, SITE_NAME } from '../../data/seo'
 import { useLang } from '../../i18n/LangContext'
 
 function MetaRow({ label, children }) {
@@ -25,7 +26,23 @@ function ShowcaseDetail() {
   const { id } = useParams()
   const { data, loading } = useApi(`/content/showcase/${id}`)
   const item = itemOf(data)
-  useTitle(item?.title ?? t('titles.showcase'))
+  useSeo({
+    title: item?.title ? `${item.title} | 한림대학교 디지털인문예술전공 웹·앱 쇼케이스` : undefined,
+    description: item?.description || null,
+    image: item?.main_img,
+    jsonLd: item ? [
+      {
+        '@context': 'https://schema.org', '@type': 'CreativeWork', name: item.title,
+        description: item.description || undefined, image: item.main_img || undefined,
+        creator: item.creator || undefined,
+        publisher: { '@type': 'EducationalOrganization', name: SITE_NAME },
+      },
+      breadcrumbJsonLd([
+        { name: '홈', path: '/' }, { name: '웹·앱 쇼케이스', path: '/showcase' },
+        { name: item.title, path: `/showcase/${id}` },
+      ]),
+    ] : null,
+  })
 
   const tools = Array.isArray(item?.tools) ? item.tools : []
   const subImgs = Array.isArray(item?.sub_imgs) ? item.sub_imgs : []

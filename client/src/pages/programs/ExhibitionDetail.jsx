@@ -9,7 +9,8 @@ import ImageFrame from '../../components/common/ImageFrame'
 import RichBody from '../../components/content/RichBody'
 import { EditPencil } from '../../components/content/EditControls'
 import { useApi, itemOf } from '../../hooks/useApi'
-import { useTitle } from '../../hooks/useTitle'
+import { useSeo, plainText } from '../../hooks/useSeo'
+import { breadcrumbJsonLd, SITE_NAME } from '../../data/seo'
 import { useLang, KoreanOnlyBadge } from '../../i18n/LangContext'
 import { exhibitionSiteLabel } from '../../data/exhibitionTitle'
 
@@ -94,7 +95,30 @@ function ExhibitionDetail() {
   const body = isEn && item?.body_en ? item.body_en : item?.body
   const intro = isEn && item?.intro_en ? item.intro_en : item?.intro
   const koFallback = isEn && item && (!item.title_en || (item.body ? !item.body_en : item.intro && !item.intro_en))
-  useTitle(title ?? t('titles.exhibitions'))
+  const start = (item?.start_date ?? '').slice(0, 10)
+  const end = (item?.end_date ?? '').slice(0, 10)
+  const description = item
+    ? `${item.semester_label ? `${item.semester_label} ` : ''}${title || '프로젝트 전시회'}은 한림대학교 디지털인문예술전공 프로젝트 전시회입니다. ${plainText(intro || body)}`
+    : null
+  const breadcrumbs = [
+    { name: '홈', path: '/' },
+    { name: '프로젝트 전시회', path: '/programs/exhibitions' },
+    { name: title || '전시 상세', path: `/programs/exhibitions/${id}` },
+  ]
+  const event = item && start && (!end || end >= start)
+    ? {
+        '@context': 'https://schema.org', '@type': 'Event', name: title,
+        startDate: start, ...(end ? { endDate: end } : {}),
+        url: item.site_url || undefined, image: item.poster_url || undefined,
+        organizer: { '@type': 'EducationalOrganization', name: SITE_NAME },
+      }
+    : null
+  useSeo({
+    title: title ? `${item?.semester_label ? `${item.semester_label} ` : ''}${title} | 한림대학교 디지털인문예술전공 프로젝트 전시회` : undefined,
+    description,
+    image: item?.poster_url,
+    jsonLd: event ? [event, breadcrumbJsonLd(breadcrumbs)] : breadcrumbJsonLd(breadcrumbs),
+  })
 
   const galleries = normalizeGalleries(item?.gallery)
 
