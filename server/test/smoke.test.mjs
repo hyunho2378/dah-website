@@ -158,6 +158,54 @@ test('(e) must_set_pw 계정 최초 로그인 → 그 자리에서 비번 등록
   assert.ok(cookies.some((c) => c.startsWith('dah_refresh=') && c.includes('HttpOnly')))
 })
 
+test('(e-보강) 공개 Google 로그인은 DB에 없는 이메일을 새 public_users로 등록하지 않고 거부한다', async () => {
+  const originalFetch = globalThis.fetch
+  const originalClientId = process.env.GOOGLE_CLIENT_ID
+  const originalClientSecret = process.env.GOOGLE_CLIENT_SECRET
+  const originalRedirectUri = process.env.GOOGLE_REDIRECT_URI
+  const clientId = 'google-client-id'
+  process.env.GOOGLE_CLIENT_ID = clientId
+  process.env.GOOGLE_CLIENT_SECRET = 'google-client-secret'
+  process.env.GOOGLE_REDIRECT_URI = 'https://api.example.test/auth/google/callback'
+
+  const claims = {
+    sub: 'unregistered-google-sub',
+    email: 'not-registered@example.com',
+    email_verified: true,
+    aud: clientId,
+    iss: 'https://accounts.google.com',
+    name: '미등록 사용자',
+  }
+  const idToken = `header.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.signature`
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ id_token: idToken }) })
+
+  const calls = []
+  const app = createApp({
+    db: mockDb((text, params) => {
+      calls.push({ text, params })
+      if (text.includes('FROM public_users')) return { rows: [] }
+      return { rows: [] }
+    }),
+  })
+  const state = jwt.sign({ nonce: 'test-nonce', next: '/' }, 'test-secret', { expiresIn: '10m' })
+
+  try {
+    const response = await request(app).get(`/auth/google/callback?code=test-code&state=${state}`)
+    assert.equal(response.status, 403)
+    assert.equal(response.body.error, 'email is not registered')
+    assert.ok(calls.some((call) => call.text.includes('FROM public_users')))
+    assert.equal(calls.some((call) => call.text.includes('INSERT INTO public_users')), false)
+  } finally {
+    globalThis.fetch = originalFetch
+    if (originalClientId === undefined) delete process.env.GOOGLE_CLIENT_ID
+    else process.env.GOOGLE_CLIENT_ID = originalClientId
+    if (originalClientSecret === undefined) delete process.env.GOOGLE_CLIENT_SECRET
+    else process.env.GOOGLE_CLIENT_SECRET = originalClientSecret
+    if (originalRedirectUri === undefined) delete process.env.GOOGLE_REDIRECT_URI
+    else process.env.GOOGLE_REDIRECT_URI = originalRedirectUri
+  }
+})
+
 test('(추가) 공개 GET /content/notice — KPC식 페이지네이션 형태 {items,total,page,pageSize}', async () => {
   const app = createApp({
     db: mockDb((text) => {

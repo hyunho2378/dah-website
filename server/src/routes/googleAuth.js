@@ -2,7 +2,7 @@
 //
 // 스태프 인증(routes/auth.js)과 경로, 쿠키, 테이블이 모두 분리된 신원 클래스다.
 //   GET  /auth/google/login?next=  state 쿠키 발급 후 구글 동의 화면으로 302
-//   GET  /auth/google/callback     state 대조, code 교환, id_token 검증, public_users upsert,
+//   GET  /auth/google/callback     state 대조, code 교환, id_token 검증, 사전 등록 public_users 확인,
 //                                  공개 쿠키 발급 후 CLIENT_ORIGIN + next 로 복귀
 //   GET  /auth/public/me           로그인된 구글 계정 (비로그인 401)
 //   POST /auth/public/logout       공개 쿠키 삭제
@@ -174,13 +174,28 @@ router.get(
       })
     }
 
+    const googleSub = String(claims.sub)
+    const email = String(claims.email).trim().toLowerCase()
+    // 콜백에서 INSERT/upsert를 하지 않는다. 미등록 이메일이 public_users나 사용자 화면에
+    // 새 계정으로 나타나는 것을 서버에서 원천 차단한다.
+    const registered = await query(
+      `SELECT id, google_sub, email, name FROM public_users
+       WHERE lower(email) = $1`,
+      [email]
+    )
+    const user = registered.rows[0]
+    if (!user || user.google_sub !== googleSub) {
+      return res.status(403).json({
+        error: 'email is not registered',
+        hint: '관리자가 DB에 미리 등록한 이메일만 로그인할 수 있습니다.',
+      })
+    }
+
     const { rows } = await query(
-      `INSERT INTO public_users (google_sub, email, name, last_login_at)
-       VALUES ($1, $2, $3, now())
-       ON CONFLICT (google_sub) DO UPDATE
-         SET email = EXCLUDED.email, name = EXCLUDED.name, last_login_at = now()
+      `UPDATE public_users SET name = $1, last_login_at = now()
+       WHERE id = $2
        RETURNING id, email, name`,
-      [String(claims.sub), String(claims.email).trim().toLowerCase(), claims.name || null]
+      [claims.name || user.name || null, user.id]
     )
     setPublicAuthCookies(res, rows[0])
     res.redirect(`${clientOrigin()}${safeNext(statePayload.next)}`)
