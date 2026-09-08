@@ -4,7 +4,7 @@ import Container from './Container'
 import logoUrl from '../../assets/logo.svg'
 
 // K2-10 최종 조정 — 좌: 로고 + "한림대학교 디지털인문예술전공" 한 줄(영문 병기·주소 제거).
-// 우: 정책 링크 줄(개인정보처리방침 | 이용약관) / TEL / 메일. 최하단 저작권 유지.
+// 우: 정책 링크 줄(개인정보처리방침 | 이용약관) / TEL. 최하단 저작권 유지.
 // 상단 1px 헤어라인 + 불투명 배경(bg-bg-elev)으로 우주 배경(성운) 푸터 영역 제외.
 function Footer() {
   const { t } = useLang()
@@ -21,7 +21,7 @@ function Footer() {
             </p>
           </div>
 
-          {/* 우: 정책 링크 줄 + TEL + 메일 */}
+          {/* 우: 정책 링크 줄 + TEL */}
           <div className="flex flex-col gap-4 lg:items-end">
             {/* Y1-6: 정책·상담 링크는 새 탭. target이 _self가 아니면 react-router가 클릭을
                 가로채지 않고 실제 새 문서 로드가 일어나므로, 열린 탭은 항상 최상단에서 시작한다. */}
@@ -45,12 +45,6 @@ function Footer() {
               </Link>
             </div>
             <p className="text-small-m text-text-meta md:text-small-d">TEL 033-248-3556</p>
-            <a
-              href="mailto:de46141@hallym.ac.kr"
-              className="text-small-m text-text-meta transition-colors duration-fast ease-out hover:text-text-pri md:text-small-d"
-            >
-              de46141@hallym.ac.kr
-            </a>
           </div>
         </div>
 

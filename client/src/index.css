@@ -41,6 +41,62 @@
        reduced-motion은 하단 전역 미디어쿼리가 무효화 */
     transition: outline-offset theme('transitionDuration.fast') theme('transitionTimingFunction.out');
   }
+
+  /* 운영위원회에서 주현호를 빠르게 세 번 누르면 켜지는 개인 테마. 새로고침 전까지
+     전체 페이지에 유지되며, 클릭 대상 자체에는 버튼·눌림 모션을 부여하지 않는다. */
+  html[data-dah-easter-egg='on'] body,
+  html[data-dah-easter-egg='on'] .cosmos-background {
+    background: linear-gradient(135deg, #0c0c0c 26%, #292929 100%) !important;
+  }
+
+  html[data-dah-easter-egg='on'] .cosmos-background > div {
+    opacity: 0 !important;
+  }
+
+  html[data-dah-easter-egg='on'] .bg-bg-base,
+  html[data-dah-easter-egg='on'] .bg-bg-elev,
+  html[data-dah-easter-egg='on'] .bg-bg-panel,
+  html[data-dah-easter-egg='on'] .bg-bg-frame {
+    background-color: #292929 !important;
+  }
+
+  html[data-dah-easter-egg='on'] .bg-glass-bg,
+  html[data-dah-easter-egg='on'] .bg-glass-strong {
+    background-color: rgb(255 255 255 / 0.06) !important;
+  }
+
+  html[data-dah-easter-egg='on'] .text-text-pri,
+  html[data-dah-easter-egg='on'] .text-reading-textStrong {
+    color: #ffffff !important;
+  }
+
+  html[data-dah-easter-egg='on'] .text-text-sec,
+  html[data-dah-easter-egg='on'] .text-text-meta,
+  html[data-dah-easter-egg='on'] .text-reading-textMeta {
+    color: rgb(255 255 255 / 0.5) !important;
+  }
+
+  html[data-dah-easter-egg='on'] .text-purple-primary,
+  html[data-dah-easter-egg='on'] .text-purple-light,
+  html[data-dah-easter-egg='on'] .text-purple-mid {
+    color: #e27da6 !important;
+  }
+
+  html[data-dah-easter-egg='on'] .bg-purple-primary,
+  html[data-dah-easter-egg='on'] .bg-button-primary {
+    background-color: #e27da6 !important;
+  }
+
+  html[data-dah-easter-egg='on'] .border-border-subtle,
+  html[data-dah-easter-egg='on'] .border-border-strong,
+  html[data-dah-easter-egg='on'] .border-glass-line {
+    border-color: rgb(255 255 255 / 0.18) !important;
+  }
+
+  html[data-dah-easter-egg='on'] ::selection {
+    background: #e27da6 !important;
+    color: #ffffff !important;
+  }
 }
 
 @layer components {

@@ -1,7 +1,6 @@
 // /programs/exhibitions/:id — 전시회 상세 (T2 확장)
 // 좌 포스터 2:3 / 우 메타 표 / RichBody / 하단 현장·작품 갤러리(라이트박스 없이 원본 새탭) / 공유.
 import { useParams } from 'react-router-dom'
-import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import ShareButton from '../../components/common/ShareButton'
 import Button from '../../components/common/Button'
@@ -37,21 +36,22 @@ function normalizeGalleries(gallery) {
 
 const toImage = (img) => (typeof img === 'string' ? { url: img, alt: '' } : img)
 
+// TipTap 빈 문서({ type: 'doc', content: [{ type: 'paragraph' }]})는 실제 본문이 아니다.
+// 해당 경우 소개문을 보여 주어야 관리자에서 등록한 핵심 설명이 사라지지 않는다.
+function hasRichBodyContent(value) {
+  if (!value) return false
+  if (!Array.isArray(value.content)) return true
+  return value.content.some((node) =>
+    node?.text || node?.content?.some((child) => child?.text || child?.content?.length)
+  )
+}
+
 // 전시 기간: start_date~end_date(DATE 문자열), 없으면 held_at 폴백
 function periodText(start, end, fallback) {
   const s = (start ?? '').slice(0, 10)
   const e = (end ?? '').slice(0, 10)
   if (s && e) return `${s} ~ ${e}`
   return s || e || (fallback ?? null)
-}
-
-function MetaRow({ label, children }) {
-  return (
-    <div className="flex gap-16 border-b border-border-subtle py-12">
-      <dt className="w-80 shrink-0 font-mono text-caption-m text-text-meta">{label}</dt>
-      <dd className="min-w-0 flex-1 text-body-m text-text-pri md:text-body-d">{children}</dd>
-    </div>
-  )
 }
 
 function GallerySection({ label, images, title }) {
@@ -93,8 +93,9 @@ function ExhibitionDetail() {
   const isEn = lang === 'en'
   const title = (isEn && item?.title_en) || item?.title
   const body = isEn && item?.body_en ? item.body_en : item?.body
+  const hasBody = hasRichBodyContent(body)
   const intro = isEn && item?.intro_en ? item.intro_en : item?.intro
-  const koFallback = isEn && item && (!item.title_en || (item.body ? !item.body_en : item.intro && !item.intro_en))
+  const koFallback = isEn && item && (!item.title_en || (hasBody ? !item.body_en : item.intro && !item.intro_en))
   const start = (item?.start_date ?? '').slice(0, 10)
   const end = (item?.end_date ?? '').slice(0, 10)
   const description = item
@@ -123,22 +124,7 @@ function ExhibitionDetail() {
   const galleries = normalizeGalleries(item?.gallery)
 
   return (
-    <>
-      <PageBanner
-        titleKo="프로젝트 전시회"
-        titleEn="EXHIBITIONS"
-        breadcrumb={[
-          { label: t('nav.home'), to: '/' },
-          { label: t('nav.events') },
-          { label: t('titles.exhibitions'), to: '/programs/exhibitions' },
-          { label: item?.title ?? t('actions.detail') },
-        ]}
-        nebulaX="18%"
-        nebulaY="30%"
-      />
-      {/* Y2-2(33_PHASE18): 상단 수직 여백 축소 — 첫 화면에서 헤드라인+포스터+핵심 정보가
-          스크롤 없이 들어오도록 상단 패딩만 줄인다(하단 섹션 리듬은 유지). */}
-      <Container as="section" className="pb-section-m pt-24 lg:pb-section-d lg:pt-32">
+    <Container as="section" className="pb-section-m pt-32 lg:pb-section-d lg:pt-48">
         {loading ? (
           <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
         ) : !item ? (
@@ -150,12 +136,9 @@ function ExhibitionDetail() {
           </div>
         ) : (
           <article className="flex min-w-0 flex-col gap-48">
-            <div className="grid gap-24 lg:grid-cols-3 lg:gap-40">
-              {/* 액션 버튼은 포스터 바로 아래 고정 — 우측 정보 영역에 두면 본문 길이에 따라
-                  버튼 위치가 전시회마다 달라진다(공모전 상세도 같은 구조로 통일). */}
-              <div className="flex min-w-0 flex-col gap-16 lg:col-span-1">
-                {/* 모바일에서 2:3 포스터가 화면을 다 먹지 않게 폭 상한 — 헤드라인·메타와 함께 보이게 */}
-                <figure className="w-full max-w-[240px] lg:max-w-none">
+            <div className="grid items-start gap-32 lg:grid-cols-[minmax(280px,420px)_minmax(0,1fr)] lg:gap-56">
+              <div className="min-w-0">
+                <figure className="w-full max-w-[360px] lg:max-w-[420px]">
                   <ImageFrame
                     src={item.poster_url}
                     alt={`${item.title} 포스터`}
@@ -164,16 +147,8 @@ function ExhibitionDetail() {
                     placeholder={item.semester_label || item.title}
                   />
                 </figure>
-                <div className="flex flex-wrap items-center gap-12">
-                  {item.site_url && (
-                    <Button variant="secondary" href={item.site_url} external arrow={false}>
-                      {exhibitionSiteLabel(item.semester_label) || t('actions.exhibitionSite')}
-                    </Button>
-                  )}
-                  <ShareButton title={item.title} />
-                </div>
               </div>
-              <div className="flex min-w-0 flex-col gap-16 lg:col-span-2">
+              <div className="flex min-w-0 flex-col gap-24">
                 <div className="flex flex-wrap items-start justify-between gap-16">
                   <div className="flex min-w-0 flex-col gap-8">
                     {koFallback && <KoreanOnlyBadge />}
@@ -186,23 +161,37 @@ function ExhibitionDetail() {
                     to={`/admin/posts/exhibitions/${id}/edit`}
                   />
                 </div>
-                <dl className="w-max max-w-full border-t border-border-subtle">
+                <dl className="grid w-full max-w-[640px] gap-12 sm:grid-cols-2">
                   {item.semester_label && (
-                    <MetaRow label={t('meta.semester')}>{item.semester_label}</MetaRow>
+                    <div className="rounded-md border border-border-subtle bg-bg-elev px-16 py-12">
+                      <dt className="font-mono text-caption-m text-text-meta">{t('meta.semester')}</dt>
+                      <dd className="mt-4 text-body-m text-text-pri md:text-body-d">{item.semester_label}</dd>
+                    </div>
                   )}
                   {periodText(item.start_date, item.end_date, item.held_at) && (
-                    <MetaRow label={t('meta.period')}>
-                      {periodText(item.start_date, item.end_date, item.held_at)}
-                    </MetaRow>
+                    <div className="rounded-md border border-border-subtle bg-bg-elev px-16 py-12">
+                      <dt className="font-mono text-caption-m text-text-meta">{t('meta.period')}</dt>
+                      <dd className="mt-4 text-body-m text-text-pri md:text-body-d">
+                        {periodText(item.start_date, item.end_date, item.held_at)}
+                      </dd>
+                    </div>
                   )}
                 </dl>
-                {body ? (
+                {hasBody ? (
                   <RichBody body={body} />
                 ) : intro ? (
                   <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
                     {intro}
                   </p>
                 ) : null}
+                <div className="flex flex-wrap items-center gap-12 pt-4">
+                  {item.site_url && (
+                    <Button variant="secondary" href={item.site_url} external arrow={false}>
+                      {exhibitionSiteLabel(item.semester_label) || t('actions.exhibitionSite')}
+                    </Button>
+                  )}
+                  <ShareButton title={item.title} />
+                </div>
               </div>
             </div>
             {galleries.map((g) => (
@@ -215,8 +204,7 @@ function ExhibitionDetail() {
             ))}
           </article>
         )}
-      </Container>
-    </>
+    </Container>
   )
 }
 

@@ -1,15 +1,12 @@
 // /programs/exhibitions — 전시회 아카이브 (상단 피처드 히어로 + 포스터 그리드, 2017~)
 // 포스터는 원색 유지(grayscale 금지 — 전시 포스터 정체성). ImageFrame(2:3)로 통일.
 import Link from '../../components/common/LangLink'
-import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
 import Button from '../../components/common/Button'
-import RichBody from '../../components/content/RichBody'
 import Reveal from '../../components/common/Reveal'
 import InlineEditBar from '../../components/content/InlineEditBar'
-import { ACCENT } from '../../styles/accents'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
@@ -34,14 +31,6 @@ function exhibitionFullTitleEn(ordinal) {
     : null
 }
 
-// 전시 기간: start_date~end_date(DATE 문자열), 없으면 held_at 폴백
-function periodText(start, end, fallback) {
-  const s = (start ?? '').slice(0, 10)
-  const e = (end ?? '').slice(0, 10)
-  if (s && e) return `${s} ~ ${e}`
-  return s || e || (fallback ?? null)
-}
-
 // 피처드 전시(is_featured) — 목록 최상단 히어로 블록
 // Y2-1(33_PHASE18): 유리 질감의 정점. 포스터를 키우고 유리 프레임으로 감싸며,
 // 블록 뒤에 은은한 퍼플 글로우(bg-nebula-* 토큰)를 깐다.
@@ -50,20 +39,12 @@ function periodText(start, end, fallback) {
 const GLASS_SURFACE =
   'rounded-glass border border-glass-line bg-glass-bg shadow-glass'
 
-// 39_FIX: 접수 CTA 패널은 장식보다 가독성·결정성이 우선이라 유리를 쓰지 않는다.
-// liquidGL은 물론 CSS 글래스(반투명·backdrop-filter)도 금지 — 사이트 카드와 같은
-// 불투명 표면(bg-bg-elev) + 헤어라인으로만 구성한다. 배경 네뷸라가 비쳐 텍스트·링크
-// 대비가 로드마다 흔들리던 문제도 함께 사라진다.
-const CTA_SURFACE =
-  'rounded-glass border border-glass-line bg-bg-elev shadow-glass'
-
 function FeaturedExhibition({ item }) {
   const { lang } = useLang()
   const fullTitle =
     (lang === 'en'
       ? exhibitionFullTitleEn(item.ordinal)
       : exhibitionFullTitle(item.ordinal)) || item.title
-  const period = periodText(item.start_date, item.end_date, item.held_at)
   const showTitle = item.title && item.title !== fullTitle
   // J5: EN 모드 소개문 — intro_en 우선, 없으면 국문 intro + Korean only 뱃지
   const introText = lang === 'en' ? item.intro_en || item.intro : item.intro
@@ -80,9 +61,9 @@ function FeaturedExhibition({ item }) {
         aria-hidden="true"
         className="pointer-events-none absolute -inset-x-24 -inset-y-32 -z-10 bg-nebula-deep"
       />
-      <div className="grid gap-32 md:grid-cols-[280px_1fr] md:gap-40 lg:grid-cols-[360px_1fr] lg:gap-56">
+      <div className="grid items-center gap-32 md:grid-cols-[minmax(240px,360px)_minmax(0,1fr)] md:gap-40 lg:gap-56">
         {/* 포스터 유리 프레임 — 포스터 자체는 원색 유지(grayscale 금지) */}
-        <div className={`w-full max-w-[280px] p-12 md:max-w-none ${GLASS_SURFACE}`}>
+        <div className={`w-full max-w-[360px] p-12 ${GLASS_SURFACE}`}>
           <ImageFrame
             src={item.poster_url}
             alt={`${item.title} 포스터`}
@@ -100,12 +81,12 @@ function FeaturedExhibition({ item }) {
               {fullTitle}
             </h2>
             {showTitle && (
-              <p className="min-w-0 text-body-l-m text-text-sec md:text-body-l-d">{item.title}</p>
+              <p className="min-w-0 text-h3-m font-medium leading-snug text-text-sec md:text-h3-d">
+                「 {item.title} 」
+              </p>
             )}
           </div>
-          {item.body ? (
-            <RichBody body={item.body} />
-          ) : introText ? (
+          {introText ? (
             <div className="flex min-w-0 flex-col items-start gap-8">
               <p className="whitespace-pre-line text-body-m leading-relaxed text-text-sec md:text-body-d">
                 {introText}
@@ -113,15 +94,11 @@ function FeaturedExhibition({ item }) {
               {introKoFallback && <KoreanOnlyBadge />}
             </div>
           ) : null}
-          {/* 전시 기간만 노출 — 접수 진입은 헤더 CTA가 담당한다 */}
-          {period && (
-            <div className={`flex min-w-0 flex-col gap-8 self-start p-24 md:p-32 ${CTA_SURFACE}`}>
-              <p className="text-small-m text-text-meta md:text-small-d">전시 기간</p>
-              <p
-                className={`min-w-0 text-h3-m font-bold leading-snug md:text-h3-d ${ACCENT.proper}`}
-              >
-                {period}
-              </p>
+          {item.site_url && (
+            <div className="self-start">
+              <Button variant="primary" href={item.site_url} external arrow={false}>
+                {item.semester_label} DAH EXHIBITION
+              </Button>
             </div>
           )}
         </div>
@@ -171,15 +148,7 @@ function Exhibitions() {
   const rest = items.filter((it) => it !== featured)
 
   return (
-    <>
-      <PageBanner
-        titleKo="프로젝트 전시회"
-        titleEn="EXHIBITIONS"
-        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.events') }, { label: t('titles.exhibitions'), to: '/programs/exhibitions' }]}
-        nebulaX="18%"
-        nebulaY="30%"
-      />
-      <Container as="section" className="py-section-m lg:py-section-d">
+    <Container as="section" className="pb-section-m pt-32 lg:pb-section-d lg:pt-48">
         <div className="flex flex-wrap items-center justify-end gap-16">
           <InlineEditBar
             type="exhibitions"
@@ -224,8 +193,7 @@ function Exhibitions() {
             )}
           </div>
         )}
-      </Container>
-    </>
+    </Container>
   )
 }
 

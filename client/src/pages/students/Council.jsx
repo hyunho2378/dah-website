@@ -1,6 +1,6 @@
 // /students/council — 운영위원회 (T4 아카이브형: 기수별 아카이브)
 // 기수 탭(최신 기본) → 로고·기수명·소개·구성원 그리드. 기수가 늘어도 동일 템플릿 보존.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import PageBanner from '../../components/layout/PageBanner'
 import ImageFrame from '../../components/common/ImageFrame'
 import Container from '../../components/layout/Container'
@@ -109,6 +109,14 @@ function Council() {
       : FALLBACK_ITEMS
 
   const [selectedId, setSelectedId] = useState(null)
+  const hyunhoClickTimes = useRef([])
+  const activateEasterEgg = () => {
+    const now = Date.now()
+    hyunhoClickTimes.current = [...hyunhoClickTimes.current.filter((time) => now - time < 900), now]
+    if (hyunhoClickTimes.current.length < 3) return
+    document.documentElement.dataset.dahEasterEgg = 'on'
+    hyunhoClickTimes.current = []
+  }
   const active = items.find((c) => c.id === selectedId) ?? items[0] ?? null
   const members = Array.isArray(active?.members) ? active.members.map(toMember) : []
   // J5: EN 모드 소개문 — 원격 행에는 introEn이 없어 정적 원문(councils)을 연도로 매칭
@@ -244,6 +252,7 @@ function Council() {
                           <span
                             key={`${member.name}-${member.majors ?? ''}`}
                             className="text-body-m text-text-pri md:text-body-d"
+                            onClick={member.name === '주현호' ? activateEasterEgg : undefined}
                           >
                             {lang === 'en' ? member.nameEn ?? member.name : member.name}
                             {member.majors && (

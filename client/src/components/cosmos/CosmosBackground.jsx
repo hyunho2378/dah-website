@@ -38,7 +38,7 @@ function CosmosBackground() {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 -z-10"
+      className="cosmos-background fixed inset-0 -z-10"
       style={{ background: `linear-gradient(to bottom, ${cosmos.depth1}, ${cosmos.depth0})` }}
     >
       {/* 글로우는 뷰포트보다 크게 잡아 패럴랙스 이동 시 가장자리 노출 방지 */}
