@@ -42,7 +42,9 @@ function UsersAdmin() {
   const [formError, setFormError] = useState(null)
   const [listError, setListError] = useState(null)
 
-  const items = data?.items || []
+  // 서버가 owner 이외 역할에 owner 행을 보내지 않는다. 구 배포 서버나 캐시 응답이 남아도
+  // 화면에서는 한 번 더 방어해 교수님용 admin/manager 화면에 owner가 보이지 않게 한다.
+  const items = (data?.items || []).filter((item) => me?.role === 'owner' || item.role !== 'owner')
   const allowedRoles = manageableRoles(me?.role)
   const roleOptions = ROLE_OPTIONS.filter((option) => allowedRoles.includes(option.value))
 

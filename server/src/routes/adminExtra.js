@@ -1,5 +1,6 @@
 // src/routes/adminExtra.js — 8절 계약 외 확장 (13_CMS_SPEC.md 6절 어드민 대시보드)
 // 사용자 관리(manager+): 화면은 모두 열되 역할별 대상 범위는 다르다.
+// manager·admin에게는 owner 계정의 존재 자체를 노출하지 않는다.
 // manager: manager만 등록·초기화, 삭제 불가 / admin: manager·admin 등록·초기화·삭제 / owner: 전체.
 // 접수 현황(admin+): GET /admin/exhibition/entries — exhibition_entries 목록 (pw_hash 제외).
 import { Router } from 'express'
@@ -27,7 +28,13 @@ router.get(
   requireAuth,
   requireRole('manager'),
   wrap(async (req, res) => {
-    const { rows } = await query(`SELECT ${USER_COLS} FROM users ORDER BY id ASC`, [])
+    // 교수님·운영 인력이 쓰는 admin/manager 계정에는 owner 계정의 이름·이메일·개수까지
+    // 전달하지 않는다. 클라이언트 필터만으로는 API 응답에서 노출될 수 있으므로 DB에서 차단한다.
+    const ownerOnly = req.user.role === 'owner'
+    const { rows } = await query(
+      `SELECT ${USER_COLS} FROM users${ownerOnly ? '' : " WHERE role <> 'owner'"} ORDER BY id ASC`,
+      []
+    )
     res.json({ items: rows, total: rows.length })
   })
 )

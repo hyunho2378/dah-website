@@ -184,6 +184,39 @@ test('(추가) 허용 목록 외 :type 차단 → 404', async () => {
 // manager 이상은 전시회·행사·사이트 설정을 모두 관리한다.
 const MANAGER = { id: 9, email: 'm@x.com', name: '매니저', role: 'manager' }
 
+test('(f-보강) manager·admin 사용자 목록에는 owner 계정이 노출되지 않고 owner만 전체를 본다', async () => {
+  const members = [
+    { id: 1, email: 'owner@x.com', name: '오너', role: 'owner' },
+    { id: 2, email: 'admin@x.com', name: '어드민', role: 'admin' },
+    { id: 3, email: 'manager@x.com', name: '매니저', role: 'manager' },
+  ]
+  const app = createApp({
+    db: mockDb((text) => {
+      if (text.startsWith('SELECT id, email, name, role, must_set_pw, created_at FROM users')) {
+        return { rows: text.includes("WHERE role <> 'owner'") ? members.slice(1) : members }
+      }
+      return { rows: [] }
+    }),
+  })
+
+  const managerList = await request(app).get('/admin/users').set('Cookie', accessCookie(MANAGER))
+  assert.equal(managerList.status, 200)
+  assert.deepEqual(managerList.body.items.map((item) => item.role), ['admin', 'manager'])
+  assert.equal(managerList.body.total, 2)
+
+  const adminList = await request(app)
+    .get('/admin/users')
+    .set('Cookie', accessCookie({ id: 2, email: 'admin@x.com', name: '어드민', role: 'admin' }))
+  assert.equal(adminList.status, 200)
+  assert.deepEqual(adminList.body.items.map((item) => item.role), ['admin', 'manager'])
+
+  const ownerList = await request(app)
+    .get('/admin/users')
+    .set('Cookie', accessCookie({ id: 1, email: 'owner@x.com', name: '오너', role: 'owner' }))
+  assert.equal(ownerList.status, 200)
+  assert.deepEqual(ownerList.body.items.map((item) => item.role), ['owner', 'admin', 'manager'])
+})
+
 test('(f) manager로 GET /admin/exhibition/entries → 200', async () => {
   const app = createApp({
     db: mockDb((text) => {
