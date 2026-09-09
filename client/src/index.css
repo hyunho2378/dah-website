@@ -53,11 +53,24 @@
     opacity: 0 !important;
   }
 
+  /* PageBanner·피처드 블록이 독립적으로 얹는 성운도 제거한다. 전역 배경만 바꿔서는
+     bg-nebula·bg-nebula-violet/deep/soft가 페이지마다 남아 보인다. */
+  html[data-dah-easter-egg='on'] [class*='bg-nebula'] {
+    background-image: none !important;
+  }
+
   html[data-dah-easter-egg='on'] .bg-bg-base,
+  html[data-dah-easter-egg='on'] [class*='bg-bg-base'],
   html[data-dah-easter-egg='on'] .bg-bg-elev,
   html[data-dah-easter-egg='on'] .bg-bg-panel,
-  html[data-dah-easter-egg='on'] .bg-bg-frame {
+  html[data-dah-easter-egg='on'] .bg-bg-frame,
+  html[data-dah-easter-egg='on'] [class*='bg-cosmos-depth'] {
     background-color: #292929 !important;
+  }
+
+  html[data-dah-easter-egg='on'] .bg-bg-base,
+  html[data-dah-easter-egg='on'] [class*='bg-bg-base'] {
+    background-color: #0c0c0c !important;
   }
 
   html[data-dah-easter-egg='on'] .bg-glass-bg,
@@ -65,8 +78,34 @@
     background-color: rgb(255 255 255 / 0.06) !important;
   }
 
+  html[data-dah-easter-egg='on'] [class*='bg-glass-highlight'] {
+    background-image: none !important;
+  }
+
+  html[data-dah-easter-egg='on'] [class*='bg-button-ghost'] {
+    background-color: #292929 !important;
+  }
+
+  /* 밝은 읽기 표면(공지·자료실·관리 시트)도 예외 없이 같은 다크 테마로 바꾼다. */
+  html[data-dah-easter-egg='on'] .bg-reading-bg {
+    background-color: #0c0c0c !important;
+  }
+
+  html[data-dah-easter-egg='on'] .bg-reading-surface,
+  html[data-dah-easter-egg='on'] .bg-reading-subtle {
+    background-color: #292929 !important;
+  }
+
+  html[data-dah-easter-egg='on'] [class*='bg-reading-accent'] {
+    background-color: rgb(226 125 166 / 0.16) !important;
+  }
+
   html[data-dah-easter-egg='on'] .text-text-pri,
-  html[data-dah-easter-egg='on'] .text-reading-textStrong {
+  html[data-dah-easter-egg='on'] .text-reading-textStrong,
+  html[data-dah-easter-egg='on'] .text-reading-text,
+  html[data-dah-easter-egg='on'] .text-reading-surface,
+  html[data-dah-easter-egg='on'] .text-text-invert,
+  html[data-dah-easter-egg='on'] .text-button-primaryText {
     color: #ffffff !important;
   }
 
@@ -76,21 +115,68 @@
     color: rgb(255 255 255 / 0.5) !important;
   }
 
+  html[data-dah-easter-egg='on'] .text-icon {
+    color: rgb(255 255 255 / 0.7) !important;
+  }
+
+  /* 보라 계열은 클래스 조합(hover:·peer-checked: 포함)까지 모두 이스터에그의 핑크로
+     대체한다. 이 선택자들은 Tailwind의 이스케이프된 variant 클래스도 안정적으로 잡는다. */
   html[data-dah-easter-egg='on'] .text-purple-primary,
   html[data-dah-easter-egg='on'] .text-purple-light,
-  html[data-dah-easter-egg='on'] .text-purple-mid {
+  html[data-dah-easter-egg='on'] .text-purple-mid,
+  html[data-dah-easter-egg='on'] .text-link,
+  html[data-dah-easter-egg='on'] .text-link-hover,
+  html[data-dah-easter-egg='on'] .text-link-active,
+  html[data-dah-easter-egg='on'] .text-reading-accent,
+  html[data-dah-easter-egg='on'] .text-reading-accentStrong,
+  html[data-dah-easter-egg='on'] .text-button-ghostText,
+  html[data-dah-easter-egg='on'] .text-icon-active,
+  html[data-dah-easter-egg='on'] .text-icon-key,
+  html[data-dah-easter-egg='on'] [class*='text-purple'],
+  html[data-dah-easter-egg='on'] [class*='text-link'],
+  html[data-dah-easter-egg='on'] [class*='text-reading-accent'] {
     color: #e27da6 !important;
   }
 
   html[data-dah-easter-egg='on'] .bg-purple-primary,
-  html[data-dah-easter-egg='on'] .bg-button-primary {
+  html[data-dah-easter-egg='on'] .bg-button-primary,
+  html[data-dah-easter-egg='on'] .bg-bg-invert,
+  html[data-dah-easter-egg='on'] [class*='bg-purple'],
+  html[data-dah-easter-egg='on'] [class*='bg-button-primary'] {
     background-color: #e27da6 !important;
   }
 
   html[data-dah-easter-egg='on'] .border-border-subtle,
   html[data-dah-easter-egg='on'] .border-border-strong,
-  html[data-dah-easter-egg='on'] .border-glass-line {
+  html[data-dah-easter-egg='on'] .border-glass-line,
+  html[data-dah-easter-egg='on'] .border-reading-hairline,
+  html[data-dah-easter-egg='on'] [class*='border-reading-accent'],
+  html[data-dah-easter-egg='on'] [class*='border-purple'],
+  html[data-dah-easter-egg='on'] [class*='border-border-focus'] {
     border-color: rgb(255 255 255 / 0.18) !important;
+  }
+
+  html[data-dah-easter-egg='on'] [class*='ring-purple'],
+  html[data-dah-easter-egg='on'] [class*='outline-border-focus'],
+  html[data-dah-easter-egg='on'] [class*='outline-reading-accent'] {
+    --tw-ring-color: #e27da6 !important;
+    outline-color: #e27da6 !important;
+  }
+
+  /* 퍼플 글로우는 토큰 shadow-btn/glow-card뿐 아니라 헤더 로고의 drop-shadow와
+     hover variant에도 남는다. 이스터에그는 빛 번짐 없이 평면적인 중성 테마로 유지한다. */
+  html[data-dah-easter-egg='on'] *,
+  html[data-dah-easter-egg='on'] *::before,
+  html[data-dah-easter-egg='on'] *::after {
+    box-shadow: none !important;
+  }
+
+  html[data-dah-easter-egg='on'] [class*='drop-shadow'] {
+    filter: none !important;
+  }
+
+  html[data-dah-easter-egg='on'] [class*='backdrop-blur'] {
+    backdrop-filter: none !important;
   }
 
   html[data-dah-easter-egg='on'] ::selection {
