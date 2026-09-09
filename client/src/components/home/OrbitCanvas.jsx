@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { colors } from '../../styles/tokens.js'
 
 // COMPONENTS.md §3 OrbitCanvas — 순수 Canvas 2D + rAF
 // 중심 우측 55%, 동심 궤도 4개(border.subtle), 노드 2~4px 공전, 근접 노드 헤어라인 연결
@@ -12,10 +11,11 @@ const LINK_DIST = 96
 const EASTER_EGG_EVENT = 'dah-easter-egg'
 
 function orbitPalette() {
-  const easterEgg = document.documentElement.dataset.dahEasterEgg === 'on'
-  return easterEgg
-    ? { orbit: 'rgba(255,255,255,0.18)', node: '#ffffff' }
-    : { orbit: colors.border.subtle, node: colors.text.pri }
+  const rootStyle = window.getComputedStyle(document.documentElement)
+  return {
+    orbit: rootStyle.getPropertyValue('--dah-orbit-line').trim(),
+    node: rootStyle.getPropertyValue('--dah-orbit-node').trim(),
+  }
 }
 
 function OrbitCanvas() {

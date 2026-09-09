@@ -62,11 +62,10 @@ export default {
       backgroundImage: {
         'glass-highlight': glass.highlight,
         nebula: cosmos.nebula,
-        // 섹션·전역 배경 성운 글로우(비대칭 배치용). 좌상 보라 / 우하 딥 퍼플. (청록 폐기, CI 4.1)
-        'nebula-violet': `radial-gradient(ellipse 60% 50% at 15% 0%, ${cosmos.accentViolet}, transparent 70%)`,
-        'nebula-deep': `radial-gradient(ellipse 55% 45% at 85% 100%, ${cosmos.accentDeep}, transparent 70%)`,
-        // 별 제거 허전함 보정용 중앙 상단 초저채도 보강 글로우(#C8B9F2 Light Purple, 상한 0.03)
-        'nebula-soft': 'radial-gradient(ellipse 70% 50% at 50% 22%, rgba(200,185,242,0.03), transparent 65%)',
+        // 성운의 형태도 CSS 변수에 둔다. 테마 전환 시 새 페이지·새 배너까지 같은 방식으로 바뀐다.
+        'nebula-violet': cosmos.nebulaViolet,
+        'nebula-deep': cosmos.nebulaDeep,
+        'nebula-soft': cosmos.nebulaSoft,
       },
       fontFamily: {
         display: typography.family.display,

@@ -473,7 +473,7 @@ function Header() {
       {showSubmit && submitMode === 'floating' && (
         <Link
           to="/submit"
-          className="fixed bottom-24 right-24 z-40 inline-flex h-48 items-center gap-8 rounded-sm bg-bg-invert px-24 text-body-m font-semibold text-text-invert shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] transition-opacity duration-fast ease-out hover:opacity-90"
+          className="fixed bottom-24 right-24 z-40 inline-flex h-48 items-center gap-8 rounded-sm bg-bg-invert px-24 text-body-m font-semibold text-text-invert shadow-btn transition-opacity duration-fast ease-out hover:opacity-90"
         >
           <CalendarCheck size={16} aria-hidden="true" />
           {t('actions.submitExhibition')}

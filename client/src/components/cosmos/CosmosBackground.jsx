@@ -1,6 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { cosmos } from '../../styles/tokens'
-
 // CosmosBackground — 우주 톤 배경 (H9, 19_PHASE7 배경 고급화)
 // 1) 생검정 탈피: 상단 depth1 → 하단 depth0 세로 그라데이션(토큰 경유, 하드코딩 없음)
 // 2) 성운 글로우: 좌상 보라 / 우하 딥 퍼플 / 중앙 상단 보강 — 보라 단일(청록 폐기), 상한 0.05 유지
@@ -39,7 +37,7 @@ function CosmosBackground() {
     <div
       aria-hidden="true"
       className="cosmos-background fixed inset-0 -z-10"
-      style={{ background: `linear-gradient(to bottom, ${cosmos.depth1}, ${cosmos.depth0})` }}
+      style={{ background: 'var(--dah-cosmos-background)' }}
     >
       {/* 글로우는 뷰포트보다 크게 잡아 패럴랙스 이동 시 가장자리 노출 방지 */}
       <div

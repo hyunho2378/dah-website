@@ -2,6 +2,167 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 디자인 시스템의 런타임 값. tokens.js와 Tailwind는 이 변수만 읽는다.
+   따라서 새 화면도 토큰 클래스(bg-bg-base, shadow-glass 등)를 쓰면 두 테마를 자동 상속한다. */
+:root {
+  --dah-bg-base: 16 13 24;
+  --dah-bg-elev: 23 19 33;
+  --dah-bg-panel: 33 26 49;
+  --dah-bg-frame: 33 26 49;
+  --dah-bg-invert: 129 95 215;
+  --dah-text-pri: 247 245 252;
+  --dah-text-sec: 201 195 213;
+  --dah-text-meta: 147 139 165;
+  --dah-text-disabled: 98 90 112;
+  --dah-text-invert: 247 245 252;
+  --dah-purple-primary: 129 95 215;
+  --dah-purple-light: 200 185 242;
+  --dah-purple-mid: 162 134 233;
+  --dah-purple-deep: 104 68 196;
+  --dah-purple-deep-dark: 75 45 153;
+  --dah-border-subtle: rgb(255 255 255 / 0.10);
+  --dah-border-strong: rgb(255 255 255 / 0.16);
+  --dah-border-purple: rgb(200 185 242 / 0.15);
+  --dah-border-purple-strong: rgb(200 185 242 / 0.34);
+  --dah-border-focus: 162 134 233;
+  --dah-border-invert: rgb(200 185 242 / 0.15);
+  --dah-link: 162 134 233;
+  --dah-link-hover: 200 185 242;
+  --dah-link-active: 129 95 215;
+  --dah-icon: 201 195 213;
+  --dah-icon-active: 162 134 233;
+  --dah-icon-key: 129 95 215;
+  --dah-icon-disabled: 147 139 165;
+  --dah-button-primary: 129 95 215;
+  --dah-button-primary-text: 247 245 252;
+  --dah-button-primary-hover: 162 134 233;
+  --dah-button-primary-pressed: 104 68 196;
+  --dah-button-secondary-border: 129 95 215;
+  --dah-button-secondary-text: 200 185 242;
+  --dah-button-secondary-hover: 129 95 215;
+  --dah-button-ghost-text: 200 185 242;
+  --dah-button-ghost-hover: 33 26 49;
+  --dah-state-error: 255 99 105;
+  --dah-state-success: 76 195 138;
+  --dah-state-semester-active: rgb(129 95 215 / 0.16);
+  --dah-reading-bg: 247 245 252;
+  --dah-reading-surface: 255 255 255;
+  --dah-reading-subtle: 242 240 246;
+  --dah-reading-text: 33 26 49;
+  --dah-reading-text-strong: 16 13 24;
+  --dah-reading-text-meta: 98 90 112;
+  --dah-reading-accent: 104 68 196;
+  --dah-reading-accent-strong: 75 45 153;
+  --dah-reading-hairline: rgb(33 26 49 / 0.15);
+  --dah-glass-bg: rgb(255 255 255 / 0.06);
+  --dah-glass-bg-strong: rgb(255 255 255 / 0.10);
+  --dah-glass-border: rgb(255 255 255 / 0.14);
+  --dah-glass-highlight: linear-gradient(135deg, rgb(255 255 255 / 0.18) 0%, rgb(255 255 255 / 0.02) 40%);
+  --dah-glass-blur: 20px;
+  --dah-glass-blur-mobile: 12px;
+  --dah-cosmos-depth0: 16 13 24;
+  --dah-cosmos-depth1: 23 19 33;
+  --dah-cosmos-background: linear-gradient(to bottom, rgb(var(--dah-cosmos-depth1)), rgb(var(--dah-cosmos-depth0)));
+  --dah-cosmos-star: rgb(247 245 252 / 0.9);
+  --dah-cosmos-accent-violet: rgb(129 95 215 / 0.05);
+  --dah-cosmos-accent-deep: rgb(104 68 196 / 0.05);
+  --dah-nebula: radial-gradient(ellipse at var(--x) var(--y), rgb(255 255 255 / 0.04), transparent 60%);
+  --dah-nebula-violet: radial-gradient(ellipse 60% 50% at 15% 0%, var(--dah-cosmos-accent-violet), transparent 70%);
+  --dah-nebula-deep: radial-gradient(ellipse 55% 45% at 85% 100%, var(--dah-cosmos-accent-deep), transparent 70%);
+  --dah-nebula-soft: radial-gradient(ellipse 70% 50% at 50% 22%, rgb(200 185 242 / 0.03), transparent 65%);
+  --dah-orbit-line: rgb(255 255 255 / 0.10);
+  --dah-orbit-node: #f7f5fc;
+  --dah-shadow-card-glow: 0 0 0 1px rgb(255 255 255 / 0.08);
+  --dah-shadow-card-glow-hover: 0 0 0 1px rgb(255 255 255 / 0.16);
+  --dah-shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.20), 0 4px 24px rgb(129 95 215 / 0.35);
+  --dah-shadow-btn-hover: inset 0 1px 0 rgb(255 255 255 / 0.28), 0 6px 32px rgb(129 95 215 / 0.50);
+  --dah-shadow-glass: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 8px 32px -16px rgb(16 13 24 / 0.80);
+  --dah-shadow-glass-hover: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 12px 40px -16px rgb(16 13 24 / 0.90);
+  --dah-shadow-glow-card: inset 0 1px 0 rgb(255 255 255 / 0.10), 0 4px 20px -10px rgb(129 95 215 / 0.14);
+  --dah-shadow-glow-card-hover: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 10px 32px -12px rgb(129 95 215 / 0.40);
+  --dah-selection-bg: #f7f5fc;
+  --dah-selection-text: #100d18;
+}
+
+/* 주현호 이스터에그: 예외 선택자 대신 같은 토큰의 값만 교체한다. */
+html[data-dah-easter-egg='on'] {
+  --dah-bg-base: 12 12 12;
+  --dah-bg-elev: 41 41 41;
+  --dah-bg-panel: 41 41 41;
+  --dah-bg-frame: 41 41 41;
+  --dah-bg-invert: 226 125 166;
+  --dah-text-pri: 255 255 255;
+  --dah-text-sec: 200 200 200;
+  --dah-text-meta: 150 150 150;
+  --dah-text-disabled: 89 89 89;
+  --dah-text-invert: 255 255 255;
+  --dah-purple-primary: 226 125 166;
+  --dah-purple-light: 255 214 230;
+  --dah-purple-mid: 239 161 194;
+  --dah-purple-deep: 194 82 130;
+  --dah-purple-deep-dark: 151 53 94;
+  --dah-border-subtle: rgb(255 255 255 / 0.18);
+  --dah-border-strong: rgb(255 255 255 / 0.28);
+  --dah-border-purple: rgb(226 125 166 / 0.35);
+  --dah-border-purple-strong: rgb(226 125 166 / 0.55);
+  --dah-border-focus: 226 125 166;
+  --dah-border-invert: rgb(226 125 166 / 0.35);
+  --dah-link: 226 125 166;
+  --dah-link-hover: 255 214 230;
+  --dah-link-active: 194 82 130;
+  --dah-icon: 200 200 200;
+  --dah-icon-active: 226 125 166;
+  --dah-icon-key: 226 125 166;
+  --dah-icon-disabled: 89 89 89;
+  --dah-button-primary: 226 125 166;
+  --dah-button-primary-text: 255 255 255;
+  --dah-button-primary-hover: 239 161 194;
+  --dah-button-primary-pressed: 194 82 130;
+  --dah-button-secondary-border: 226 125 166;
+  --dah-button-secondary-text: 255 214 230;
+  --dah-button-secondary-hover: 226 125 166;
+  --dah-button-ghost-text: 255 214 230;
+  --dah-button-ghost-hover: 41 41 41;
+  --dah-state-semester-active: rgb(226 125 166 / 0.16);
+  --dah-reading-bg: 12 12 12;
+  --dah-reading-surface: 41 41 41;
+  --dah-reading-subtle: 41 41 41;
+  --dah-reading-text: 255 255 255;
+  --dah-reading-text-strong: 255 255 255;
+  --dah-reading-text-meta: 150 150 150;
+  --dah-reading-accent: 226 125 166;
+  --dah-reading-accent-strong: 255 214 230;
+  --dah-reading-hairline: rgb(255 255 255 / 0.18);
+  --dah-glass-bg: rgb(255 255 255 / 0.06);
+  --dah-glass-bg-strong: rgb(255 255 255 / 0.10);
+  --dah-glass-border: rgb(255 255 255 / 0.18);
+  --dah-glass-highlight: none;
+  --dah-glass-blur: 0px;
+  --dah-glass-blur-mobile: 0px;
+  --dah-cosmos-depth0: 12 12 12;
+  --dah-cosmos-depth1: 41 41 41;
+  --dah-cosmos-background: linear-gradient(135deg, #0c0c0c 26%, #292929 100%);
+  --dah-cosmos-star: transparent;
+  --dah-cosmos-accent-violet: transparent;
+  --dah-cosmos-accent-deep: transparent;
+  --dah-nebula: none;
+  --dah-nebula-violet: none;
+  --dah-nebula-deep: none;
+  --dah-nebula-soft: none;
+  --dah-orbit-line: rgb(255 255 255 / 0.18);
+  --dah-orbit-node: #ffffff;
+  --dah-shadow-card-glow: none;
+  --dah-shadow-card-glow-hover: none;
+  --dah-shadow-btn: none;
+  --dah-shadow-btn-hover: none;
+  --dah-shadow-glass: none;
+  --dah-shadow-glass-hover: none;
+  --dah-shadow-glow-card: none;
+  --dah-shadow-glow-card-hover: none;
+  --dah-selection-bg: #e27da6;
+  --dah-selection-text: #ffffff;
+}
+
 @layer base {
   /* v2(11_DESIGN_V2 8절) 전역 가로 스크롤 박멸 */
   html,
@@ -32,7 +193,8 @@
   }
 
   ::selection {
-    @apply bg-text-pri text-bg-base;
+    background: var(--dah-selection-bg);
+    color: var(--dah-selection-text);
   }
 
   :focus-visible {
@@ -42,164 +204,6 @@
     transition: outline-offset theme('transitionDuration.fast') theme('transitionTimingFunction.out');
   }
 
-  /* 운영위원회에서 주현호를 빠르게 세 번 누르면 켜지는 개인 테마. 새로고침 전까지
-     전체 페이지에 유지되며, 클릭 대상 자체에는 버튼·눌림 모션을 부여하지 않는다. */
-  html[data-dah-easter-egg='on'] body,
-  html[data-dah-easter-egg='on'] .cosmos-background {
-    background: linear-gradient(135deg, #0c0c0c 26%, #292929 100%) !important;
-  }
-
-  html[data-dah-easter-egg='on'] .cosmos-background > div {
-    opacity: 0 !important;
-  }
-
-  /* PageBanner·피처드 블록이 독립적으로 얹는 성운도 제거한다. 전역 배경만 바꿔서는
-     bg-nebula·bg-nebula-violet/deep/soft가 페이지마다 남아 보인다. */
-  html[data-dah-easter-egg='on'] [class*='bg-nebula'] {
-    background-image: none !important;
-  }
-
-  html[data-dah-easter-egg='on'] .bg-bg-base,
-  html[data-dah-easter-egg='on'] [class*='bg-bg-base'],
-  html[data-dah-easter-egg='on'] .bg-bg-elev,
-  html[data-dah-easter-egg='on'] .bg-bg-panel,
-  html[data-dah-easter-egg='on'] .bg-bg-frame,
-  html[data-dah-easter-egg='on'] [class*='bg-cosmos-depth'] {
-    background-color: #292929 !important;
-  }
-
-  html[data-dah-easter-egg='on'] .bg-bg-base,
-  html[data-dah-easter-egg='on'] [class*='bg-bg-base'] {
-    background-color: #0c0c0c !important;
-  }
-
-  /* 홈 히어로의 from-bg-base 페이드는 Tailwind의 CSS 변수로 생성되므로 배경색 규칙과
-     별도로 잡는다. 그렇지 않으면 영상 위·아래에서 원래 딥퍼플이 다시 보인다. */
-  html[data-dah-easter-egg='on'] [class*='from-bg-base'] {
-    --tw-gradient-from: #0c0c0c var(--tw-gradient-from-position) !important;
-    --tw-gradient-to: rgb(12 12 12 / 0) var(--tw-gradient-to-position) !important;
-  }
-
-  html[data-dah-easter-egg='on'] .bg-glass-bg,
-  html[data-dah-easter-egg='on'] .bg-glass-strong {
-    background-color: rgb(255 255 255 / 0.06) !important;
-  }
-
-  html[data-dah-easter-egg='on'] [class*='bg-glass-highlight'] {
-    background-image: none !important;
-  }
-
-  html[data-dah-easter-egg='on'] [class*='bg-button-ghost'] {
-    background-color: #292929 !important;
-  }
-
-  /* 밝은 읽기 표면(공지·자료실·관리 시트)도 예외 없이 같은 다크 테마로 바꾼다. */
-  html[data-dah-easter-egg='on'] .bg-reading-bg {
-    background-color: #0c0c0c !important;
-  }
-
-  html[data-dah-easter-egg='on'] .bg-reading-surface,
-  html[data-dah-easter-egg='on'] .bg-reading-subtle {
-    background-color: #292929 !important;
-  }
-
-  html[data-dah-easter-egg='on'] [class*='bg-reading-accent'] {
-    background-color: rgb(226 125 166 / 0.16) !important;
-  }
-
-  /* 교육과정 SVG의 개설 과목 틴트는 React 인라인 fill이라 별도 표식으로 덮는다. */
-  html[data-dah-easter-egg='on'] .curriculum-roadmap-offered {
-    fill: rgb(226 125 166 / 0.16) !important;
-  }
-
-  html[data-dah-easter-egg='on'] .text-text-pri,
-  html[data-dah-easter-egg='on'] .text-reading-textStrong,
-  html[data-dah-easter-egg='on'] .text-reading-text,
-  html[data-dah-easter-egg='on'] .text-reading-surface,
-  html[data-dah-easter-egg='on'] .text-text-invert,
-  html[data-dah-easter-egg='on'] .text-button-primaryText {
-    color: #ffffff !important;
-  }
-
-  html[data-dah-easter-egg='on'] .text-text-sec,
-  html[data-dah-easter-egg='on'] .text-text-meta,
-  html[data-dah-easter-egg='on'] .text-reading-textMeta {
-    color: rgb(255 255 255 / 0.5) !important;
-  }
-
-  html[data-dah-easter-egg='on'] .text-text-disabled,
-  html[data-dah-easter-egg='on'] .text-icon-disabled {
-    color: rgb(255 255 255 / 0.35) !important;
-  }
-
-  html[data-dah-easter-egg='on'] .text-icon {
-    color: rgb(255 255 255 / 0.7) !important;
-  }
-
-  /* 보라 계열은 클래스 조합(hover:·peer-checked: 포함)까지 모두 이스터에그의 핑크로
-     대체한다. 이 선택자들은 Tailwind의 이스케이프된 variant 클래스도 안정적으로 잡는다. */
-  html[data-dah-easter-egg='on'] .text-purple-primary,
-  html[data-dah-easter-egg='on'] .text-purple-light,
-  html[data-dah-easter-egg='on'] .text-purple-mid,
-  html[data-dah-easter-egg='on'] .text-link,
-  html[data-dah-easter-egg='on'] .text-link-hover,
-  html[data-dah-easter-egg='on'] .text-link-active,
-  html[data-dah-easter-egg='on'] .text-reading-accent,
-  html[data-dah-easter-egg='on'] .text-reading-accentStrong,
-  html[data-dah-easter-egg='on'] .text-button-ghostText,
-  html[data-dah-easter-egg='on'] .text-icon-active,
-  html[data-dah-easter-egg='on'] .text-icon-key,
-  html[data-dah-easter-egg='on'] [class*='text-purple'],
-  html[data-dah-easter-egg='on'] [class*='text-link'],
-  html[data-dah-easter-egg='on'] [class*='text-reading-accent'] {
-    color: #e27da6 !important;
-  }
-
-  html[data-dah-easter-egg='on'] .bg-purple-primary,
-  html[data-dah-easter-egg='on'] .bg-button-primary,
-  html[data-dah-easter-egg='on'] .bg-bg-invert,
-  html[data-dah-easter-egg='on'] [class*='bg-purple'],
-  html[data-dah-easter-egg='on'] [class*='bg-button-primary'] {
-    background-color: #e27da6 !important;
-  }
-
-  html[data-dah-easter-egg='on'] .border-border-subtle,
-  html[data-dah-easter-egg='on'] .border-border-strong,
-  html[data-dah-easter-egg='on'] .border-glass-line,
-  html[data-dah-easter-egg='on'] .border-reading-hairline,
-  html[data-dah-easter-egg='on'] [class*='border-reading-accent'],
-  html[data-dah-easter-egg='on'] [class*='border-purple'],
-  html[data-dah-easter-egg='on'] [class*='border-border-focus'] {
-    border-color: rgb(255 255 255 / 0.18) !important;
-  }
-
-  html[data-dah-easter-egg='on'] [class*='ring-purple'],
-  html[data-dah-easter-egg='on'] [class*='outline-border-focus'],
-  html[data-dah-easter-egg='on'] [class*='outline-reading-accent'] {
-    --tw-ring-color: #e27da6 !important;
-    outline-color: #e27da6 !important;
-  }
-
-  /* 퍼플 글로우는 토큰 shadow-btn/glow-card뿐 아니라 헤더 로고의 drop-shadow와
-     hover variant에도 남는다. 이스터에그는 빛 번짐 없이 평면적인 중성 테마로 유지한다. */
-  html[data-dah-easter-egg='on'] *,
-  html[data-dah-easter-egg='on'] *::before,
-  html[data-dah-easter-egg='on'] *::after {
-    box-shadow: none !important;
-  }
-
-  html[data-dah-easter-egg='on'] [class*='drop-shadow'] {
-    filter: none !important;
-  }
-
-  html[data-dah-easter-egg='on'] [class*='backdrop-blur'] {
-    backdrop-filter: none !important;
-  }
-
-  html[data-dah-easter-egg='on'] ::selection {
-    background: #e27da6 !important;
-    color: #ffffff !important;
-  }
 }
 
 @layer components {

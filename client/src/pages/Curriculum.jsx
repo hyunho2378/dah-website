@@ -478,11 +478,7 @@ function Curriculum() {
                               : 'transparent',
                           }}
                           stroke="currentColor"
-                          className={`text-border-subtle transition-colors duration-base ease-out ${
-                            semester.offeredNames.has(nameKey(b.ko))
-                              ? 'curriculum-roadmap-offered'
-                              : ''
-                          }`}
+                          className="text-border-subtle transition-colors duration-base ease-out"
                         />
                         <text
                           x={b.x + 6}
