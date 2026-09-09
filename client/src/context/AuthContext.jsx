@@ -8,7 +8,9 @@ import { useLoginModal } from './LoginModalContext'
 
 const ROLE_RANK = { manager: 1, admin: 2, owner: 3 }
 
-// 13_CMS_SPEC 1절 편집 가능 매트릭스 (유형 → 최소 롤)
+// 편집 가능 매트릭스 (유형 → 최소 롤).
+// 관리자 정책: manager와 admin은 동일하게 모든 대시보드·시스템·콘텐츠를 관리한다.
+// owner만 사용자 전체·백업처럼 소유자 범위의 기능을 추가로 가진다.
 const EDIT_MIN_ROLE = {
   // manager+
   notice: 'manager',
@@ -22,20 +24,19 @@ const EDIT_MIN_ROLE = {
   portfolios: 'manager',
   club: 'manager',
   showcase: 'manager',
-  // admin+
-  professor: 'admin',
-  professors: 'admin',
-  mentor: 'admin',
-  mentors: 'admin',
-  curriculum: 'admin',
-  codesharing: 'admin',
-  nanodegree: 'admin',
-  ci: 'admin',
-  council: 'admin',
-  career: 'admin',
-  careers: 'admin',
-  // 사이트 설정 — 13_CMS 1절 owner·admin, 14_ROUTES_V2 /admin/settings admin
-  settings: 'admin',
+  // manager+ — 서버 content-config.js 및 /admin 라우트와 동일한 기준
+  professor: 'manager',
+  professors: 'manager',
+  mentor: 'manager',
+  mentors: 'manager',
+  curriculum: 'manager',
+  codesharing: 'manager',
+  nanodegree: 'manager',
+  ci: 'manager',
+  council: 'manager',
+  career: 'manager',
+  careers: 'manager',
+  settings: 'manager',
   // owner 전용
   users: 'owner',
   export: 'owner',

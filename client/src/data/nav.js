@@ -68,7 +68,7 @@ export const nav = [
       {
         label: '포트폴리오',
         labelEn: 'Portfolio',
-        to: '/students/careers#portfolios',
+        to: '/students/portfolios',
         visibilityKey: 'portfolios',
       },
     ],

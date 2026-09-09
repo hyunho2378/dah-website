@@ -36,6 +36,7 @@ import FormEditor from './FormEditor'
 import FormResponsesSheet from './FormResponsesSheet'
 import SettingsAdmin from './SettingsAdmin'
 import UsersAdmin from './UsersAdmin'
+import AboutAdmin from './AboutAdmin'
 
 export { AdminLayout }
 
@@ -59,6 +60,7 @@ export const ADMIN_ROUTES = [
   { path: 'forms/new', Component: FormEditor, role: 'manager' },
   { path: 'forms/:id/edit', Component: FormEditor, role: 'manager' },
   { path: 'settings', Component: SettingsAdmin, role: 'manager' },
+  { path: 'about', Component: AboutAdmin, role: 'manager' },
   { path: 'users', Component: UsersAdmin, role: 'manager' },
 ]
 

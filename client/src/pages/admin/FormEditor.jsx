@@ -48,6 +48,8 @@ const OPTION_TYPES = ['select', 'radio', 'checkbox']
 
 const PANEL =
   'flex flex-col gap-16 rounded-glass border border-glass-line bg-glass-bg p-24 backdrop-blur-glass-mobile'
+const QUESTION_CARD =
+  'flex flex-col gap-16 rounded-glass border border-glass-line border-l-4 border-l-purple-primary bg-bg-elev p-24 shadow-glass'
 const ICON_BTN =
   'flex h-32 w-32 cursor-pointer items-center justify-center rounded-sm text-text-sec transition duration-fast ease-out hover:bg-glass-strong hover:text-text-pri focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40'
 
@@ -232,7 +234,7 @@ function FieldCard({ field, index, onChange, onRemove, dragging, over, rowProps,
         onArm(false)
         rp.onDragEnd?.(e)
       }}
-      className={`${PANEL} transition duration-fast ease-out ${dragging ? 'opacity-40' : ''} ${
+      className={`${QUESTION_CARD} transition duration-fast ease-out ${dragging ? 'opacity-40' : ''} ${
         over ? 'border-border-purple' : ''
       }`}
     >
@@ -377,6 +379,7 @@ function FormEditor() {
     <section className="flex flex-col gap-24">
       <PageHead
         title={isNew ? '폼 만들기' : '폼 수정'}
+        desc="질문 카드를 위에서 아래 순서로 구성합니다. 공개 화면은 같은 순서로 표시됩니다."
         actions={<GhostButton onClick={() => navigate(backTo)}>목록</GhostButton>}
       />
 
@@ -393,7 +396,7 @@ function FormEditor() {
           )}
         </div>
       ) : (
-        <form onSubmit={save} className="flex flex-col gap-24">
+        <form onSubmit={save} className="mx-auto flex w-full max-w-5xl flex-col gap-24">
           <div className={PANEL}>
             <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">기본 정보</h3>
             <div className="grid grid-cols-1 gap-16 md:grid-cols-2">
@@ -503,8 +506,11 @@ function FormEditor() {
           </div>
 
           <div className="flex flex-col gap-16">
-            <div className="flex flex-wrap items-center justify-between gap-16">
-              <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">필드</h3>
+            <div className="flex flex-wrap items-center justify-between gap-16 border-b border-border-subtle pb-16">
+              <div>
+                <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">질문</h3>
+                <p className="mt-4 text-small-m text-text-sec">질문마다 카드 한 장으로 편집합니다.</p>
+              </div>
               <div className="flex flex-wrap items-center gap-8">
                 <GhostButton onClick={() => setPreview((v) => !v)} aria-pressed={preview}>
                   {preview ? '미리보기 닫기' : '미리보기'}

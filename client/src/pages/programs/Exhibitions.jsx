@@ -1,6 +1,7 @@
 // /programs/exhibitions — 전시회 아카이브 (상단 피처드 히어로 + 포스터 그리드, 2017~)
 // 포스터는 원색 유지(grayscale 금지 — 전시 포스터 정체성). ImageFrame(2:3)로 통일.
 import Link from '../../components/common/LangLink'
+import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
@@ -148,7 +149,19 @@ function Exhibitions() {
   const rest = items.filter((it) => it !== featured)
 
   return (
-    <Container as="section" className="pb-section-m pt-32 lg:pb-section-d lg:pt-48">
+    <>
+      <PageBanner
+        titleKo="프로젝트 전시회"
+        titleEn="EXHIBITIONS"
+        breadcrumb={[
+          { label: t('nav.home'), to: '/' },
+          { label: t('nav.events') },
+          { label: t('titles.exhibitions'), to: '/programs/exhibitions' },
+        ]}
+        nebulaX="64%"
+        nebulaY="20%"
+      />
+      <Container as="section" className="pb-section-m pt-32 lg:pb-section-d lg:pt-48">
         <div className="flex flex-wrap items-center justify-end gap-16">
           <InlineEditBar
             type="exhibitions"
@@ -193,7 +206,8 @@ function Exhibitions() {
             )}
           </div>
         )}
-    </Container>
+      </Container>
+    </>
   )
 }
 

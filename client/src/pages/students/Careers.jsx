@@ -1,18 +1,14 @@
-// /students/careers — 진로 (취업 현황 + 재학생 포트폴리오 통합, 10_IA_V2 0절)
-// API: /content/careers, /content/portfolios — offline 시 src/data 정적 폴백.
-import { ArrowUpRight } from 'lucide-react'
+// /students/careers — 취업 현황
 import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import SectionLabel from '../../components/common/SectionLabel'
 import Reveal from '../../components/common/Reveal'
-import Divider from '../../components/common/Divider'
 import ArrowLink from '../../components/common/ArrowLink'
-import { AddButton } from '../../components/content/EditControls'
+import InlineEditBar from '../../components/content/InlineEditBar'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
 import { useLang } from '../../i18n/LangContext'
 import { careers as staticCareers } from '../../data/careers'
-import { portfolios as staticPortfolios } from '../../data/portfolios'
 const staggerDelay = (index) => (index < 6 ? index * 80 : 0)
 
 const joinMajors = (majors) =>
@@ -34,14 +30,6 @@ const normalizeCareer = (c, isEn) => {
     role: en?.roleEn ?? c.position ?? c.role ?? null,
   }
 }
-
-const normalizePortfolio = (p) => ({
-  id: p.id,
-  studentNo: p.student_no ?? p.studentNo,
-  name: p.name,
-  majors: p.majors,
-  url: p.link ?? p.url ?? null,
-})
 
 // N2-3: 과한 박스(GlassCard) 제거 → 헤어라인 상단 구분 경량 셀(정보 유지)
 function CareerCard({ career }) {
@@ -75,75 +63,17 @@ function CareerCard({ career }) {
   )
 }
 
-// P4 리스트 행 — url 없으면 비링크 행(원문에 없는 링크 생성 금지)
-function PortfolioItem({ portfolio }) {
-  const { studentNo, name, majors, url } = portfolio
-
-  const body = (
-    <>
-      <span className="shrink-0 font-mono text-caption-m text-text-meta">
-        {studentNo}
-      </span>
-      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-12 gap-y-4">
-        <span
-          className={`text-body-m text-text-pri underline-offset-4 md:text-body-d ${
-            url ? 'group-hover:underline' : ''
-          }`}
-        >
-          {name}
-        </span>
-        {majors && (
-          <span className="font-mono text-caption-m text-text-sec">
-            {joinMajors(majors)}
-          </span>
-        )}
-        {url && (
-          <ArrowUpRight
-            size={16}
-            aria-hidden="true"
-            className="ml-auto shrink-0 text-text-meta transition-colors duration-fast ease-out group-hover:text-text-pri"
-          />
-        )}
-      </span>
-    </>
-  )
-
-  const className =
-    'flex min-w-0 flex-col gap-4 py-16 transition-colors duration-fast ease-out md:flex-row md:items-center md:gap-24 md:py-20'
-
-  if (url) {
-    return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`group ${className} hover:bg-bg-elev`}
-      >
-        {body}
-      </a>
-    )
-  }
-  return <div className={className}>{body}</div>
-}
-
 function Careers() {
   const { lang, t } = useLang()
   useTitle(t('titles.careers'))
   const isEn = lang === 'en'
   // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피 — 취업 26건 등)
   const careersRes = useApi('/content/careers', { params: { pageSize: 100 } })
-  const portfoliosRes = useApi('/content/portfolios', { params: { pageSize: 100 } })
 
   const careerFallback = careersRes.offline || (careersRes.error && !careersRes.data)
   const careerItems = (
     careerFallback ? staticCareers : careersRes.data?.items ?? []
   ).map((c) => normalizeCareer(c, isEn))
-
-  const pfFallback =
-    portfoliosRes.offline || (portfoliosRes.error && !portfoliosRes.data)
-  const portfolioItems = (
-    pfFallback ? staticPortfolios : portfoliosRes.data?.items ?? []
-  ).map(normalizePortfolio)
 
   return (
     <>
@@ -162,7 +92,7 @@ function Careers() {
               <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
                 {t('sections.employment')}
               </h2>
-              <AddButton type="careers" to="/admin/careers" />
+              <InlineEditBar type="careers" addTo="/admin/careers" manageTo="/admin/careers" />
             </div>
           </Reveal>
           {careerItems.length === 0 ? (
@@ -176,31 +106,6 @@ function Careers() {
                 <Reveal key={career.id} delay={staggerDelay(index)} className="min-w-0">
                   <CareerCard career={career} />
                 </Reveal>
-              ))}
-            </div>
-          )}
-        </section>
-        <Divider />
-        {/* Y3-3(33_PHASE18) 통합: 학생 활동 하위 '포트폴리오' 메뉴의 앵커 착지점.
-            헤더가 고정이라 scroll-mt로 헤더 높이만큼 여백을 준다. */}
-        <section id="portfolios" className="scroll-mt-96 py-section-m lg:py-section-d">
-          <Reveal>
-            <SectionLabel index="02" text="PORTFOLIO" />
-            <div className="mt-24 flex flex-wrap items-center justify-between gap-16">
-              <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
-                {t('sections.portfolio')}
-              </h2>
-              <AddButton type="portfolios" to="/admin/careers" />
-            </div>
-          </Reveal>
-          {portfolioItems.length === 0 ? (
-            <p className="py-64 font-mono text-caption-m text-text-meta">
-              {portfoliosRes.loading ? t('common.loading') : t('common.empty')}
-            </p>
-          ) : (
-            <div className="mt-48 divide-y divide-border-subtle">
-              {portfolioItems.map((portfolio) => (
-                <PortfolioItem key={portfolio.id} portfolio={portfolio} />
               ))}
             </div>
           )}

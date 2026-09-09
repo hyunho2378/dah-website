@@ -3,6 +3,8 @@ import Container from '../components/layout/Container'
 import SectionLabel from '../components/common/SectionLabel'
 import Reveal from '../components/common/Reveal'
 import { useTitle } from '../hooks/useTitle'
+import { useApi } from '../hooks/useApi'
+import { EditPencil } from '../components/content/EditControls'
 import { useLang } from '../i18n/LangContext'
 import { history } from '../data/history'
 import { motion } from '../styles/tokens'
@@ -12,7 +14,7 @@ import { motion } from '../styles/tokens'
 //      새 콘텐츠 창작 없음 — 기존 원문 텍스트 재배치만.
 // G16: 고정 페이지 영문 원고 — 국문 원문의 정보를 늘리거나 줄이지 않은 대역.
 // KR 원문은 source_content.md 이관본 그대로(교정 제외 대상).
-const COPY = {
+export const ABOUT_COPY = {
   ko: {
     what: '한림대학교 디지털인문예술전공은 AI와 디지털 트랜스포메이션과 같이 글로벌 혁신을 주도하는 디지털·정보통신기술, 인간을 위한 가치를 구현하는 디자인, 그리고 사람과 사회를 이해하는 인문사회학적 소양이 융합하여 미래의 주역이 될 인재를 양성하는 새로운 융합 프로그램입니다.',
     whyStatement: '앞으로는 한 전문 영역의 경계를 넘어 다방면의 지식을 통섭할 수 있어야 합니다.',
@@ -169,8 +171,20 @@ function HistoryTimeline({ items, lang }) {
 
 function About() {
   const { lang, t } = useLang()
+  const settings = useApi('/settings/public')
   useTitle(t('titles.about'))
-  const copy = COPY[lang] ?? COPY.ko
+  const savedCopy = settings.data?.settings?.aboutContent?.[lang]
+  const fallbackCopy = ABOUT_COPY[lang] ?? ABOUT_COPY.ko
+  const copy = {
+    ...fallbackCopy,
+    ...(savedCopy && typeof savedCopy === 'object' ? savedCopy : {}),
+    vision:
+      Array.isArray(savedCopy?.vision) && savedCopy.vision.length > 0
+        ? savedCopy.vision
+        : fallbackCopy.vision,
+  }
+  const savedHistory = settings.data?.settings?.aboutHistory
+  const historyItems = Array.isArray(savedHistory) && savedHistory.length > 0 ? savedHistory : history
 
   return (
     <>
@@ -187,6 +201,9 @@ function About() {
       />
 
       <div className="pb-section-m md:pb-section-d">
+        <Container className="pt-24">
+          <EditPencil type="settings" to="/admin/about" label="전공 소개·연혁 편집" />
+        </Container>
         {/* 01 개요 — What is DAH / Why DAH를 좌우 번갈아 배치. 원문 재배치만이고 문구 추가·삭제 없음 */}
         <Container as="section" className="pt-section-m md:pt-section-d">
           <Reveal>
@@ -276,7 +293,7 @@ function About() {
         </Container>
 
         {/* 03 연혁 타임라인 — 항목은 언어별(KR: text / EN: textEn) 렌더 */}
-        {history.length > 0 && (
+        {historyItems.length > 0 && (
           <Container as="section" id="history" className="scroll-mt-header pt-section-m md:pt-section-d">
             <Reveal>
               <div className="flex flex-wrap items-center gap-12">
@@ -288,7 +305,7 @@ function About() {
             </Reveal>
             <div className="mt-48 md:mt-64">
               {/* K2-7: 최신 연도 최상단(내림차순) — 데이터 원문 순서(오름차순)는 유지, 렌더에서만 정렬 */}
-              <HistoryTimeline items={[...history].sort((a, b) => b.date.localeCompare(a.date))} lang={lang} />
+              <HistoryTimeline items={[...historyItems].sort((a, b) => b.date.localeCompare(a.date))} lang={lang} />
             </div>
           </Container>
         )}

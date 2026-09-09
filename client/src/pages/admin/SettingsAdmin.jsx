@@ -5,15 +5,7 @@
 import { useEffect, useState } from 'react'
 import { useApi, api } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
-import {
-  ErrorText,
-  Field,
-  Input,
-  PageHead,
-  PrimaryButton,
-  Select,
-  Toggle,
-} from '../../components/admin/FormControls'
+import { ErrorText, Field, Input, PageHead, PrimaryButton } from '../../components/admin/FormControls'
 
 const PANEL =
   'flex flex-col gap-16 rounded-glass border border-glass-line bg-glass-bg p-24 backdrop-blur-glass-mobile'
@@ -25,8 +17,6 @@ function SettingsAdmin() {
   const { data, loading, error, refetch } = useApi('/settings/public')
 
   const [ctas, setCtas] = useState([{ ...EMPTY_CTA }, { ...EMPTY_CTA }])
-  const [headerVisible, setHeaderVisible] = useState(true)
-  const [buttonMode, setButtonMode] = useState('header')
   const [hydrated, setHydrated] = useState(false)
   const [busy, setBusy] = useState(false)
   const [saveError, setSaveError] = useState(null)
@@ -40,10 +30,6 @@ function SettingsAdmin() {
         { ...EMPTY_CTA, ...(remote[0] || {}), href: remote[0]?.href || remote[0]?.to || '' },
         { ...EMPTY_CTA, ...(remote[1] || {}), href: remote[1]?.href || remote[1]?.to || '' },
       ])
-    }
-    if (data.exhibition) {
-      setHeaderVisible(data.exhibition.header_visible !== false)
-      setButtonMode(data.exhibition.button_mode || 'header')
     }
     setHydrated(true)
   }, [hydrated, data])
@@ -69,10 +55,7 @@ function SettingsAdmin() {
           href: cta.href.trim(),
           external: /^https?:\/\//.test(cta.href.trim()),
         }))
-      await api.put('/admin/settings', {
-        settings: { hero: { ...heroBase, ctas: nextCtas } },
-        exhibition: { header_visible: headerVisible, button_mode: buttonMode },
-      })
+      await api.put('/admin/settings', { settings: { hero: { ...heroBase, ctas: nextCtas } } })
       setSaved(true)
       refetch()
     } catch (err) {
@@ -84,7 +67,7 @@ function SettingsAdmin() {
 
   return (
     <section className="flex flex-col gap-32">
-      <PageHead title="사이트 설정" desc="히어로 버튼과 접수 버튼 노출을 관리합니다." />
+      <PageHead title="사이트 설정" desc="홈 화면의 히어로 버튼을 관리합니다." />
 
       {error && <ErrorText>{error.message}</ErrorText>}
       {loading && <p className="font-mono text-caption-m text-text-meta">불러오는 중</p>}
@@ -111,41 +94,6 @@ function SettingsAdmin() {
             </div>
           ))}
         </div>
-
-        {/* 접수 버튼 노출 (13_CMS 1절: on/off + 위치) */}
-        <div className={PANEL}>
-          <h3 className="text-h3-m font-bold text-text-pri md:text-h3-d">접수 버튼 노출</h3>
-          <p className="text-small-m text-text-sec">
-            스위치를 켜면 접수 기간과 무관하게 버튼을 노출합니다. 기간 검증은 제출 시점에
-            서버가 적용합니다.
-          </p>
-          <div className="flex flex-wrap items-start gap-24">
-            <Field label="노출 허용">
-              <Toggle
-                checked={headerVisible}
-                onChange={(v) => {
-                  setSaved(false)
-                  setHeaderVisible(v)
-                }}
-                label="접수 버튼 노출 허용"
-              />
-            </Field>
-            <Field label="위치">
-              <Select
-                value={buttonMode}
-                onChange={(e) => {
-                  setSaved(false)
-                  setButtonMode(e.target.value)
-                }}
-                options={[
-                  { value: 'header', label: '헤더' },
-                  { value: 'floating', label: '플로팅' },
-                ]}
-              />
-            </Field>
-          </div>
-        </div>
-
         <ErrorText>{saveError}</ErrorText>
         {saved && <p className="font-mono text-caption-m text-text-meta">저장 완료</p>}
         <div>

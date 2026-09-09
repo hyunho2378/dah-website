@@ -39,6 +39,7 @@ const NAV_GROUPS = [
   {
     label: 'ABOUT',
     items: [
+      { to: '/admin/about', label: '전공 소개·연혁', role: 'manager' },
       { to: '/admin/professors', label: '교수진', role: 'manager' },
       { to: '/admin/mentors', label: '멘토', role: 'manager' },
       { to: '/admin/ci', label: 'CI', role: 'manager' },

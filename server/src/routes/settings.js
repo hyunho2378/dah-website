@@ -1,6 +1,6 @@
 // src/routes/settings.js — 설정 (12_BACKEND.md 8절)
 // GET /settings/public — site_settings 전체 + 전시회 접수 노출 상태 계산 (히어로 버튼, 접수 버튼)
-// PUT /admin/settings — owner·admin. site_settings upsert + exhibition_settings 갱신
+// PUT /admin/settings — manager+. site_settings upsert + exhibition_settings 갱신
 import { Router } from 'express'
 import { query } from '../db.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
@@ -52,6 +52,9 @@ export const DEFAULT_VISIBILITY = {
   professors: true,
   mentors: true,
   curriculum: true,
+  codesharing: true,
+  nanodegree: true,
+  ci: true,
   council: true,
   careers: true,
 }
@@ -122,8 +125,8 @@ router.get(
 router.put(
   '/admin/settings',
   requireAuth,
-  // 12_BACKEND 2절: manager는 전시회 담당이다. 전시회 일정·회차·과목은 manager+,
-  // 그 밖의 사이트 설정 키는 아래에서 admin+로 다시 막는다.
+  // 관리자 정책: manager와 admin은 모든 시스템 설정을 함께 관리한다.
+  // owner만 사용자 전체·백업처럼 소유자 범위의 기능을 추가로 가진다.
   requireRole('manager'),
   wrap(async (req, res) => {
     const { settings, exhibition } = req.body || {}

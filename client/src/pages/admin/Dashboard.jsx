@@ -31,6 +31,9 @@ const COUNT_TARGETS = [
   { type: 'professors', label: '교수진', to: '/admin/professors', role: 'manager' },
   { type: 'mentors', label: '멘토', to: '/admin/mentors', role: 'manager' },
   { type: 'curriculum', label: '교과목', to: '/admin/curriculum', role: 'manager' },
+  { type: 'codesharing', label: '코드쉐어링', to: '/admin/codesharing', role: 'manager' },
+  { type: 'nanodegree', label: '나노디그리', to: '/admin/nanodegree', role: 'manager' },
+  { type: 'ci', label: 'CI', to: '/admin/ci', role: 'manager' },
   { type: 'council', label: '운영위원회', to: '/admin/council', role: 'manager' },
   { type: 'careers', label: '취업 현황', to: '/admin/careers', role: 'manager' },
 ]
@@ -53,6 +56,9 @@ const DEFAULT_VISIBILITY = {
   professors: true,
   mentors: true,
   curriculum: true,
+  codesharing: true,
+  nanodegree: true,
+  ci: true,
   council: true,
   careers: true,
 }
@@ -176,7 +182,7 @@ function Dashboard() {
         <p className="font-mono text-label-m uppercase tracking-label text-text-meta">CONTENT</p>
         <ErrorText>{countError}</ErrorText>
         <ErrorText>{visError}</ErrorText>
-        <ul className="mt-16 grid grid-cols-2 gap-12 md:grid-cols-3 lg:grid-cols-4">
+        <ul className="mt-16 grid grid-cols-2 gap-12 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
           {targets.map((t) => (
             <li
               key={t.type}

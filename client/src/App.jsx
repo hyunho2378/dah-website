@@ -29,6 +29,7 @@ import Clubs from './pages/students/Clubs'
 import ClubDetail from './pages/students/ClubDetail'
 import StudentsAchievements from './pages/students/Achievements'
 import StudentsCareers from './pages/students/Careers'
+import Portfolios from './pages/students/Portfolios'
 import ShowcaseGrid from './pages/showcase/ShowcaseGrid'
 import ShowcaseDetail from './pages/showcase/ShowcaseDetail'
 import ShowcaseSubmit from './pages/showcase/ShowcaseSubmit'
@@ -96,6 +97,7 @@ const PUBLIC_ROUTES = [
   { path: '/students/clubs/:id', element: <ClubDetail /> },
   { path: '/students/achievements', element: <StudentsAchievements /> },
   { path: '/students/careers', element: <StudentsCareers /> },
+  { path: '/students/portfolios', element: <Portfolios /> },
   { path: '/showcase', element: <ShowcaseGrid /> },
   { path: '/showcase/:id', element: <ShowcaseDetail /> },
   { path: '/news', element: <News /> },

@@ -1,8 +1,6 @@
 // /resources/:id — 자료실 상세 (N1-1, 23_PHASE11)
 // NewsDetail과 동일 구조: 타이틀 블록 + 첨부 줄(파일명·미리보기·다운로드) + 리치 본문 + 갤러리.
 // 자료실은 정적 폴백이 없어 itemOf만 사용.
-// H3-5(37_SHEET_ROADMAP): 공지 상세와 일관되게 문서 블록만 G4 밝은 읽기 표면(tokens.reading.*),
-// 배너·목록 버튼·공유 등 사이트 크롬은 다크 유지.
 import { useParams } from 'react-router-dom'
 import { Download, ExternalLink, Paperclip } from 'lucide-react'
 import PageBanner from '../components/layout/PageBanner'
@@ -16,22 +14,24 @@ import { useSeo, plainText } from '../hooks/useSeo'
 import { breadcrumbJsonLd, SITE_NAME } from '../data/seo'
 import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
 
-// 첨부 줄 — 파일명 + 미리보기(새 탭) + 다운로드 (NewsDetail과 동일한 밝은 읽기 표면 토큰)
 const ATTACH_LINK =
-  'inline-flex items-center gap-4 rounded-sm border border-reading-hairline bg-reading-surface px-12 py-4 text-caption-m text-reading-accent transition-colors duration-fast ease-out hover:border-reading-accent hover:text-reading-accentStrong'
+  'inline-flex items-center gap-4 rounded-sm border border-border-subtle bg-bg-base px-12 py-6 text-caption-m text-text-sec transition duration-fast ease-out hover:border-border-strong hover:bg-glass-strong hover:text-text-pri'
+const canPreview = (file) => /\.(pdf|jpe?g|png|webp|gif)(?:[?#].*)?$/i.test(file.name || file.url)
 
 function AttachmentRow({ file, t }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-12 border-t border-reading-hairline py-12">
-      <span className="inline-flex min-w-0 items-center gap-8 text-small-m text-reading-textStrong md:text-small-d">
-        <Paperclip size={16} aria-hidden="true" className="shrink-0 text-reading-textMeta" />
+    <div className="flex min-w-0 flex-col gap-12 border-t border-border-subtle py-16 md:flex-row md:items-center md:justify-between">
+      <span className="inline-flex min-w-0 items-center gap-8 text-small-m text-text-pri md:text-small-d">
+        <Paperclip size={16} aria-hidden="true" className="shrink-0 text-text-meta" />
         <span className="truncate">{file.name || file.url.split('/').pop()}</span>
       </span>
-      <span className="flex shrink-0 items-center gap-8">
-        <a href={file.url} target="_blank" rel="noopener noreferrer" className={ATTACH_LINK}>
-          <ExternalLink size={12} aria-hidden="true" />
-          {t('news.preview')}
-        </a>
+      <span className="flex shrink-0 flex-wrap items-center gap-8">
+        {canPreview(file) ? (
+          <a href={file.url} target="_blank" rel="noopener noreferrer" className={ATTACH_LINK}>
+            <ExternalLink size={12} aria-hidden="true" />
+            {t('news.preview')}
+          </a>
+        ) : <span className="font-mono text-caption-m text-text-meta">브라우저 미리보기 미지원</span>}
         <a href={file.url} download className={ATTACH_LINK}>
           <Download size={12} aria-hidden="true" />
           {t('news.download')}
@@ -104,20 +104,19 @@ function ResourceDetail() {
               <EditPencil type="resource" to={`/admin/posts/resource/${id}/edit`} />
             </div>
 
-            {/* H3-5: 문서 블록 = G4 밝은 읽기 표면(제목 + 등록일·태그 + 첨부 + 본문 + 갤러리) */}
-            <div className="rounded-md bg-reading-bg p-24 md:p-40">
-              <header className="border-b border-reading-hairline pb-24">
-                <h1 className="text-h1-m font-bold leading-snug text-reading-textStrong md:text-h1-d">
+            <div className="rounded-glass border border-glass-line bg-bg-elev p-24 shadow-glass md:p-40 lg:p-48">
+              <header className="border-b border-border-subtle pb-24 md:pb-32">
+                <h1 className="max-w-4xl text-h1-m font-bold leading-snug text-text-pri md:text-h1-d">
                   {title}
                 </h1>
-                <div className="mt-16 flex flex-wrap items-center gap-12 text-small-m text-reading-textMeta md:text-small-d">
+                <div className="mt-16 flex flex-wrap items-center gap-12 text-small-m text-text-meta md:text-small-d">
                   {date && (
                     <time dateTime={date}>
                       {t('news.registered')} {date}
                     </time>
                   )}
                   {tag && (
-                    <span className="inline-flex items-center rounded-sm border border-reading-hairline bg-reading-surface px-8 py-2 text-caption-m text-reading-accent">
+                    <span className="inline-flex items-center rounded-sm border border-border-subtle bg-bg-panel px-8 py-2 text-caption-m text-text-sec">
                       {tag}
                     </span>
                   )}
@@ -133,11 +132,11 @@ function ResourceDetail() {
 
               {/* 본문 — 밝은 표면 대비(reading.text 15.0:1) */}
               {body ? (
-                <div className="pt-32">
-                  <RichBody body={body} tone="light" />
+                <div className="max-w-4xl pt-32 md:pt-40">
+                  <RichBody body={body} />
                 </div>
               ) : (
-                <p className="pt-32 text-body-l-m leading-relaxed text-reading-textMeta md:text-body-l-d">
+                <p className="pt-32 text-body-l-m leading-relaxed text-text-meta md:text-body-l-d">
                   {t('news.resourceNoBody')}
                 </p>
               )}
@@ -151,7 +150,7 @@ function ResourceDetail() {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group block overflow-hidden rounded-md border border-reading-hairline bg-reading-surface"
+                        className="group block overflow-hidden rounded-md border border-border-subtle bg-bg-panel"
                       >
                         <img
                           src={url}
