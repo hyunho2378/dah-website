@@ -9,6 +9,14 @@ const ORBIT_COUNT = 4
 const MAX_PARALLAX = 16
 const LERP = 0.06
 const LINK_DIST = 96
+const EASTER_EGG_EVENT = 'dah-easter-egg'
+
+function orbitPalette() {
+  const easterEgg = document.documentElement.dataset.dahEasterEgg === 'on'
+  return easterEgg
+    ? { orbit: 'rgba(255,255,255,0.18)', node: '#ffffff' }
+    : { orbit: colors.border.subtle, node: colors.text.pri }
+}
 
 function OrbitCanvas() {
   const canvasRef = useRef(null)
@@ -29,6 +37,7 @@ function OrbitCanvas() {
     let rafId = 0
     let running = false
     const mouse = { tx: 0, ty: 0, x: 0, y: 0 }
+    let palette = orbitPalette()
 
     const setup = () => {
       width = canvas.clientWidth
@@ -68,7 +77,7 @@ function OrbitCanvas() {
       const cy = height * 0.5 + mouse.y
 
       // 동심 궤도
-      ctx.strokeStyle = colors.border.subtle
+      ctx.strokeStyle = palette.orbit
       ctx.lineWidth = 1
       orbits.forEach((r) => {
         ctx.beginPath()
@@ -101,7 +110,7 @@ function OrbitCanvas() {
       ctx.globalAlpha = 1
 
       // 노드 점
-      ctx.fillStyle = colors.text.pri
+      ctx.fillStyle = palette.node
       particles.forEach((p) => {
         ctx.globalAlpha = p.alpha
         ctx.beginPath()
@@ -132,17 +141,22 @@ function OrbitCanvas() {
       mouse.ty = (e.clientY / window.innerHeight - 0.5) * 2 * MAX_PARALLAX
     }
     const onResize = () => setup()
+    const onEasterEgg = () => {
+      palette = orbitPalette()
+    }
 
     setup()
     start()
     window.addEventListener('resize', onResize)
     window.addEventListener('mousemove', onMouseMove, { passive: true })
+    window.addEventListener(EASTER_EGG_EVENT, onEasterEgg)
     document.addEventListener('visibilitychange', onVisibility)
 
     return () => {
       stop()
       window.removeEventListener('resize', onResize)
       window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener(EASTER_EGG_EVENT, onEasterEgg)
       document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [reduced])

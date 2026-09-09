@@ -73,6 +73,13 @@
     background-color: #0c0c0c !important;
   }
 
+  /* 홈 히어로의 from-bg-base 페이드는 Tailwind의 CSS 변수로 생성되므로 배경색 규칙과
+     별도로 잡는다. 그렇지 않으면 영상 위·아래에서 원래 딥퍼플이 다시 보인다. */
+  html[data-dah-easter-egg='on'] [class*='from-bg-base'] {
+    --tw-gradient-from: #0c0c0c var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(12 12 12 / 0) var(--tw-gradient-to-position) !important;
+  }
+
   html[data-dah-easter-egg='on'] .bg-glass-bg,
   html[data-dah-easter-egg='on'] .bg-glass-strong {
     background-color: rgb(255 255 255 / 0.06) !important;
@@ -100,6 +107,11 @@
     background-color: rgb(226 125 166 / 0.16) !important;
   }
 
+  /* 교육과정 SVG의 개설 과목 틴트는 React 인라인 fill이라 별도 표식으로 덮는다. */
+  html[data-dah-easter-egg='on'] .curriculum-roadmap-offered {
+    fill: rgb(226 125 166 / 0.16) !important;
+  }
+
   html[data-dah-easter-egg='on'] .text-text-pri,
   html[data-dah-easter-egg='on'] .text-reading-textStrong,
   html[data-dah-easter-egg='on'] .text-reading-text,
@@ -113,6 +125,11 @@
   html[data-dah-easter-egg='on'] .text-text-meta,
   html[data-dah-easter-egg='on'] .text-reading-textMeta {
     color: rgb(255 255 255 / 0.5) !important;
+  }
+
+  html[data-dah-easter-egg='on'] .text-text-disabled,
+  html[data-dah-easter-egg='on'] .text-icon-disabled {
+    color: rgb(255 255 255 / 0.35) !important;
   }
 
   html[data-dah-easter-egg='on'] .text-icon {

@@ -115,6 +115,8 @@ function Council() {
     hyunhoClickTimes.current = [...hyunhoClickTimes.current.filter((time) => now - time < 900), now]
     if (hyunhoClickTimes.current.length < 3) return
     document.documentElement.dataset.dahEasterEgg = 'on'
+    // Canvas처럼 CSS 변수·클래스만으로 색을 바꿀 수 없는 렌더러에도 전환을 알린다.
+    window.dispatchEvent(new Event('dah-easter-egg'))
     hyunhoClickTimes.current = []
   }
   const active = items.find((c) => c.id === selectedId) ?? items[0] ?? null
