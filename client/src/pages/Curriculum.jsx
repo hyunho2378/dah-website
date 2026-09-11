@@ -48,19 +48,19 @@ function SemesterTable({ trackKey, semester, lang, t, offeredNames }) {
           <tr className="border-b border-border-subtle">
             <th
               scope="col"
-              className="w-64 whitespace-nowrap px-16 py-8 font-mono text-caption-m font-medium text-text-meta"
+              className="w-64 whitespace-nowrap px-16 py-8 font-mono text-caption-m font-semibold text-text-meta"
             >
               {t('curriculum.grade')}
             </th>
             <th
               scope="col"
-              className="whitespace-nowrap px-8 py-8 font-mono text-caption-m font-medium text-text-meta"
+              className="whitespace-nowrap px-8 py-8 font-mono text-caption-m font-semibold text-text-meta"
             >
               {t('curriculum.course')}
             </th>
             <th
               scope="col"
-              className="w-128 whitespace-nowrap px-16 py-8 text-right font-mono text-caption-m font-medium text-text-meta"
+              className="w-128 whitespace-nowrap px-16 py-8 text-right font-mono text-caption-m font-semibold text-text-meta"
             >
               {t('curriculum.credit')}
             </th>
@@ -395,9 +395,9 @@ function Curriculum() {
                       textAnchor="middle"
                       fontSize="13"
                       fill="currentColor"
-                      className="font-mono text-text-pri"
+                      className="font-mono font-semibold text-text-pri"
                     >
-                      {`${i + 1}${t('curriculum.gradeSuffix')}`}
+                      {`${t('curriculum.levelPrefix')}${i + 1}`}
                     </text>
                     <text
                       x={i * diagram.colW + diagram.colW / 4}

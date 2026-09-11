@@ -180,7 +180,7 @@ export const ko = {
   curriculum: {
     // 교육과정은 입학 연차가 아닌 학습 수준을 기준으로 안내한다.
     grade: '수준',
-    gradeSuffix: '수준',
+    levelPrefix: '수준 ',
     course: '과목명',
     credit: '학점-강의-실습',
     sem1: '1학기',

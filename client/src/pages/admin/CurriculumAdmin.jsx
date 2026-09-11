@@ -35,7 +35,7 @@ const TRACKS = [
 const TRACK_LABEL = { common: '공통기초', design: '디자인', ai: 'AI', culture: '엔터컬처' }
 
 // DB 필드명 grade는 호환성을 위해 유지하고, 운영 화면에서는 학습 수준으로 표기한다.
-const LEVELS = [1, 2, 3, 4].map((n) => ({ value: String(n), label: `${n}수준` }))
+const LEVELS = [1, 2, 3, 4].map((n) => ({ value: String(n), label: `수준 ${n}` }))
 const TERMS = [
   { value: '1', label: '1학기' },
   { value: '2', label: '2학기' },
@@ -409,7 +409,7 @@ function CurriculumAdmin() {
                       <Trash2 size={14} />
                     </button>
                     <span className="ml-auto shrink-0 pl-8 font-mono text-caption-m text-text-meta">
-                      {item.grade}수준 · {TRACK_LABEL[item.track] || item.track}
+                      수준 {item.grade} · {TRACK_LABEL[item.track] || item.track}
                       {item.credit ? ` · ${item.credit}` : ''}
                     </span>
                     {/* H3-2: 터치·키보드용 동일 동작 경로 */}
@@ -507,7 +507,7 @@ function CurriculumAdmin() {
                     {o.name_ko}
                   </span>
                   <span className="ml-auto shrink-0 font-mono text-caption-m text-text-meta">
-                    {o.grade}수준 · {TRACK_LABEL[o.track] || o.track}
+                    수준 {o.grade} · {TRACK_LABEL[o.track] || o.track}
                   </span>
                   <button
                     type="button"
