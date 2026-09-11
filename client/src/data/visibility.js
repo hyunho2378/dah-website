@@ -16,8 +16,11 @@
  * 여기 없는 경로는 가시성 제어 대상이 아니다(항상 공개).
  */
 export const ROUTE_VISIBILITY = {
+  '/about/ci': ['ci'],
   '/about/people': ['professors', 'mentors'],
   '/curriculum': ['curriculum'],
+  '/curriculum/codesharing': ['codesharing'],
+  '/curriculum/nanodegree': ['nanodegree'],
   '/programs/exhibitions': ['exhibitions'],
   '/programs/contests': ['contest'],
   '/programs/lectures': ['lecture'],
@@ -25,6 +28,7 @@ export const ROUTE_VISIBILITY = {
   '/students/clubs': ['club'],
   '/students/achievements': ['achievement'],
   '/students/careers': ['careers', 'portfolios'],
+  '/students/portfolios': ['portfolios'],
   '/showcase': ['showcase'],
   '/news': ['notice'],
   '/resources': ['resource'],

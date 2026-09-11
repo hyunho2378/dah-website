@@ -12,24 +12,25 @@ import { motion } from '../../styles/tokens.js'
 // 데이터: useApi('/content/achievement') → 미기동·오류 시 src/data/achievements 폴백.
 
 // API posts(type=achievement) → 정적 achievements.js와 동일 필드로 정규화
-function normalize(item) {
+function normalize(item, isEn) {
   return {
     id: item.id,
     year: item.year ?? null,
-    title: item.title_ko || item.title || '',
+    title: (isEn && (item.title_en || item.titleEn)) || item.title_ko || item.title || '',
   }
 }
 
 function AchievementsHighlight() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   const { data, error, offline } = useApi('/content/achievement')
 
   const apiList = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : null
-  const source =
+  const sourceRows =
     !apiList || apiList.length === 0 || error || offline
       ? staticAchievements
-      : apiList.map(normalize)
-  const latest = [...source]
+      : apiList
+  const latest = sourceRows
+    .map((item) => normalize(item, lang === 'en'))
     .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
     .slice(0, 3)
 

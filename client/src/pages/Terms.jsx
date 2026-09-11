@@ -123,7 +123,7 @@ function Terms() {
       />
 
       <Container className="py-section-m md:py-section-d">
-        <div className="max-w-[760px]">
+        <div className="max-w-reading">
           <div className="mb-16"><KoreanOnlyBadge /></div>
           <p className="text-body-m leading-relaxed text-text-sec md:text-body-d">
             본 약관은 {ORG} 웹사이트의 이용에 필요한 기본 사항을 규정합니다. 이용자가

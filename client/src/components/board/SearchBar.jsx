@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
+import { useLang } from '../../i18n/LangContext'
 
 // KPC 게시판 문법(11_DESIGN_V2 1절) — 검색 입력.
 // 제출 시 onSearch(q)만 호출한다. 데이터 요청은 페이지가 소유.
-function SearchBar({ value = '', onSearch, placeholder = '검색어 입력' }) {
+function SearchBar({ value = '', onSearch, placeholder }) {
+  const { t } = useLang()
   const [q, setQ] = useState(value)
 
   return (
@@ -20,13 +22,13 @@ function SearchBar({ value = '', onSearch, placeholder = '검색어 입력' }) {
         value={q}
         size={18}
         onChange={(event) => setQ(event.target.value)}
-        placeholder={placeholder}
-        aria-label="검색어"
+        placeholder={placeholder || t('news.searchPlaceholder')}
+        aria-label={t('aria.searchQuery')}
         className="w-full min-w-0 bg-transparent font-sans text-small-m text-text-pri placeholder:text-text-meta focus:outline-none md:w-auto md:text-small-d"
       />
       <button
         type="submit"
-        aria-label="검색"
+        aria-label={t('aria.search')}
         className="shrink-0 cursor-pointer text-text-meta transition-colors duration-fast ease-out hover:text-text-pri"
       >
         <Search size={16} aria-hidden="true" />

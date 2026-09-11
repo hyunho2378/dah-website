@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useLang } from '../../i18n/LangContext'
 
 // KPC 게시판 문법 — 페이지 번호 내비게이션. 총 1페이지면 미렌더.
 const WINDOW = 5
@@ -18,14 +19,15 @@ const cellBase =
   'flex h-40 w-40 shrink-0 items-center justify-center rounded-md font-mono text-small-m transition-colors duration-fast ease-out md:text-small-d'
 
 function Pagination({ page, pageSize, total, onChange }) {
+  const { t } = useLang()
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   if (totalPages <= 1) return null
 
   return (
-    <nav aria-label="페이지" className="flex items-center justify-center gap-4">
+    <nav aria-label={t('aria.pagination')} className="flex items-center justify-center gap-4">
       <button
         type="button"
-        aria-label="이전 페이지"
+        aria-label={t('aria.previousPage')}
         disabled={page <= 1}
         onClick={() => onChange(page - 1)}
         className={`${cellBase} cursor-pointer text-text-sec hover:text-text-pri disabled:cursor-not-allowed disabled:text-text-meta`}
@@ -52,7 +54,7 @@ function Pagination({ page, pageSize, total, onChange }) {
       })}
       <button
         type="button"
-        aria-label="다음 페이지"
+        aria-label={t('aria.nextPage')}
         disabled={page >= totalPages}
         onClick={() => onChange(page + 1)}
         className={`${cellBase} cursor-pointer text-text-sec hover:text-text-pri disabled:cursor-not-allowed disabled:text-text-meta`}

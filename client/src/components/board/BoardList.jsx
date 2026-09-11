@@ -3,6 +3,7 @@ import { ArrowUpRight, Download, Pin } from 'lucide-react'
 import Tag from '../common/Tag'
 import SearchBar from './SearchBar'
 import Pagination from './Pagination'
+import { useLang } from '../../i18n/LangContext'
 
 // KPC 게시판 문법(11_DESIGN_V2 1절): 총 N건 + 검색 + 리스트 행 + 페이지네이션.
 // 테이블 금지 — 글래스 리스트 행으로 재해석. 행: [번호|공지] [태그 Tag] [제목] … [작성자] [날짜]
@@ -10,6 +11,7 @@ import Pagination from './Pagination'
 // attachments는 비링크 행(자료실)에서만 렌더한다(중첩 앵커 금지).
 
 function RowBody({ item, isLink }) {
+  const { t } = useLang()
   const { no, tag, title, author, date, pinned, href, attachments } = item
 
   return (
@@ -18,7 +20,7 @@ function RowBody({ item, isLink }) {
         {pinned ? (
           <span className="flex w-40 shrink-0 items-center gap-4 font-mono text-caption-m text-text-pri">
             <Pin size={16} aria-hidden="true" />
-            <span className="sr-only">고정 공지</span>
+            <span className="sr-only">{t('aria.pinnedNotice')}</span>
           </span>
         ) : (
           <span className="w-40 shrink-0 font-mono text-caption-m text-text-meta">

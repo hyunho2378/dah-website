@@ -22,12 +22,12 @@ const CATEGORIES = [
 ]
 
 // API 응답(배열 또는 {items}) → 최신 3건 제목 리스트. 실패·미기동 시 빈 배열(P6: 리스트만 생략)
-function normalizeLatest(data) {
+function normalizeLatest(data, isEn) {
   const list = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : []
   return list
     .map((item) => ({
       id: item.id,
-      title: item.title_ko || item.title || item.semester_label || '',
+      title: (isEn && item.title_en) || item.title_ko || item.title || item.semester_label || '',
     }))
     .filter((item) => item.id !== undefined && item.title)
     .slice(0, 3)
@@ -67,7 +67,7 @@ function DetailPanel({ category, items, t }) {
 }
 
 function ProgramShowcase() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
   const [active, setActive] = useState(CATEGORIES[0].key)
   const [openMobile, setOpenMobile] = useState(null)
   // 훅 호출 개수·순서는 가시성과 무관하게 고정해야 하므로(Rules of Hooks)
@@ -84,10 +84,10 @@ function ProgramShowcase() {
   const lectures = useApi(CATEGORIES[2].api)
   const showcase = useApi(CATEGORIES[3].api)
   const latest = {
-    exhibitions: normalizeLatest(exhibitions.data),
-    contests: normalizeLatest(contests.data),
-    lectures: normalizeLatest(lectures.data),
-    showcase: normalizeLatest(showcase.data),
+    exhibitions: normalizeLatest(exhibitions.data, lang === 'en'),
+    contests: normalizeLatest(contests.data, lang === 'en'),
+    lectures: normalizeLatest(lectures.data, lang === 'en'),
+    showcase: normalizeLatest(showcase.data, lang === 'en'),
   }
 
   return (

@@ -78,7 +78,7 @@ function highlightNames(text, names) {
   )
 }
 
-function AwardItem({ item, isEn, sorting = false }) {
+function AwardItem({ item, isEn, sorting = false, t }) {
   const names = ((isEn ? item.awardeesEn : item.awardees) || '')
     .split(',')
     .map((s) => s.trim())
@@ -107,7 +107,7 @@ function AwardItem({ item, isEn, sorting = false }) {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-4 font-mono text-caption-m text-text-sec transition-colors duration-fast ease-out hover:text-text-pri"
         >
-          대회 페이지
+          {t('actions.contestPage')}
           <ArrowUpRight size={16} aria-hidden="true" />
         </a>
       )}
@@ -117,11 +117,11 @@ function AwardItem({ item, isEn, sorting = false }) {
 
 // Y3-4(33_PHASE18): 연도 섹션 — 같은 연도 안에서만 6점 핸들 드래그로 순서를 바꾼다.
 // useDragSort는 훅이라 연도마다 독립 인스턴스가 필요해 섹션을 컴포넌트로 분리했다.
-function YearSection({ year, rows, isEn, sorting, onReorder }) {
+function YearSection({ year, rows, isEn, sorting, onReorder, t }) {
   const { dragIndex, overIndex, rowProps } = useDragSort((from, to) => onReorder(year, from, to))
 
   return (
-    <section id={`year-${year}`} aria-label={`${year}년 실적`} className="scroll-mt-96">
+    <section id={`year-${year}`} aria-label={`${year} ${t('aria.yearResults')}`} className="scroll-mt-96">
       <h2 className="border-b border-border-strong pb-12 text-h2-m font-bold md:text-h2-d">
         <Accent kind="proper">{year}</Accent>
       </h2>
@@ -138,7 +138,7 @@ function YearSection({ year, rows, isEn, sorting, onReorder }) {
             }`}
             {...(sorting ? rowProps(index) : {})}
           >
-            <AwardItem item={normalize(row, isEn)} isEn={isEn} sorting={sorting} />
+            <AwardItem item={normalize(row, isEn)} isEn={isEn} sorting={sorting} t={t} />
           </li>
         ))}
       </ul>
@@ -250,6 +250,7 @@ function Achievements() {
                   isEn={isEn}
                   sorting={sorting}
                   onReorder={reorder}
+                  t={t}
                 />
               ))}
             </div>

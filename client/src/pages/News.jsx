@@ -8,7 +8,7 @@ import BoardList from '../components/board/BoardList'
 import { AddButton } from '../components/content/EditControls'
 import { useApi } from '../hooks/useApi'
 import { useTitle } from '../hooks/useTitle'
-import { useLang, KoreanOnlyBadge } from '../i18n/LangContext'
+import { useLang } from '../i18n/LangContext'
 import { notices } from '../data/notices'
 
 // 필터 값(value)은 API 파라미터로 그대로 전송 — 알려진 태그는 표시명만 사전(news.tags.*) 조회,
@@ -23,12 +23,12 @@ const KNOWN_TAG_KEYS = {
 const PAGE_SIZE = 10
 
 // API 게시글 → 게시판 행
-function toRow(post, no) {
+function toRow(post, no, isEn) {
   return {
     id: post.id,
     no,
     tag: post.tag ?? post.org ?? null,
-    title: post.title_ko ?? post.title,
+    title: (isEn && post.title_en) || post.title_ko || post.title,
     author: post.author ?? null,
     date: post.date ?? (post.created_at ?? '').slice(0, 10) ?? null,
     pinned: Boolean(post.pinned),
@@ -42,7 +42,8 @@ function pinnedFirst(list) {
 }
 
 function News() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
+  const isEn = lang === 'en'
   useTitle(t('titles.notices'))
   const [tag, setTag] = useState('전체')
   const [q, setQ] = useState('')
@@ -70,9 +71,11 @@ function News() {
   const fallback = useMemo(() => {
     let list = [...notices].sort((a, b) => b.date.localeCompare(a.date))
     if (tag !== '전체') list = list.filter((n) => (n.tag ?? n.org) === tag)
-    if (q) list = list.filter((n) => n.title.includes(q))
+    if (q) {
+      list = list.filter((n) => ((isEn && (n.title_en || n.titleEn)) || n.title).includes(q))
+    }
     return list
-  }, [tag, q])
+  }, [isEn, tag, q])
 
   const useFallback = offline || (error && !data)
   const total = useFallback ? fallback.length : data?.total ?? 0
@@ -81,7 +84,7 @@ function News() {
     ? fallback.slice((page - 1) * pageSize, page * pageSize)
     : data?.items ?? []
   const rows = pinnedFirst(source).map((post, idx) =>
-    toRow(post, total - (page - 1) * pageSize - idx)
+    toRow(post, total - (page - 1) * pageSize - idx, isEn)
   )
 
   const statusText = loading
@@ -129,8 +132,6 @@ function News() {
               )
             })}
           </div>
-          {/* 공지 콘텐츠는 국문 원문 — 영문 페이지에서 Korean only 뱃지 병기(en 번역 부재) */}
-          <KoreanOnlyBadge />
         </div>
         {offline && (
           <p className="mt-16 font-mono text-caption-m text-text-meta">

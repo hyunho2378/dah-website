@@ -129,7 +129,7 @@ function Privacy() {
       />
 
       <Container className="py-section-m md:py-section-d">
-        <div className="max-w-[760px]">
+        <div className="max-w-reading">
           <div className="mb-16"><KoreanOnlyBadge /></div>
           <p className="text-body-m leading-relaxed text-text-sec md:text-body-d">
             {ORG}(이하 &lsquo;본 전공&rsquo;)은 개인정보 보호법 등 관련 법령을 준수하며,

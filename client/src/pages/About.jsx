@@ -201,11 +201,11 @@ function About() {
       />
 
       <div className="pb-section-m md:pb-section-d">
-        <Container className="pt-24">
+        <Container className="pt-16 md:pt-20">
           <EditPencil type="settings" to="/admin/about" label="전공 소개·연혁 편집" />
         </Container>
         {/* 01 개요 — What is DAH / Why DAH를 좌우 번갈아 배치. 원문 재배치만이고 문구 추가·삭제 없음 */}
-        <Container as="section" className="pt-section-m md:pt-section-d">
+        <Container as="section" className="pt-page-start-m md:pt-page-start-d">
           <Reveal>
             <SectionLabel index="01" text="OVERVIEW" />
           </Reveal>
@@ -254,7 +254,7 @@ function About() {
                 {MISSION_EN}
               </h2>
               {lang !== 'en' && (
-                <p className="mt-24 max-w-[960px] text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
+                <p className="mt-24 max-w-lead text-body-l-m leading-[1.8] text-text-sec md:text-body-l-d">
                   {copy.missionKr}
                 </p>
               )}

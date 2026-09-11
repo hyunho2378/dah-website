@@ -31,7 +31,7 @@ function AttachmentRow({ file, t }) {
             <ExternalLink size={12} aria-hidden="true" />
             {t('news.preview')}
           </a>
-        ) : <span className="font-mono text-caption-m text-text-meta">브라우저 미리보기 미지원</span>}
+        ) : <span className="font-mono text-caption-m text-text-meta">{t('news.previewUnavailable')}</span>}
         <a href={file.url} download className={ATTACH_LINK}>
           <Download size={12} aria-hidden="true" />
           {t('news.download')}
@@ -53,13 +53,18 @@ function ResourceDetail() {
   const title = (isEn && post?.title_en) || post?.title_ko || post?.title || ''
   const body = isEn && post?.body_en ? post.body_en : post?.body
   const koFallback = isEn && (!post?.title_en || !post?.body_en)
+  const departmentName = isEn
+    ? 'Digital Arts & Humanities, Hallym University'
+    : '한림대학교 디지털인문예술전공'
   const tag = post?.tag ?? null
   const date = post?.date ?? (post?.created_at ?? '').slice(0, 10)
   const attachments = (post?.attachments ?? post?.files ?? []).filter((f) => f && f.url)
   const gallery = (Array.isArray(post?.gallery) ? post.gallery : []).filter(Boolean)
   useSeo({
-    title: title ? `${title} | 한림대학교 디지털인문예술전공 자료실` : undefined,
-    description: post ? plainText(body) || `${title} 관련 한림대학교 디지털인문예술전공 자료입니다.` : null,
+    title: title ? `${title} | ${departmentName}${isEn ? ' — Resources' : ' 자료실'}` : undefined,
+    description: post
+      ? plainText(body) || (isEn ? `${title} is a resource from ${departmentName}.` : `${title} 관련 ${departmentName} 자료입니다.`)
+      : null,
     image: post?.poster_url,
     jsonLd: post ? [
       {
@@ -68,8 +73,8 @@ function ResourceDetail() {
         publisher: { '@type': 'EducationalOrganization', name: SITE_NAME },
       },
       breadcrumbJsonLd([
-        { name: '홈', path: '/' }, { name: '자료실', path: '/resources' },
-        { name: title || '자료 상세', path: `/resources/${id}` },
+        { name: t('nav.home'), path: '/' }, { name: t('titles.resources'), path: '/resources' },
+        { name: title || t('actions.detail'), path: `/resources/${id}` },
       ]),
     ] : null,
   })

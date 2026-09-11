@@ -96,15 +96,20 @@ function ExhibitionDetail() {
   const hasBody = hasRichBodyContent(body)
   const intro = isEn && item?.intro_en ? item.intro_en : item?.intro
   const koFallback = isEn && item && (!item.title_en || (hasBody ? !item.body_en : item.intro && !item.intro_en))
+  const departmentName = isEn
+    ? 'Digital Arts & Humanities, Hallym University'
+    : '한림대학교 디지털인문예술전공'
   const start = (item?.start_date ?? '').slice(0, 10)
   const end = (item?.end_date ?? '').slice(0, 10)
   const description = item
-    ? `${item.semester_label ? `${item.semester_label} ` : ''}${title || '프로젝트 전시회'}은 한림대학교 디지털인문예술전공 프로젝트 전시회입니다. ${plainText(intro || body)}`
+    ? isEn
+      ? `${item.semester_label ? `${item.semester_label} ` : ''}${title || 'Project Exhibition'} is a project exhibition by ${departmentName}. ${plainText(intro || body)}`
+      : `${item.semester_label ? `${item.semester_label} ` : ''}${title || '프로젝트 전시회'}은 ${departmentName} 프로젝트 전시회입니다. ${plainText(intro || body)}`
     : null
   const breadcrumbs = [
-    { name: '홈', path: '/' },
-    { name: '프로젝트 전시회', path: '/programs/exhibitions' },
-    { name: title || '전시 상세', path: `/programs/exhibitions/${id}` },
+    { name: t('nav.home'), path: '/' },
+    { name: t('titles.exhibitions'), path: '/programs/exhibitions' },
+    { name: title || t('actions.detail'), path: `/programs/exhibitions/${id}` },
   ]
   const event = item && start && (!end || end >= start)
     ? {
@@ -115,7 +120,9 @@ function ExhibitionDetail() {
       }
     : null
   useSeo({
-    title: title ? `${item?.semester_label ? `${item.semester_label} ` : ''}${title} | 한림대학교 디지털인문예술전공 프로젝트 전시회` : undefined,
+    title: title
+      ? `${item?.semester_label ? `${item.semester_label} ` : ''}${title} | ${departmentName}${isEn ? ' — Exhibitions' : ' 프로젝트 전시회'}`
+      : undefined,
     description,
     image: item?.poster_url,
     jsonLd: event ? [event, breadcrumbJsonLd(breadcrumbs)] : breadcrumbJsonLd(breadcrumbs),

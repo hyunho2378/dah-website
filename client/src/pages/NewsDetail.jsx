@@ -30,7 +30,7 @@ function AttachmentRow({ file, t }) {
             <ExternalLink size={12} aria-hidden="true" />
             {t('news.preview')}
           </a>
-        ) : <span className="font-mono text-caption-m text-text-meta">브라우저 미리보기 미지원</span>}
+        ) : <span className="font-mono text-caption-m text-text-meta">{t('news.previewUnavailable')}</span>}
         <a href={file.url} download className={ATTACH_LINK}>
           <Download size={12} aria-hidden="true" />
           {t('news.download')}
@@ -53,14 +53,19 @@ function NewsDetail() {
   const title = (isEn && post?.title_en) || post?.title_ko || post?.title || ''
   const body = isEn && post?.body_en ? post.body_en : post?.body
   const koFallback = isEn && (!post?.title_en || !post?.body_en)
+  const departmentName = isEn
+    ? 'Digital Arts & Humanities, Hallym University'
+    : '한림대학교 디지털인문예술전공'
   const tag = post?.tag ?? post?.org ?? null
   const date = post?.date ?? (post?.created_at ?? '').slice(0, 10)
   const attachments = (post?.attachments ?? post?.files ?? []).filter((f) => f && f.url)
   // K2-3 데이터 계약: posts.gallery = 이미지 URL 배열 → 본문 아래 갤러리
   const gallery = (Array.isArray(post?.gallery) ? post.gallery : []).filter(Boolean)
   useSeo({
-    title: title ? `${title} | 한림대학교 디지털인문예술전공` : undefined,
-    description: post ? plainText(body) || `${title} 관련 한림대학교 디지털인문예술전공 공지사항입니다.` : null,
+    title: title ? `${title} | ${departmentName}${isEn ? ' — Notices' : ''}` : undefined,
+    description: post
+      ? plainText(body) || (isEn ? `${title} is a notice from ${departmentName}.` : `${title} 관련 ${departmentName} 공지사항입니다.`)
+      : null,
     image: post?.poster_url,
     jsonLd: post ? [
       {
@@ -70,8 +75,8 @@ function NewsDetail() {
         publisher: { '@type': 'EducationalOrganization', name: SITE_NAME },
       },
       breadcrumbJsonLd([
-        { name: '홈', path: '/' }, { name: '공지사항', path: '/news' },
-        { name: title || '공지 상세', path: `/news/${id}` },
+        { name: t('nav.home'), path: '/' }, { name: t('titles.notices'), path: '/news' },
+        { name: title || t('actions.detail'), path: `/news/${id}` },
       ]),
     ] : null,
   })

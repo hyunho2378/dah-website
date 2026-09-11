@@ -30,7 +30,7 @@ export const nav = [
       { label: '연혁', labelEn: 'History', to: '/about#history' },
       { label: '교수진', labelEn: 'Faculty', to: '/about/people', visibilityKey: 'professors' },
       { label: '멘토', labelEn: 'Mentors', to: '/about/people#mentors', visibilityKey: 'mentors' },
-      { label: 'CI', labelEn: 'CI', to: '/about/ci' },
+      { label: 'CI', labelEn: 'CI', to: '/about/ci', visibilityKey: 'ci' },
     ],
   },
   {
@@ -39,8 +39,8 @@ export const nav = [
     to: '/curriculum',
     children: [
       { label: '교육과정', labelEn: 'Curriculum', to: '/curriculum', visibilityKey: 'curriculum' },
-      { label: '코드쉐어링', labelEn: 'Code Sharing', to: '/curriculum/codesharing' },
-      { label: '나노디그리', labelEn: 'Nanodegree', to: '/curriculum/nanodegree' },
+      { label: '코드쉐어링', labelEn: 'Code Sharing', to: '/curriculum/codesharing', visibilityKey: 'codesharing' },
+      { label: '나노디그리', labelEn: 'Nanodegree', to: '/curriculum/nanodegree', visibilityKey: 'nanodegree' },
     ],
   },
   {

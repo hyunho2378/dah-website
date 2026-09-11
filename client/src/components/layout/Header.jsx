@@ -136,12 +136,18 @@ function Header() {
   const { isPublic } = useContentVisibility()
   const visibleNav = nav
     .filter((item) => !item.visibilityKey || isPublic(item.visibilityKey))
-    .map((item) => ({
-      ...item,
-      // 필터 후 인덱스는 원본 nav와 어긋나므로 "원래 하위가 있었는지"를 항목에 실어 나른다
-      hadChildren: item.children.length > 0,
-      children: item.children.filter((c) => !c.visibilityKey || isPublic(c.visibilityKey)),
-    }))
+    .map((item) => {
+      const children = item.children.filter((child) => !child.visibilityKey || isPublic(child.visibilityKey))
+      return {
+        ...item,
+        // 필터 후 인덱스는 원본 nav와 어긋나므로 "원래 하위가 있었는지"를 항목에 실어 나른다.
+        // 대표 경로도 첫 번째 공개 하위 페이지로 맞춘다. 예: 교육과정을 끄고 코드쉐어링만
+        // 켠 경우, "학사 안내"를 눌렀을 때 비공개 교육과정 URL로 가지 않게 한다.
+        hadChildren: item.children.length > 0,
+        to: item.children.length > 0 && children.length > 0 ? children[0].to : item.to,
+        children,
+      }
+    })
     .filter((item) => !item.hadChildren || item.children.length > 0)
 
   const glassed = scrolled || openIndex !== null

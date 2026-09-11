@@ -14,8 +14,8 @@ import { colors } from '../styles/tokens'
 
 // 교육과정 (J10, 20_PHASE8) — 표 형식 전환.
 // 트랙(공통기초 포함)별로 1학기·2학기 표를 나란히(데스크탑 2열, 모바일 세로) 배치.
-// 표 컬럼: 학년 | 과목명 | 학점-강의-실습. 디자인은 토큰만(radius 4, 헤어라인, 다크).
-// 4년 로드맵 SVG는 과목의 개설 학기(1·2학기)를 학기 서브컬럼에 반영, 공통기초 최상단.
+// 표 컬럼: 수준 | 과목명 | 학점-강의-실습. 디자인은 토큰만(radius 4, 헤어라인, 다크).
+// 4수준 로드맵 SVG는 과목의 개설 학기(1·2학기)를 학기 서브컬럼에 반영, 공통기초 최상단.
 
 const LANE_KEYS = ['common', 'track-1', 'track-2', 'track-3']
 
@@ -32,7 +32,7 @@ function courseName(course, lang) {
   return lang === 'en' && course.nameEn ? course.nameEn : course.name
 }
 
-// J10: 학기 표 — 학년 | 과목명 | 학점-강의-실습
+// J10: 학기 표 — 수준 | 과목명 | 학점-강의-실습
 // A0: 선택 학기에 개설된 과목 행은 면 자체를 state.semesterActive로 은은히 틴트한다.
 function SemesterTable({ trackKey, semester, lang, t, offeredNames }) {
   const rows = coursesOf(trackKey, semester)
@@ -113,7 +113,7 @@ function LaneSection({ trackKey, lang, t, offeredNames }) {
         </h2>
         {summary && (
           // K2-5: 트랙 요약 max-w 720 → 960(가독 상한)
-          <p className="mt-16 max-w-[960px] text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
+          <p className="mt-16 max-w-lead text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
             {summary}
           </p>
         )}
@@ -140,7 +140,7 @@ function LaneSection({ trackKey, lang, t, offeredNames }) {
   )
 }
 
-// 4년 로드맵 다이어그램 — 학기(1·2학기) 서브컬럼에 과목 배치, 공통기초 최상단
+// 4수준 로드맵 다이어그램 — 학기(1·2학기) 서브컬럼에 과목 배치, 공통기초 최상단
 // K2-12 겹침 진단: 블록 자체는 레인 계산상 겹치지 않으나, 긴 과목명(예: "AI 서비스 기획과
 // 프로토타이핑")이 블록 폭(semW-12)을 넘겨 이웃 블록·레인 라벨을 시각적으로 침범했다.
 // 해결: (1) 문자폭 추정 기반 말줄임 + <title>로 전체명 제공 (2) labelH·rowH 여유 상향
@@ -173,7 +173,7 @@ function buildDiagramLayout(lanes, items, lang) {
   let y = axisH
   const laneBoxes = []
   for (const lane of lanes) {
-    // (학년, 학기)별 과목 — 레인 높이는 학년 내 학기 중 최다 행 기준
+    // (수준, 학기)별 과목 — 레인 높이는 수준 내 학기 중 최다 행 기준
     const cells = [1, 2, 3, 4].map((year) =>
       [1, 2].map((sem) =>
         items.filter((c) => c.track === lane.key && c.year === year && c.semester === sem)

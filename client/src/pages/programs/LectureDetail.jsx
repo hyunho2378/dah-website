@@ -31,6 +31,9 @@ function LectureDetail() {
   const title = (isEn && item?.title_en) || item?.title_ko || item?.title
   const body = isEn && item?.body_en ? item.body_en : item?.body
   const koFallback = isEn && item && (!item.title_en || !item.body_en)
+  const departmentName = isEn
+    ? 'Digital Arts & Humanities, Hallym University'
+    : '한림대학교 디지털인문예술전공'
   const start = (item?.event_start ?? '').slice(0, 10)
   const end = (item?.event_end ?? '').slice(0, 10)
   const gallery = Array.isArray(item?.gallery) ? item.gallery : []
@@ -42,12 +45,14 @@ function LectureDetail() {
       }
     : null
   useSeo({
-    title: title ? `${title} | 한림대학교 디지털인문예술전공 특강` : undefined,
-    description: item ? plainText(body) || `${title} 관련 한림대학교 디지털인문예술전공 특강 정보입니다.` : null,
+    title: title ? `${title} | ${departmentName}${isEn ? ' — Lectures' : ' 특강'}` : undefined,
+    description: item
+      ? plainText(body) || (isEn ? `${title} is a lecture hosted by ${departmentName}.` : `${title} 관련 ${departmentName} 특강 정보입니다.`)
+      : null,
     image: item?.poster_url,
     jsonLd: item ? [event, breadcrumbJsonLd([
-      { name: '홈', path: '/' }, { name: '특강', path: '/programs/lectures' },
-      { name: title || '특강 상세', path: `/programs/lectures/${id}` },
+      { name: t('nav.home'), path: '/' }, { name: t('titles.lectures'), path: '/programs/lectures' },
+      { name: title || t('actions.detail'), path: `/programs/lectures/${id}` },
     ])].filter(Boolean) : null,
   })
 

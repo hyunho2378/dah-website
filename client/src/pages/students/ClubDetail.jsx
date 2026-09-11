@@ -68,13 +68,16 @@ function ClubDetail() {
   const remote = itemOf(data)
   const fallback = staticClubs?.find((c) => c.id === id) || null
   const club = normalize(remote || fallback, isEn)
+  const departmentName = isEn
+    ? 'Digital Arts & Humanities, Hallym University'
+    : '한림대학교 디지털인문예술전공'
 
   useSeo({
-    title: club?.title ? `${club.title} | 한림대학교 디지털인문예술전공 동아리` : undefined,
+    title: club?.title ? `${club.title} | ${departmentName}${isEn ? ' — Clubs' : ' 동아리'}` : undefined,
     description: club?.intro || null,
     image: club?.logo,
     jsonLd: club ? breadcrumbJsonLd([
-      { name: '홈', path: '/' }, { name: '학생 동아리', path: '/students/clubs' },
+      { name: t('nav.home'), path: '/' }, { name: t('titles.clubs'), path: '/students/clubs' },
       { name: club.title, path: `/students/clubs/${id}` },
     ]) : null,
   })
@@ -151,8 +154,8 @@ function ClubDetail() {
                   </p>
                 )}
               </div>
-              <ListBlock title="활동 내용" items={club.activities} />
-              <ListBlock title="추천 대상" items={club.targets} />
+              <ListBlock title={t('clubs.activities')} items={club.activities} />
+              <ListBlock title={t('clubs.targets')} items={club.targets} />
             </div>
           </div>
         )}

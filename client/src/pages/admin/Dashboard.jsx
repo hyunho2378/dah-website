@@ -182,7 +182,7 @@ function Dashboard() {
         <p className="font-mono text-label-m uppercase tracking-label text-text-meta">CONTENT</p>
         <ErrorText>{countError}</ErrorText>
         <ErrorText>{visError}</ErrorText>
-        <ul className="mt-16 grid grid-cols-2 gap-12 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+        <ul className="mt-16 grid grid-cols-2 gap-12 md:grid-cols-3 lg:grid-cols-5">
           {targets.map((t) => (
             <li
               key={t.type}

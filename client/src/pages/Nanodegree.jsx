@@ -64,7 +64,7 @@ function Nanodegree() {
             <h2 className="mt-24 text-h1-m font-extrabold leading-tight tracking-display text-text-pri md:mt-32 md:text-h1-d">
               {t('sections.nanodegree')}
             </h2>
-            <p className="mt-24 max-w-[960px] text-body-l-m leading-relaxed text-text-sec md:mt-32 md:text-body-l-d">
+            <p className="mt-24 max-w-lead text-body-l-m leading-relaxed text-text-sec md:mt-32 md:text-body-l-d">
               {intro}
             </p>
           </Reveal>
@@ -77,7 +77,7 @@ function Nanodegree() {
             <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
               {t('nanodegree.cert')}
             </h2>
-            <p className="mt-16 max-w-[960px] text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
+            <p className="mt-16 max-w-lead text-body-l-m leading-relaxed text-text-sec md:mt-24 md:text-body-l-d">
               {cert}
             </p>
           </Reveal>

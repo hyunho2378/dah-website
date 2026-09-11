@@ -39,6 +39,9 @@ function ContestDetail() {
   const isEn = lang === 'en'
   const title = (isEn && item?.title_en) || item?.title_ko || item?.title
   const koFallback = isEn && item && !item.title_en
+  const departmentName = isEn
+    ? 'Digital Arts & Humanities, Hallym University'
+    : '한림대학교 디지털인문예술전공'
   const start = (item?.event_start ?? '').slice(0, 10)
   const end = (item?.event_end ?? '').slice(0, 10)
   const gallery = Array.isArray(item?.gallery) ? item.gallery : []
@@ -49,7 +52,9 @@ function ContestDetail() {
   // 학기는 목록 카드와 같은 규칙으로 산출한다(저장된 라벨 우선, 없으면 개최일에서)
   const semester = semesterLabelOf(item)
   const description = item
-    ? `${semester ? `${semester} ` : ''}${title || '공모전'} 관련 한림대학교 디지털인문예술전공 공모전 정보입니다. ${plainText(item.body)}`
+    ? isEn
+      ? `${semester ? `${semester} ` : ''}${title || 'Contest'} is a contest listed by ${departmentName}. ${plainText(item.body)}`
+      : `${semester ? `${semester} ` : ''}${title || '공모전'} 관련 ${departmentName} 공모전 정보입니다. ${plainText(item.body)}`
     : null
   const event = item && start && (!end || end >= start)
     ? {
@@ -59,11 +64,11 @@ function ContestDetail() {
       }
     : null
   useSeo({
-    title: title ? `${title} | 한림대학교 디지털인문예술전공 공모전` : undefined,
+    title: title ? `${title} | ${departmentName}${isEn ? ' — Contests' : ' 공모전'}` : undefined,
     description, image: posterUrl,
     jsonLd: item ? [event, breadcrumbJsonLd([
-      { name: '홈', path: '/' }, { name: '공모전', path: '/programs/contests' },
-      { name: title || '공모전 상세', path: `/programs/contests/${id}` },
+      { name: t('nav.home'), path: '/' }, { name: t('titles.contests'), path: '/programs/contests' },
+      { name: title || t('actions.detail'), path: `/programs/contests/${id}` },
     ])].filter(Boolean) : null,
   })
 

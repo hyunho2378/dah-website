@@ -244,7 +244,7 @@ function AdminLayout() {
     <RequireRole role="manager">
       <PageBanner titleKo="관리" titleEn="ADMIN" nebulaX="76%" nebulaY="18%" />
       {/* J1: 공용 Container 정렬 — 공개 페이지와 좌우선 일치 */}
-      <Container className="pb-section-m pt-32 lg:grid lg:grid-cols-[240px,minmax(0,1fr)] lg:items-start lg:gap-32">
+      <Container className="pb-section-m pt-page-start-m md:pt-page-start-d lg:grid lg:grid-cols-[240px,minmax(0,1fr)] lg:items-start lg:gap-32">
         {/* J1: 사이드바 독립 스크롤 — 뷰포트 기준 sticky + 내부 overflow */}
         <aside className="mb-32 lg:sticky lg:top-96 lg:mb-0 lg:max-h-[calc(100vh-theme(spacing.128))] lg:overflow-y-auto">
           <AdminNav />

@@ -107,7 +107,7 @@ function HeroSection({ settings }) {
           </p>
           {/* K2-5: max-w-xl(576) → 720 상향. J4.2 높이 예약 재계산 — 720px·17px 기준
               KR(약 150자)·EN(약 270자) 모두 4줄 이내로 lg:min-h-[4lh] 예약 유지가 정합 */}
-          <p className="mt-16 max-w-[720px] text-body-l-m leading-body text-text-sec lg:min-h-[4lh] lg:text-body-l-d">
+          <p className="mt-16 max-w-prose text-body-l-m leading-body text-text-sec lg:min-h-[4lh] lg:text-body-l-d">
             {lang === 'en' && hero.bodyEn ? hero.bodyEn : hero.body}
           </p>
           <div className="mt-40 flex flex-wrap items-center gap-16">

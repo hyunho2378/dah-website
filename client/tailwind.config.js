@@ -81,6 +81,8 @@ export default {
         'section-m': px(spacing.section.mobile),
         // K2-14: 섹션 수직 패딩도 96→160 점프 대신 뷰포트 선형 보간(원리는 fluid()와 동일)
         'section-d': fluid(spacing.section.mobile, spacing.section.desktop),
+        'page-start-m': px(spacing.pageStart.mobile),
+        'page-start-d': fluid(spacing.pageStart.mobile, spacing.pageStart.desktop),
         'gutter-m': px(spacing.gutter.mobile),
         'gutter-t': px(spacing.gutter.tablet),
         'gutter-d': px(spacing.gutter.desktop),
@@ -88,8 +90,11 @@ export default {
         'header-s': px(layout.headerHeight.shrunk),
       },
       maxWidth: {
-        container: px(spacing.container.desktop),
+        container: px(layout.contentWidth.page),
         'container-wide': px(spacing.container.wide),
+        lead: px(layout.contentWidth.lead),
+        reading: px(layout.contentWidth.reading),
+        prose: px(layout.contentWidth.prose),
       },
       borderRadius: {
         sm: px(layout.radius.sm),

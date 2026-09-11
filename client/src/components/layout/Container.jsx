@@ -1,10 +1,10 @@
-// Container — F2: 전역 단일 컨테이너. 헤더·섹션·푸터가 이 컴포넌트만 사용해
-// 모든 브레이크포인트에서 좌우 정렬선(콘텐츠 좌측선)을 픽셀 일치시킨다.
-// max-w 1200 기본 → 2xl 1280(max-w-container). 좌우 패딩은 gutter 토큰.
+// Container — 전역 페이지 폭은 항상 1280px(max-w-container) 하나로 고정한다.
+// 1200→1280으로 바뀌던 2xl 분기를 없애, 공개 페이지·관리자·헤더의 좌우 정렬선이
+// 모든 데스크톱 폭에서 동일하다. 장문 폭은 호출부에서 max-w-reading/lead만 추가한다.
 function Container({ as: As = 'div', className = '', children, ...rest }) {
   return (
     <As
-      className={`mx-auto w-full max-w-[1200px] px-gutter-m md:px-gutter-t lg:px-gutter-d 2xl:max-w-container ${className}`}
+      className={`mx-auto w-full max-w-container px-gutter-m md:px-gutter-t lg:px-gutter-d ${className}`}
       {...rest}
     >
       {children}

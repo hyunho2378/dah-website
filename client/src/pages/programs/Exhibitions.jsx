@@ -41,12 +41,13 @@ const GLASS_SURFACE =
   'rounded-glass border border-glass-line bg-glass-bg shadow-glass'
 
 function FeaturedExhibition({ item }) {
-  const { lang } = useLang()
+  const { lang, t } = useLang()
+  const title = (lang === 'en' && item.title_en) || item.title
   const fullTitle =
     (lang === 'en'
       ? exhibitionFullTitleEn(item.ordinal)
       : exhibitionFullTitle(item.ordinal)) || item.title
-  const showTitle = item.title && item.title !== fullTitle
+  const showTitle = title && title !== fullTitle
   // J5: EN 모드 소개문 — intro_en 우선, 없으면 국문 intro + Korean only 뱃지
   const introText = lang === 'en' ? item.intro_en || item.intro : item.intro
   const introKoFallback = lang === 'en' && !item.intro_en && Boolean(item.intro)
@@ -67,7 +68,7 @@ function FeaturedExhibition({ item }) {
         <div className={`w-full max-w-[360px] p-12 ${GLASS_SURFACE}`}>
           <ImageFrame
             src={item.poster_url}
-            alt={`${item.title} 포스터`}
+            alt={`${title} ${t('aria.poster')}`}
             ratio="2/3"
             loading="eager"
             placeholder={fullTitle}
@@ -83,7 +84,7 @@ function FeaturedExhibition({ item }) {
             </h2>
             {showTitle && (
               <p className="min-w-0 text-h3-m font-medium leading-snug text-text-sec md:text-h3-d">
-                「 {item.title} 」
+                「 {title} 」
               </p>
             )}
           </div>
@@ -109,15 +110,17 @@ function FeaturedExhibition({ item }) {
 }
 
 function PosterCard({ item }) {
+  const { lang, t } = useLang()
+  const title = (lang === 'en' && item.title_en) || item.title
   return (
     <Link to={`/programs/exhibitions/${item.id}`} className="group block h-full">
       {/* H2: 포스터 축소 원복 — 여백은 그리드 간격+소패딩(p-12)으로만, 포스터는 크게(2:3) */}
       <GlassCard hover glow className="flex h-full flex-col gap-12 p-12">
         <ImageFrame
           src={item.poster_url}
-          alt={`${item.title} 포스터`}
+          alt={`${title} ${t('aria.poster')}`}
           ratio="2/3"
-          placeholder={item.semester_label || item.title}
+          placeholder={item.semester_label || title}
         />
         <div className="flex min-w-0 flex-col gap-4">
           {item.semester_label && (
@@ -126,7 +129,7 @@ function PosterCard({ item }) {
             </p>
           )}
           <h3 className="min-w-0 text-body-l-m font-bold leading-snug text-text-pri underline-offset-4 group-hover:underline md:text-body-l-d">
-            {item.title}
+            {title}
           </h3>
         </div>
       </GlassCard>

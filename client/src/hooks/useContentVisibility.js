@@ -22,6 +22,9 @@ export const DEFAULT_VISIBILITY = {
   professors: true,
   mentors: true,
   curriculum: true,
+  codesharing: true,
+  nanodegree: true,
+  ci: true,
   council: true,
   careers: true,
 }

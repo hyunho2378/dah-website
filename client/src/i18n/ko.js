@@ -54,7 +54,7 @@ export const ko = {
     missionVision: '미션과 비전',
     history: '연혁',
     graduate: '대학원 안내',
-    roadmap: '학년별 교육 과정',
+    roadmap: '수준별 교육 과정',
     relatedCourses: '관련 교과목',
     procedure: '승인 절차',
     departments: '인정 학과',
@@ -145,12 +145,24 @@ export const ko = {
     breadcrumb: '브레드크럼',
     mobileMenu: '모바일 메뉴',
     tagFilter: '태그 필터',
+    searchQuery: '검색어',
+    search: '검색',
+    pagination: '페이지 이동',
+    previousPage: '이전 페이지',
+    nextPage: '다음 페이지',
+    pinnedNotice: '고정 공지',
+    poster: '포스터',
     submenu: '하위 메뉴',
     yearNav: '연도 이동',
+    yearResults: '년 실적',
     termSelect: '기수 선택',
   },
   council: {
     compositionTitle: '운영위원회 구성',
+  },
+  clubs: {
+    activities: '활동 내용',
+    targets: '추천 대상',
   },
   ci: {
     title: 'CI의 의미',
@@ -166,14 +178,14 @@ export const ko = {
     pending: '미정',
   },
   curriculum: {
-    // K2-11: 표 라벨 "학년" → "수준" (로드맵 축 라벨 gradeSuffix는 유지)
+    // 교육과정은 입학 연차가 아닌 학습 수준을 기준으로 안내한다.
     grade: '수준',
-    gradeSuffix: '학년',
+    gradeSuffix: '수준',
     course: '과목명',
     credit: '학점-강의-실습',
     sem1: '1학기',
     sem2: '2학기',
-    roadmapAria: '공통기초를 최상단에 두고 학년과 학기 축으로 배치한 트랙별 교육과정 로드맵',
+    roadmapAria: '공통기초를 최상단에 두고 수준과 학기 축으로 배치한 트랙별 교육과정 로드맵',
   },
   // P13: 코드쉐어링 유형·표 헤더 라벨
   codesharing: {
@@ -208,6 +220,7 @@ export const ko = {
     registered: '등록일',
     preview: '미리보기',
     download: '다운로드',
+    previewUnavailable: '브라우저 미리보기 미지원',
     tags: {
       all: '전체',
       internal: '대내',

@@ -34,7 +34,8 @@ const TRACKS = [
 
 const TRACK_LABEL = { common: '공통기초', design: '디자인', ai: 'AI', culture: '엔터컬처' }
 
-const GRADES = [1, 2, 3, 4].map((n) => ({ value: String(n), label: `${n}학년` }))
+// DB 필드명 grade는 호환성을 위해 유지하고, 운영 화면에서는 학습 수준으로 표기한다.
+const LEVELS = [1, 2, 3, 4].map((n) => ({ value: String(n), label: `${n}수준` }))
 const TERMS = [
   { value: '1', label: '1학기' },
   { value: '2', label: '2학기' },
@@ -68,7 +69,7 @@ function toPayload(form) {
   }
 }
 
-// 로드맵과 동일 순서: 공통기초 최상단 → 학년 → 정렬
+// 로드맵과 동일 순서: 공통기초 최상단 → 수준 → 정렬
 function sortFn(a, b) {
   const commonFirst = (a.track === 'common' ? 0 : 1) - (b.track === 'common' ? 0 : 1)
   return (
@@ -293,10 +294,10 @@ function CurriculumAdmin() {
             onChange={(e) => setForm((p) => ({ ...p, name_en: e.target.value }))}
           />
         </Field>
-        <Field label="학년">
+        <Field label="수준">
           <Select
             value={form.grade}
-            options={GRADES}
+            options={LEVELS}
             onChange={(e) => setForm((p) => ({ ...p, grade: e.target.value }))}
           />
         </Field>
@@ -347,7 +348,7 @@ function CurriculumAdmin() {
     <section className="flex flex-col gap-24">
       <PageHead
         title="교과목"
-        desc="좌측은 전체 과목(학년·트랙·학점), 우측은 학기별 개설 목록입니다. 과목을 학기 박스로 끌어 놓거나 + 버튼을 누르면 그 학기에 개설됩니다. 원본 과목은 그대로 남습니다."
+        desc="좌측은 전체 과목(수준·트랙·학점), 우측은 학기별 개설 목록입니다. 과목을 학기 박스로 끌어 놓거나 + 버튼을 누르면 그 학기에 개설됩니다. 원본 과목은 그대로 남습니다."
         offline={offline}
         actions={
           <GhostButton onClick={openNew}>
@@ -408,7 +409,7 @@ function CurriculumAdmin() {
                       <Trash2 size={14} />
                     </button>
                     <span className="ml-auto shrink-0 pl-8 font-mono text-caption-m text-text-meta">
-                      {item.grade}학년 · {TRACK_LABEL[item.track] || item.track}
+                      {item.grade}수준 · {TRACK_LABEL[item.track] || item.track}
                       {item.credit ? ` · ${item.credit}` : ''}
                     </span>
                     {/* H3-2: 터치·키보드용 동일 동작 경로 */}
@@ -506,7 +507,7 @@ function CurriculumAdmin() {
                     {o.name_ko}
                   </span>
                   <span className="ml-auto shrink-0 font-mono text-caption-m text-text-meta">
-                    {o.grade}학년 · {TRACK_LABEL[o.track] || o.track}
+                    {o.grade}수준 · {TRACK_LABEL[o.track] || o.track}
                   </span>
                   <button
                     type="button"

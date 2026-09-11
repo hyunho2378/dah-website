@@ -141,6 +141,9 @@ export const spacing = {
   // 호출부 37곳이 전부 `py-section-m lg:py-section-d`라 이 한 줄이 곧 전 페이지 적용이고,
   // tailwind fluid()가 clamp(80, 보간, 128)로 재계산해 브레이크포인트 점프도 없다.
   section: { mobile: 80, desktop: 128 },   // 섹션 수직 패딩
+  // 페이지 배너 직후 첫 콘텐츠의 시작 여백. 일반 섹션 간격보다 작아야 배너와
+  // 첫 콘텐츠가 서로 떨어진 블록처럼 보이지 않는다. 이후 섹션은 section 값을 쓴다.
+  pageStart: { mobile: 40, desktop: 56 },
   container: { desktop: 1280, wide: 1440 }, // 콘텐츠 최대폭
   gutter: { mobile: 16, tablet: 24, desktop: 32 },
 };
@@ -151,6 +154,9 @@ export const layout = {
   // G4(18_PHASE6): 라디우스 전면 4px 통일. full은 알약형(언어 토글·GlassDock)만 허용.
   radius: { sm: 4, md: 4, lg: 4, full: 9999 },
   headerHeight: { default: 72, shrunk: 56 },
+  // 콘텐츠 폭 규칙: 한 화면 안에서 본문 성격에 따라 이 세 단계만 사용한다.
+  // page는 목록·그리드·관리 화면, lead는 넓은 설명, reading은 약관·장문 본문이다.
+  contentWidth: { page: 1280, lead: 960, reading: 760, prose: 720 },
 };
 
 // v2(11_DESIGN_V2 2절): 유리 패널 표면 언어 (Apple HIG 글래스모피즘)

@@ -3,7 +3,6 @@
 // 풀어 카드를 그렸으나, 이제 목록 응답 자체가 카드 하나에 대응한다.
 // 정렬은 서버가 학기 라벨 내림차순으로 내려준다(content-config의 contest orderBy).
 import Link from '../../components/common/LangLink'
-import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
@@ -89,15 +88,10 @@ function Contests() {
   const sections = groupByCategory(items)
 
   return (
-    <>
-      <PageBanner
-        titleKo="공모전"
-        titleEn="CONTESTS"
-        breadcrumb={[{ label: t('nav.home'), to: '/' }, { label: t('nav.events') }, { label: t('titles.contests'), to: '/programs/contests' }]}
-        nebulaX="46%"
-        nebulaY="14%"
-      />
-      <Container as="section" className="py-section-m lg:py-section-d">
+      <Container as="section" className="pb-section-m pt-page-start-m md:pt-page-start-d lg:pb-section-d">
+        {/* 목록 화면은 페이지 배너(브레드크럼·eyebrow·중복 제목)를 두지 않는다.
+            H1은 문서 구조와 검색 엔진을 위해 유지하되 시각적으로는 카드 목록이 바로 시작한다. */}
+        <h1 className="sr-only">{t('titles.contests')}</h1>
         <div className="flex flex-wrap items-center justify-end gap-16">
           <InlineEditBar
             type="contest"
@@ -132,7 +126,6 @@ function Contests() {
           </div>
         )}
       </Container>
-    </>
   )
 }
 

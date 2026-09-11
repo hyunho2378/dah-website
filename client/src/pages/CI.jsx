@@ -108,7 +108,7 @@ function CI() {
             <Reveal delay={motion.stagger}>
               <div className="flex flex-col gap-24">
                 {intro && (
-                  <p className="max-w-[720px] whitespace-pre-line text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
+                  <p className="max-w-prose whitespace-pre-line text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
                     {intro}
                   </p>
                 )}
@@ -193,7 +193,7 @@ function CI() {
                 {t('ci.logoGuide')}
               </h2>
               {logoGuideNote && (
-                <p className="mt-16 max-w-[720px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                <p className="mt-16 max-w-prose text-body-m leading-relaxed text-text-sec md:text-body-d">
                   {logoGuideNote}
                 </p>
               )}
@@ -266,7 +266,7 @@ function CI() {
                 {t('ci.colors')}
               </h2>
               {colorsNote && (
-                <p className="mt-16 max-w-[720px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                <p className="mt-16 max-w-prose text-body-m leading-relaxed text-text-sec md:text-body-d">
                   {colorsNote}
                 </p>
               )}
@@ -312,12 +312,12 @@ function CI() {
                 {t('ci.motif')}
               </h2>
               {motifNote && (
-                <p className="mt-16 max-w-[720px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                <p className="mt-16 max-w-prose text-body-m leading-relaxed text-text-sec md:text-body-d">
                   {motifNote}
                 </p>
               )}
             </Reveal>
-            <div className="mt-32 max-w-[720px] md:mt-48">
+            <div className="mt-32 max-w-prose md:mt-48">
               <Reveal>
                 <ImageFrame
                   src={motif || undefined}
@@ -340,7 +340,7 @@ function CI() {
                 {t('ci.slogan')}
               </h2>
             </Reveal>
-            <div className="mt-32 max-w-[720px] md:mt-48">
+            <div className="mt-32 max-w-prose md:mt-48">
               <Reveal>
                 <p className="whitespace-pre-line text-h3-m font-bold leading-snug text-text-pri md:text-h3-d">
                   {slogan}

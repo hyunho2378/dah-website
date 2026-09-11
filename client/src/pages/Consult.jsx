@@ -130,7 +130,7 @@ function Consult() {
       />
       <Container as="section" className="py-section-m lg:py-section-d">
         {done ? (
-          <GlassCard className="flex max-w-[760px] flex-col items-start gap-24 p-24 md:p-32">
+          <GlassCard className="flex max-w-reading flex-col items-start gap-24 p-24 md:p-32">
             <h2 className="text-h2-m font-bold leading-snug text-text-pri md:text-h2-d">
               {c.doneTitle}
             </h2>

@@ -22,12 +22,15 @@ function MetaRow({ label, children }) {
 }
 
 function ShowcaseDetail() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
+  const isEn = lang === 'en'
   const { id } = useParams()
   const { data, loading } = useApi(`/content/showcase/${id}`)
   const item = itemOf(data)
   useSeo({
-    title: item?.title ? `${item.title} | 한림대학교 디지털인문예술전공 웹·앱 쇼케이스` : undefined,
+    title: item?.title
+      ? `${item.title} | ${isEn ? 'Digital Arts & Humanities, Hallym University — Web & App Showcase' : '한림대학교 디지털인문예술전공 웹·앱 쇼케이스'}`
+      : undefined,
     description: item?.description || null,
     image: item?.main_img,
     jsonLd: item ? [
@@ -38,7 +41,7 @@ function ShowcaseDetail() {
         publisher: { '@type': 'EducationalOrganization', name: SITE_NAME },
       },
       breadcrumbJsonLd([
-        { name: '홈', path: '/' }, { name: '웹·앱 쇼케이스', path: '/showcase' },
+        { name: t('nav.home'), path: '/' }, { name: t('titles.showcase'), path: '/showcase' },
         { name: item.title, path: `/showcase/${id}` },
       ]),
     ] : null,

@@ -141,12 +141,24 @@ export const en = {
     breadcrumb: 'Breadcrumb',
     mobileMenu: 'Mobile menu',
     tagFilter: 'Tag filter',
+    searchQuery: 'Search query',
+    search: 'Search',
+    pagination: 'Pagination',
+    previousPage: 'Previous page',
+    nextPage: 'Next page',
+    pinnedNotice: 'Pinned notice',
+    poster: 'Poster',
     submenu: 'submenu',
     yearNav: 'Jump to year',
+    yearResults: 'results',
     termSelect: 'Select term',
   },
   council: {
     compositionTitle: 'Committee Members',
+  },
+  clubs: {
+    activities: 'Activities',
+    targets: 'Recommended for',
   },
   ci: {
     title: 'The Meaning of Our CI',
@@ -162,9 +174,9 @@ export const en = {
     pending: 'TBD',
   },
   curriculum: {
-    // K2-11: table label "학년" → "수준"
+    // The curriculum is organized by learning level rather than entry year.
     grade: 'Level',
-    gradeSuffix: 'Y',
+    gradeSuffix: ' Level',
     course: 'Course',
     credit: 'Credit-Lecture-Lab',
     sem1: 'Semester 1',
@@ -204,6 +216,7 @@ export const en = {
     registered: 'Posted',
     preview: 'Preview',
     download: 'Download',
+    previewUnavailable: 'Browser preview unavailable',
     tags: {
       all: 'All',
       internal: 'Internal',

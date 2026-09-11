@@ -11,12 +11,12 @@ import { useLang } from '../i18n/LangContext'
 
 const PAGE_SIZE = 10
 
-function toRow(post, no) {
+function toRow(post, no, isEn) {
   return {
     id: post.id,
     no,
     tag: post.tag ?? null,
-    title: post.title_ko ?? post.title,
+    title: (isEn && post.title_en) || post.title_ko || post.title,
     author: post.author ?? null,
     date: post.date ?? (post.created_at ?? '').slice(0, 10) ?? null,
     pinned: Boolean(post.pinned),
@@ -26,7 +26,8 @@ function toRow(post, no) {
 }
 
 function Resources() {
-  const { t } = useLang()
+  const { lang, t } = useLang()
+  const isEn = lang === 'en'
   useTitle(t('titles.resources'))
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
@@ -38,7 +39,7 @@ function Resources() {
   const total = data?.total ?? 0
   const pageSize = data?.pageSize ?? PAGE_SIZE
   const rows = (data?.items ?? []).map((post, idx) =>
-    toRow(post, total - (page - 1) * pageSize - idx)
+    toRow(post, total - (page - 1) * pageSize - idx, isEn)
   )
 
   const statusText = loading

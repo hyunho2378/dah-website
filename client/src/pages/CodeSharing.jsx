@@ -95,7 +95,7 @@ function CodeSharing() {
               {definition}
             </p>
             {/* K2-5: 문단 max-w 640 → 960(가독 상한) — 절반 꺾임 해소 */}
-            <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+            <p className="mt-16 max-w-lead text-body-m leading-relaxed text-text-sec md:text-body-d">
               {note}
             </p>
             {/* 글래스 다운로드 버튼 — 파일 슬롯 예약(파일명 고정: codesharing-form.hwp) */}
@@ -141,7 +141,7 @@ function CodeSharing() {
             <h2 className="mt-24 text-h2-m font-extrabold leading-snug tracking-display text-text-pri md:mt-32 md:text-h2-d">
               {t('codesharing.substituteType')}
             </h2>
-            <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+            <p className="mt-16 max-w-lead text-body-m leading-relaxed text-text-sec md:text-body-d">
               {substitute || t('codesharing.none')}
             </p>
           </Reveal>
@@ -156,7 +156,7 @@ function CodeSharing() {
                 {t('codesharing.recognizedType')}
               </h2>
               {recognizedNote && (
-                <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                <p className="mt-16 max-w-lead text-body-m leading-relaxed text-text-sec md:text-body-d">
                   {recognizedNote}
                 </p>
               )}
@@ -185,7 +185,7 @@ function CodeSharing() {
                 {t('codesharing.creditType')}
               </h2>
               {creditNote && (
-                <p className="mt-16 max-w-[960px] text-body-m leading-relaxed text-text-sec md:text-body-d">
+                <p className="mt-16 max-w-lead text-body-m leading-relaxed text-text-sec md:text-body-d">
                   {creditNote}
                 </p>
               )}

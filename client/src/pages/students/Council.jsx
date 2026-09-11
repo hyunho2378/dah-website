@@ -216,7 +216,7 @@ function Council() {
                 </div>
               </div>
               {introText && (
-                <p className="max-w-[960px] whitespace-pre-line text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
+                <p className="max-w-lead whitespace-pre-line text-body-l-m leading-relaxed text-text-sec md:text-body-l-d">
                   {introText}
                 </p>
               )}
