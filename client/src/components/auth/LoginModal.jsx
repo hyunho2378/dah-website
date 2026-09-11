@@ -21,6 +21,8 @@ function LoginModal() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  const canLogin = Boolean(email.trim() && password)
+  const canSetPassword = newPassword.length >= 8 && newPassword === confirmPassword
 
   // 닫힘 시 폼 상태 초기화 (다음 오픈이 항상 login 단계에서 시작)
   useEffect(() => {
@@ -74,6 +76,7 @@ function LoginModal() {
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    if (!canLogin || busy) return
     setBusy(true)
     setError(null)
     try {
@@ -170,10 +173,11 @@ function LoginModal() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
+                required
               />
             </Field>
             <ErrorText>{error}</ErrorText>
-            <PrimaryButton type="submit" disabled={busy} className="w-full">
+            <PrimaryButton type="submit" disabled={busy || !canLogin} className="w-full">
               {busy ? '확인 중' : '로그인'}
             </PrimaryButton>
           </form>
@@ -201,7 +205,7 @@ function LoginModal() {
               />
             </Field>
             <ErrorText>{error}</ErrorText>
-            <PrimaryButton type="submit" disabled={busy} className="w-full">
+            <PrimaryButton type="submit" disabled={busy || !canSetPassword} className="w-full">
               {busy ? '설정 중' : '설정 후 로그인'}
             </PrimaryButton>
           </form>

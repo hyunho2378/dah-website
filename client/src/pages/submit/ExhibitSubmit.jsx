@@ -124,9 +124,17 @@ function ExhibitSubmit() {
     setForm((prev) => ({ ...prev, [key]: event.target.value }))
   const setValue = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }))
   const isTeam = form.entryType === 'team'
+  const identityComplete = isTeam
+    ? Boolean(form.teamName.trim()) && members.every((m) => m.name.trim() && m.studentNo.trim() && m.major.trim())
+    : Boolean(form.name.trim() && form.studentNo.trim() && form.major.trim())
+  const canSubmit =
+    identityComplete &&
+    isValidPhone(form.phone) &&
+    Boolean(form.course.trim() && form.workTitle.trim() && form.workDesc.trim())
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (!canSubmit || submitting) return
     if (!isValidPhone(form.phone)) {
       setError('연락처를 010-0000-0000 형식으로 모두 입력해 주세요')
       return
@@ -502,7 +510,7 @@ function ExhibitSubmit() {
                   </p>
                 )}
                 <div>
-                  <SubmitButton busy={submitting}>
+                  <SubmitButton busy={submitting} disabled={!canSubmit}>
                     {submitting ? '접수 중' : '접수'}
                   </SubmitButton>
                 </div>

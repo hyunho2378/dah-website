@@ -17,6 +17,7 @@ function SegmentControl({
   options = [],
   value,
   onChange,
+  disabled = false,
   'aria-label': ariaLabel,
   className = '',
 }) {
@@ -54,10 +55,20 @@ function SegmentControl({
 
   const commit = (index) => {
     const opt = options[index]
-    if (!opt) return
+    if (!opt || disabled || opt.disabled) return
     onChange?.(opt.value)
     setOpen(false)
     btnRef.current?.focus()
+  }
+
+  const nextEnabledIndex = (from, delta) => {
+    if (!options.length) return 0
+    let next = from
+    for (let i = 0; i < options.length; i += 1) {
+      next = (next + delta + options.length) % options.length
+      if (!options[next]?.disabled) return next
+    }
+    return from
   }
 
   if (mode === 'segment') {
@@ -74,8 +85,9 @@ function SegmentControl({
               key={opt.value}
               type="button"
               aria-pressed={on}
+              disabled={disabled || opt.disabled}
               onClick={() => onChange?.(opt.value)}
-              className={`cursor-pointer whitespace-nowrap rounded-sm px-16 py-8 text-small-m font-semibold transition-colors duration-fast ease-out md:text-small-d ${
+              className={`min-h-11 cursor-pointer whitespace-nowrap rounded-sm px-16 py-8 text-small-m font-semibold transition-colors duration-fast ease-out disabled:cursor-not-allowed disabled:opacity-40 md:text-small-d ${
                 on
                   ? 'bg-button-primary text-button-primaryText'
                   : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
@@ -95,33 +107,46 @@ function SegmentControl({
       <button
         type="button"
         ref={btnRef}
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
         onClick={() => {
+          if (disabled) return
           if (!open) {
             place()
-            setActiveIndex(selectedIndex < 0 ? 0 : selectedIndex)
+            const initial = selectedIndex < 0 ? 0 : selectedIndex
+            setActiveIndex(options[initial]?.disabled ? nextEnabledIndex(initial, 1) : initial)
           }
           setOpen((v) => !v)
         }}
         onKeyDown={(e) => {
+          if (disabled) return
+          if (!open && ['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+            e.preventDefault()
+            place()
+            const initial = selectedIndex < 0 ? 0 : selectedIndex
+            setActiveIndex(options[initial]?.disabled ? nextEnabledIndex(initial, 1) : initial)
+            setOpen(true)
+            return
+          }
           if (!open) return
           if (e.key === 'Escape') {
             e.preventDefault()
             setOpen(false)
+            btnRef.current?.focus()
           } else if (e.key === 'ArrowDown') {
             e.preventDefault()
-            setActiveIndex((i) => (i + 1) % options.length)
+            setActiveIndex((i) => nextEnabledIndex(i, 1))
           } else if (e.key === 'ArrowUp') {
             e.preventDefault()
-            setActiveIndex((i) => (i - 1 + options.length) % options.length)
+            setActiveIndex((i) => nextEnabledIndex(i, -1))
           } else if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
             commit(activeIndex)
           }
         }}
-        className={`inline-flex cursor-pointer items-center gap-8 rounded-sm border border-border-purple bg-glass-bg px-16 py-8 text-body-m font-semibold text-text-pri transition-colors duration-fast ease-out hover:border-border-purpleStrong hover:bg-glass-strong ${className}`.trim()}
+        className={`inline-flex min-h-11 cursor-pointer items-center gap-8 rounded-sm border border-border-purple bg-glass-bg px-16 py-8 text-body-m font-semibold text-text-pri transition-colors duration-fast ease-out hover:border-border-purpleStrong hover:bg-glass-strong active:bg-bg-panel disabled:cursor-not-allowed disabled:border-border-subtle disabled:bg-bg-elev disabled:text-text-disabled ${className}`.trim()}
       >
         {selected ? selected.label : '선택'}
         <ChevronDown
@@ -150,10 +175,15 @@ function SegmentControl({
                   key={opt.value}
                   role="option"
                   aria-selected={on}
+                  aria-disabled={opt.disabled || undefined}
                   onPointerEnter={() => setActiveIndex(i)}
                   onClick={() => commit(i)}
-                  className={`flex cursor-pointer items-center justify-between gap-8 rounded-sm px-12 py-8 text-body-m transition-colors duration-fast ease-out ${
-                    i === activeIndex ? 'bg-glass-strong text-text-pri' : 'text-text-sec'
+                  className={`flex min-h-11 cursor-pointer items-center justify-between gap-8 rounded-sm px-12 py-8 text-body-m transition-colors duration-fast ease-out ${
+                    opt.disabled
+                      ? 'cursor-not-allowed text-text-disabled'
+                      : i === activeIndex
+                        ? 'bg-glass-strong text-text-pri'
+                        : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
                   }`}
                 >
                   <span className="min-w-0 truncate">{opt.label}</span>

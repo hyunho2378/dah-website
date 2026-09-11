@@ -88,6 +88,32 @@
 - 키보드 내비게이션 전 구간, 캔버스 영역 aria-hidden 처리
 - 히어로 EN 캡스는 장식이 아니라 실제 헤딩. h1은 페이지당 1개
 
-## 9. 절대 금지
+## 9. 인터랙션·데이터 상태 계약
+
+Apple HIG의 버튼 상태(기본·눌림·포커스·선택·비활성)와 Material의 상태 레이어 원칙을
+웹에 맞게 적용한다. 상태는 색 하나만 바꾸지 않고, 표면·테두리·텍스트·커서·ARIA를 함께
+바꾼다. 상태가 없는 컴포넌트는 새로 만들지 않는다.
+
+| 대상 | 필수 상태 | 표현 규칙 |
+|---|---|---|
+| 버튼·링크 | default / hover / pressed / focus-visible / disabled / busy | hover는 포인터가 있는 환경에서만, pressed는 채도·명도 한 단계 변화, focus는 2px ring, busy는 중복 실행 불가 |
+| 입력·선택 | default / hover / focus / filled / readonly / disabled / invalid | 라벨은 항상 남기고, 오류는 필드와 문구를 `aria-invalid`·`aria-describedby`로 연결 |
+| 토글·탭·선택지 | default / hover / focus / selected / disabled | 선택은 `aria-pressed`·`aria-selected`·`aria-checked` 중 역할에 맞는 하나로 표현하고 색 외 보더·체크도 함께 변경 |
+| 카드·목록 행 | default / hover / focus-within / selected | 클릭 가능한 경우에만 hover를 주며, 링크 전체를 단일 포커스 대상으로 만든다 |
+| 비동기 데이터 | loading / empty / error / offline / success | 로딩·빈 결과·오류를 같은 자리에서 교체해 레이아웃 이동을 막고, 오류에는 원인과 재시도 수단을 제공 |
+
+- 기본 조작 대상은 최소 44×44px. 표 내부처럼 정보 밀도가 본질인 도구는 최소 24×24px와
+  인접 대상 사이 8px 이상 간격을 함께 확보한다.
+- 기본 입력·버튼 높이는 44px 이상, 폼 입력은 48px 이상. 아이콘만 있는 일반 버튼도
+  44px hit-area를 확보한다.
+- 화면 폭은 320px를 하한으로 하고, 콘텐츠는 `min-w-0`·`max-w-*`·`minmax(0,1fr)`로
+  넘침을 막는다. 페이지/lead/reading/prose 폭 외 임의 max-width를 만들지 않는다.
+- `focus-visible`은 최소 2 CSS px, 배경과 3:1 이상 대비를 유지한다. 포커스를 자동으로
+  이동시키지 않으며, 모달·드롭다운을 닫을 때만 원래 트리거로 되돌린다.
+- disabled는 동작 불가 사유가 명확할 때만 쓰고, 단순한 서버 처리 중에는 `aria-busy`와
+  중복 실행 차단을 함께 사용한다. 빈 값 저장이 정상인 설정 화면은 disabled로 막지 않는다.
+- `prefers-reduced-motion`에서 상태 전환도 즉시 처리한다.
+
+## 10. 절대 금지
 
 localStorage/sessionStorage, TypeScript, 색상·간격·폰트 하드코딩, 이모지, scale() transform, 임의 색상 추가, 배경 비디오, 외부 애니메이션 라이브러리, 가짜 데이터 생성(스탯·인용 포함)

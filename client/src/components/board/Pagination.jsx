@@ -16,7 +16,7 @@ function pageWindow(page, totalPages) {
 }
 
 const cellBase =
-  'flex h-40 w-40 shrink-0 items-center justify-center rounded-md font-mono text-small-m transition-colors duration-fast ease-out md:text-small-d'
+  'flex h-11 w-11 shrink-0 items-center justify-center rounded-md font-mono text-small-m transition-colors duration-fast ease-out md:text-small-d'
 
 function Pagination({ page, pageSize, total, onChange }) {
   const { t } = useLang()
@@ -30,7 +30,7 @@ function Pagination({ page, pageSize, total, onChange }) {
         aria-label={t('aria.previousPage')}
         disabled={page <= 1}
         onClick={() => onChange(page - 1)}
-        className={`${cellBase} cursor-pointer text-text-sec hover:text-text-pri disabled:cursor-not-allowed disabled:text-text-meta`}
+        className={`${cellBase} cursor-pointer text-text-sec hover:bg-glass-strong hover:text-text-pri active:bg-bg-panel disabled:cursor-not-allowed disabled:text-text-meta`}
       >
         <ChevronLeft size={16} aria-hidden="true" />
       </button>
@@ -45,7 +45,7 @@ function Pagination({ page, pageSize, total, onChange }) {
             className={`${cellBase} cursor-pointer ${
               isActive
                 ? 'border border-border-strong bg-glass-strong text-text-pri'
-                : 'text-text-sec hover:text-text-pri'
+                : 'text-text-sec hover:bg-glass-strong hover:text-text-pri active:bg-bg-panel'
             }`}
           >
             {n}
@@ -57,7 +57,7 @@ function Pagination({ page, pageSize, total, onChange }) {
         aria-label={t('aria.nextPage')}
         disabled={page >= totalPages}
         onClick={() => onChange(page + 1)}
-        className={`${cellBase} cursor-pointer text-text-sec hover:text-text-pri disabled:cursor-not-allowed disabled:text-text-meta`}
+        className={`${cellBase} cursor-pointer text-text-sec hover:bg-glass-strong hover:text-text-pri active:bg-bg-panel disabled:cursor-not-allowed disabled:text-text-meta`}
       >
         <ChevronRight size={16} aria-hidden="true" />
       </button>

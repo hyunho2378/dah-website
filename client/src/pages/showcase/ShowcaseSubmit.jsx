@@ -15,7 +15,7 @@ import { AccountBar, LoginGate } from '../submit/exhibitFormKit'
 import { submitErrorMessage } from '../submit/exhibitFormShared'
 
 const inputCls =
-  'w-full min-w-0 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri placeholder:text-text-meta transition-colors duration-fast ease-out focus:border-border-strong focus:outline-none md:text-body-d'
+  'w-full min-w-0 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri placeholder:text-text-meta transition-colors duration-fast ease-out enabled:hover:border-border-strong focus:border-border-strong focus:outline-none disabled:cursor-not-allowed disabled:bg-bg-elev disabled:text-text-disabled aria-[invalid=true]:border-state-error md:text-body-d'
 const labelCls = 'text-small-m font-semibold text-text-pri md:text-small-d'
 
 // 16:9 중앙 크롭 미리보기 생성 (미리보기 전용 — 서버가 실제 리사이즈)
@@ -122,6 +122,15 @@ function ShowcaseSubmit() {
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState(null)
+  const canSubmit =
+    Boolean(
+      form.title.trim() &&
+        form.topic.trim() &&
+        form.creator.trim() &&
+        form.description.trim() &&
+        main &&
+        subs.length === 2
+    )
 
   const set = (key) => (event) =>
     setForm((prev) => ({ ...prev, [key]: event.target.value }))
@@ -157,6 +166,7 @@ function ShowcaseSubmit() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (!canSubmit || submitting) return
     if (!main) {
       setError('메인 이미지 1장이 필요합니다')
       return
@@ -310,7 +320,8 @@ function ShowcaseSubmit() {
                   type="button"
                   onClick={addTool}
                   aria-label="툴 추가"
-                  className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-border-subtle p-12 text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri"
+                  disabled={!toolInput.trim()}
+                  className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-border-subtle p-12 text-text-sec transition-colors duration-fast ease-out hover:border-border-strong hover:text-text-pri disabled:text-text-disabled"
                 >
                   <Plus size={16} aria-hidden="true" />
                 </button>
@@ -393,8 +404,9 @@ function ShowcaseSubmit() {
             <div>
               <button
                 type="submit"
-                disabled={submitting}
-                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-bg-invert px-24 text-body-m font-semibold text-text-invert transition-opacity duration-fast ease-out hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 md:h-48 md:text-body-d"
+                disabled={submitting || !canSubmit}
+                aria-busy={submitting || undefined}
+                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-bg-invert px-24 text-body-m font-semibold text-text-invert transition-opacity duration-fast ease-out hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-not-allowed disabled:bg-bg-panel disabled:text-text-disabled disabled:opacity-100 md:h-48 md:text-body-d"
               >
                 {submitting ? '제출 중' : '제출'}
               </button>

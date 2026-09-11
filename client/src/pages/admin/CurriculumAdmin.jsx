@@ -105,6 +105,7 @@ function CurriculumAdmin() {
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const canSaveCourse = Boolean(form?.name_ko?.trim())
 
   const [selected, setSelected] = useState(defaultSemester)
   const [addedSemesters, setAddedSemesters] = useState([]) // 아직 개설 과목이 없는 신규 학기
@@ -149,6 +150,7 @@ function CurriculumAdmin() {
 
   const save = async (e) => {
     e.preventDefault()
+    if (!canSaveCourse || busy) return
     setBusy(true)
     setSaveError(null)
     try {
@@ -286,6 +288,7 @@ function CurriculumAdmin() {
           <Input
             value={form.name_ko}
             onChange={(e) => setForm((p) => ({ ...p, name_ko: e.target.value }))}
+            required
           />
         </Field>
         <Field label="과목명 (영문)">
@@ -336,7 +339,7 @@ function CurriculumAdmin() {
       </div>
       <ErrorText>{saveError}</ErrorText>
       <div className="flex items-center gap-8">
-        <PrimaryButton type="submit" disabled={busy}>
+        <PrimaryButton type="submit" disabled={busy || !canSaveCourse}>
           {busy ? '저장 중' : '저장'}
         </PrimaryButton>
         <GhostButton onClick={close}>취소</GhostButton>

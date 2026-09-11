@@ -330,6 +330,7 @@ function FormEditor() {
   const [hydrated, setHydrated] = useState(isNew)
   const [busy, setBusy] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const canSaveForm = Boolean(form.title_ko?.trim() && form.slug?.trim())
   const [preview, setPreview] = useState(false)
   const [previewValue, setPreviewValue] = useState({})
   const [armed, setArmed] = useState(null) // 드래그 준비된 필드 index
@@ -361,6 +362,7 @@ function FormEditor() {
 
   const save = async (e) => {
     e.preventDefault()
+    if (!canSaveForm || busy) return
     setBusy(true)
     setSaveError(null)
     try {
@@ -577,7 +579,7 @@ function FormEditor() {
 
           <ErrorText>{saveError}</ErrorText>
           <div className="flex items-center gap-8">
-            <PrimaryButton type="submit" disabled={busy}>
+            <PrimaryButton type="submit" disabled={busy || !canSaveForm}>
               {busy ? '저장 중' : '저장'}
             </PrimaryButton>
             <GhostButton onClick={() => navigate(backTo)}>취소</GhostButton>

@@ -41,6 +41,7 @@ function UsersAdmin() {
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState(null)
   const [listError, setListError] = useState(null)
+  const canCreate = Boolean(form.email.trim() && form.name.trim())
 
   // 서버가 owner 이외 역할에 owner 행을 보내지 않는다. 구 배포 서버나 캐시 응답이 남아도
   // 화면에서는 한 번 더 방어해 교수님용 admin/manager 화면에 owner가 보이지 않게 한다.
@@ -50,6 +51,7 @@ function UsersAdmin() {
 
   const create = async (e) => {
     e.preventDefault()
+    if (!canCreate || busy) return
     setBusy(true)
     setFormError(null)
     try {
@@ -135,7 +137,7 @@ function UsersAdmin() {
         </div>
         <ErrorText>{formError}</ErrorText>
         <div>
-          <PrimaryButton type="submit" disabled={busy}>
+          <PrimaryButton type="submit" disabled={busy || !canCreate}>
             <Plus size={16} aria-hidden="true" />
             {busy ? '등록 중' : '등록'}
           </PrimaryButton>

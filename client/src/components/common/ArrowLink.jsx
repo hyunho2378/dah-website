@@ -7,11 +7,11 @@ const linkClass =
   'group inline-flex cursor-pointer items-center gap-8 text-body-m text-text-pri md:text-body-d'
 
 const arrowClass =
-  'shrink-0 transition-transform duration-base ease-out group-hover:translate-x-4'
+  'shrink-0 transition-transform duration-base ease-out group-hover:translate-x-4 group-focus-visible:translate-x-4'
 
 function Label({ children }) {
   return (
-    <span className="relative after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-current after:transition-[width] after:duration-base after:ease-out group-hover:after:w-full">
+    <span className="relative after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-current after:transition-[width] after:duration-base after:ease-out group-hover:after:w-full group-focus-visible:after:w-full">
       {children}
     </span>
   )

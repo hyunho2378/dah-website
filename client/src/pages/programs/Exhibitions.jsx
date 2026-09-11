@@ -7,6 +7,7 @@ import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
 import Button from '../../components/common/Button'
 import Reveal from '../../components/common/Reveal'
+import StateMessage from '../../components/common/StateMessage'
 import InlineEditBar from '../../components/content/InlineEditBar'
 import { exhibitionFullTitle } from '../../data/exhibitionTitle'
 import { useApi } from '../../hooks/useApi'
@@ -141,7 +142,7 @@ function Exhibitions() {
   const { t } = useLang()
   useTitle(t('titles.exhibitions'))
   // 아카이브는 단일 페이지에 전량 노출(페이지네이션 UI 없음) — 서버 최대치(100)로 요청
-  const { data, loading, error, offline } = useApi('/content/exhibitions', {
+  const { data, loading, error, offline, refetch } = useApi('/content/exhibitions', {
     params: { pageSize: 100 },
   })
   // Y2-5: 접수 진입 노출 여부는 설정 스위치(show_button)가 결정 — 기간 검증은 서버(403)
@@ -173,11 +174,11 @@ function Exhibitions() {
           />
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
+          <StateMessage state="loading">{t('common.loading')}</StateMessage>
         ) : items.length === 0 ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">
+          <StateMessage state={error && !offline ? 'error' : 'empty'} onRetry={error && !offline ? refetch : undefined}>
             {error && !offline ? t('common.error') : t('common.empty')}
-          </p>
+          </StateMessage>
         ) : (
           <div className="mt-32 flex min-w-0 flex-col gap-64">
             {featured && (

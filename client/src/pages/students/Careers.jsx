@@ -3,6 +3,7 @@ import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import SectionLabel from '../../components/common/SectionLabel'
 import Reveal from '../../components/common/Reveal'
+import StateMessage from '../../components/common/StateMessage'
 import ArrowLink from '../../components/common/ArrowLink'
 import InlineEditBar from '../../components/content/InlineEditBar'
 import { useApi } from '../../hooks/useApi'
@@ -96,9 +97,9 @@ function Careers() {
             </div>
           </Reveal>
           {careerItems.length === 0 ? (
-            <p className="py-64 font-mono text-caption-m text-text-meta">
-              {careersRes.loading ? t('common.loading') : t('common.empty')}
-            </p>
+            <StateMessage state={careersRes.loading ? 'loading' : careersRes.error && !careerFallback ? 'error' : 'empty'} onRetry={careersRes.error && !careerFallback ? careersRes.refetch : undefined}>
+              {careersRes.loading ? t('common.loading') : careersRes.error && !careerFallback ? t('common.error') : t('common.empty')}
+            </StateMessage>
           ) : (
             <div className="mt-48 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))] md:gap-24">
               {/* K2-14: 카드 그리드 유동화 — 300px = 기존 lg 3열 카드폭 근사 하한 */}

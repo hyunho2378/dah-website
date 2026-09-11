@@ -171,6 +171,7 @@ html[data-dah-easter-egg='on'] {
   }
 
   html {
+    min-width: 320px;
     scroll-behavior: smooth;
   }
 
@@ -202,6 +203,52 @@ html[data-dah-easter-egg='on'] {
     /* K2-9: 포커스 링 진입을 미세하게 부드럽게 — 토큰(motion.duration.fast) 경유,
        reduced-motion은 하단 전역 미디어쿼리가 무효화 */
     transition: outline-offset theme('transitionDuration.fast') theme('transitionTimingFunction.out');
+  }
+
+  /* UI 상태 공통 계약: 컨트롤마다 다른 커서·비활성 규칙이 생기지 않게 기본 동작을
+     한 곳에서 보장한다. 개별 컴포넌트는 표면·테두리 같은 시각 위계만 추가한다. */
+  :where(button, a[href], input, textarea, select, [role='button'], [role='option'], [role='checkbox'], [role='switch']) {
+    touch-action: manipulation;
+  }
+
+  :where([aria-disabled='true']) {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  :where([aria-busy='true']) {
+    cursor: progress;
+  }
+
+  /* 인터랙션 기본 상태: 각 컴포넌트의 색 위계는 유지하되, 누락된 버튼·입력도
+     키보드 포커스와 비활성/읽기 전용 상태를 일관되게 가진다. */
+  button:disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    cursor: not-allowed;
+    color: rgb(var(--dah-text-disabled));
+    background-color: rgb(var(--dah-bg-elev));
+  }
+
+  input[readonly],
+  textarea[readonly] {
+    cursor: default;
+    color: rgb(var(--dah-text-meta));
+    background-color: rgb(var(--dah-bg-elev));
+  }
+
+  input[aria-invalid='true'],
+  textarea[aria-invalid='true'],
+  select[aria-invalid='true'],
+  [role='group'][aria-invalid='true'],
+  [role='radiogroup'][aria-invalid='true'] {
+    border-color: rgb(var(--dah-state-error));
   }
 
 }

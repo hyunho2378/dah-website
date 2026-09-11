@@ -85,6 +85,16 @@ function firstValue(fields, data) {
   return ''
 }
 
+// 제출 버튼의 기본 상태는 필수값 충족 여부로 결정한다. 형식·기간·정원 등 최종 검증은
+// 계속 서버가 담당하므로, 여기서는 빈 제출만 선제적으로 막는다.
+function hasRequiredValues(fields, value) {
+  return fields.filter((field) => field.required).every((field) => {
+    const current = value?.[field.id]
+    if (Array.isArray(current)) return current.length > 0
+    return String(current ?? '').trim().length > 0
+  })
+}
+
 /**
  * 작성·수정 공용 폼 카드. 클라이언트 검증은 두지 않는다. 검증 권한은 서버 하나이고
  * 400 응답의 errors를 그대로 FormRenderer errors로 되돌려 필드 아래 인라인으로 띄운다.
@@ -108,6 +118,7 @@ function ResponseForm({
   const [message, setMessage] = useState(null)
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const requiredComplete = hasRequiredValues(fields, value)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -154,7 +165,7 @@ function ResponseForm({
           </p>
         )}
         <div>
-          <SubmitButton busy={busy || uploading || locked}>
+          <SubmitButton busy={busy || uploading || locked} disabled={!requiredComplete}>
             {busy ? busyLabel : submitLabel}
           </SubmitButton>
         </div>

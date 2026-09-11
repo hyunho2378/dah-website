@@ -5,6 +5,7 @@ import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
 import Reveal from '../../components/common/Reveal'
+import StateMessage from '../../components/common/StateMessage'
 import Tag from '../../components/common/Tag'
 import Button from '../../components/common/Button'
 import InlineEditBar from '../../components/content/InlineEditBar'
@@ -50,7 +51,7 @@ function ShowcaseGrid() {
   const { t } = useLang()
   useTitle(t('titles.showcase'))
   // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
-  const { data, loading, error, offline } = useApi('/content/showcase', {
+  const { data, loading, error, offline, refetch } = useApi('/content/showcase', {
     params: { status: 'published', pageSize: 100 },
   })
   const items = data?.items ?? []
@@ -72,11 +73,11 @@ function ShowcaseGrid() {
           </Button>
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
+          <StateMessage state="loading">{t('common.loading')}</StateMessage>
         ) : items.length === 0 ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">
+          <StateMessage state={error && !offline ? 'error' : 'empty'} onRetry={error && !offline ? refetch : undefined}>
             {error && !offline ? t('common.error') : t('common.empty')}
-          </p>
+          </StateMessage>
         ) : (
           <ul className="mt-32 grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24 lg:grid-cols-3">
             {/* M3-3: 그리드 밀도↑·이미지 비중↑ — md 2열 / lg 3열 고정 */}

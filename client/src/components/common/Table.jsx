@@ -2,7 +2,9 @@
 // Curriculum.jsx SemesterTable와 동일 토큰 언어(thead mono·text-meta, tbody body·text-pri).
 // 표만 가로 스크롤(overflow-x-auto + min-w-0)해 페이지 가로 스크롤을 막는다.
 // columns: [{ key, label, align?, nowrap?, mono? }], rows: [{...}], caption?(상단 라벨).
-function Table({ columns, rows, caption }) {
+function Table({ columns, rows, caption, emptyLabel = '등록된 항목이 없습니다' }) {
+  const safeColumns = Array.isArray(columns) ? columns : []
+  const safeRows = Array.isArray(rows) ? rows : []
   return (
     <div className="min-w-0 overflow-x-auto rounded-md border border-border-subtle">
       {caption && (
@@ -13,7 +15,7 @@ function Table({ columns, rows, caption }) {
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="border-b border-border-subtle">
-            {columns.map((col) => (
+            {safeColumns.map((col) => (
               <th
                 key={col.key}
                 scope="col"
@@ -27,9 +29,18 @@ function Table({ columns, rows, caption }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-border-subtle">
-          {rows.map((row, ri) => (
+          {safeRows.length === 0 ? (
+            <tr>
+              <td
+                colSpan={Math.max(1, safeColumns.length)}
+                className="px-16 py-32 text-center font-mono text-caption-m text-text-meta"
+              >
+                {emptyLabel}
+              </td>
+            </tr>
+          ) : safeRows.map((row, ri) => (
             <tr key={ri}>
-              {columns.map((col) => (
+              {safeColumns.map((col) => (
                 <td
                   key={col.key}
                   className={`px-16 py-12 ${

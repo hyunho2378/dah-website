@@ -45,6 +45,13 @@
 ### Divider.jsx
 - border.subtle 1px 수평선. 컨테이너 폭
 
+### StateMessage.jsx
+- 목록·상세의 비동기 데이터 상태 공용. props: `state("loading"|"empty"|"error"|"offline"|"success")`, `children`, `action`
+- 현재 콘텐츠 영역 안에서만 렌더하며 min-height 160. 로딩/빈 결과/오류가 교체되어도
+  주변 레이아웃이 흔들리지 않는다.
+- error는 `role="alert"`, loading/success/offline은 `role="status"` + `aria-live="polite"`.
+- error에는 가능하면 재시도 Button을 `action`으로 제공. 장식 일러스트·스피너 라이브러리 금지.
+
 ### 다크 사이트 내 밝은 읽기 표면 (G4, 37_SHEET_ROADMAP)
 
 사이트 전역은 **다크 테마를 유지**한다. 아래 두 용도에 한해 밝은 표면을 **예외로 명시 적용**한다.

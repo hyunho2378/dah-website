@@ -29,7 +29,8 @@ function SearchBar({ value = '', onSearch, placeholder }) {
       <button
         type="submit"
         aria-label={t('aria.search')}
-        className="shrink-0 cursor-pointer text-text-meta transition-colors duration-fast ease-out hover:text-text-pri"
+        disabled={!q.trim()}
+        className="shrink-0 cursor-pointer text-text-meta transition-colors duration-fast ease-out hover:text-text-pri disabled:text-text-disabled"
       >
         <Search size={16} aria-hidden="true" />
       </button>

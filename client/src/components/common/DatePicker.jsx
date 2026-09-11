@@ -15,7 +15,7 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 const MONTHS = Array.from({ length: 12 }, (_, i) => `${i + 1}월`)
 
 const FIELD =
-  'flex w-full cursor-pointer items-center justify-between gap-8 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-left text-body-m text-text-pri outline-none transition duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40'
+  'flex w-full cursor-pointer items-center justify-between gap-8 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-left text-body-m text-text-pri outline-none transition duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-not-allowed disabled:border-border-subtle disabled:bg-bg-elev disabled:text-text-disabled aria-[invalid=true]:border-state-error'
 
 const pad = (n) => String(n).padStart(2, '0')
 const toDateStr = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`
@@ -42,8 +42,13 @@ function DatePicker({
   withTime = false,
   placeholder = withTime ? '날짜·시간 선택' : '날짜 선택',
   disabled = false,
+  min,
+  max,
   id,
   'aria-label': ariaLabel,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
+  'aria-errormessage': ariaErrorMessage,
   className = '',
 }) {
   const btnRef = useRef(null)
@@ -56,6 +61,8 @@ function DatePicker({
 
   const parsed = useMemo(() => parseValue(value), [value])
   const hint = useMemo(() => parseValue(viewDate), [viewDate])
+  const minDate = useMemo(() => parseValue(min), [min])
+  const maxDate = useMemo(() => parseValue(max), [max])
   const today = useMemo(() => new Date(), [])
   const [view, setView] = useState(() => ({
     y: parsed?.y ?? hint?.y ?? today.getFullYear(),
@@ -112,7 +119,26 @@ function DatePicker({
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ]
 
+  const dateValue = (y, m, d) => Date.UTC(y, m, d)
+  const inRange = (y, m, d) => {
+    const target = dateValue(y, m, d)
+    if (minDate && target < dateValue(minDate.y, minDate.m, minDate.d)) return false
+    if (maxDate && target > dateValue(maxDate.y, maxDate.m, maxDate.d)) return false
+    return true
+  }
+  const monthHasAvailableDate = (y, m) => {
+    const last = new Date(y, m + 1, 0).getDate()
+    const firstValue = dateValue(y, m, 1)
+    const lastValue = dateValue(y, m, last)
+    const minValue = minDate ? dateValue(minDate.y, minDate.m, minDate.d) : null
+    const maxValue = maxDate ? dateValue(maxDate.y, maxDate.m, maxDate.d) : null
+    return (minValue === null || lastValue >= minValue) && (maxValue === null || firstValue <= maxValue)
+  }
+  const yearHasAvailableDate = (y) =>
+    Array.from({ length: 12 }, (_, m) => m).some((m) => monthHasAvailableDate(y, m))
+
   const emit = (y, m, d, hh = parsed?.hh ?? 0, mm = parsed?.mm ?? 0) => {
+    if (!inRange(y, m, d)) return
     onChange?.(withTime ? `${toDateStr(y, m, d)}T${pad(hh)}:${pad(mm)}` : toDateStr(y, m, d))
   }
 
@@ -132,6 +158,7 @@ function DatePicker({
   const shiftMonth = (delta) => {
     setView((v) => {
       const next = new Date(v.y, v.m + delta, 1)
+      if (!monthHasAvailableDate(next.getFullYear(), next.getMonth())) return v
       return { y: next.getFullYear(), m: next.getMonth() }
     })
   }
@@ -168,6 +195,9 @@ function DatePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={ariaLabel}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
+        aria-errormessage={ariaErrorMessage}
         onClick={() => {
           if (disabled) return
           place()
@@ -193,7 +223,18 @@ function DatePicker({
           >
             <div className="flex items-center justify-between gap-8">
               {picker === null ? (
-                <button type="button" onClick={() => shiftMonth(-1)} aria-label="이전 달" className={navBtn}>
+                <button
+                  type="button"
+                  onClick={() => shiftMonth(-1)}
+                  disabled={
+                    !monthHasAvailableDate(
+                      new Date(view.y, view.m - 1, 1).getFullYear(),
+                      new Date(view.y, view.m - 1, 1).getMonth()
+                    )
+                  }
+                  aria-label="이전 달"
+                  className={navBtn}
+                >
                   <ChevronLeft size={16} />
                 </button>
               ) : (
@@ -220,7 +261,18 @@ function DatePicker({
                 </button>
               </div>
               {picker === null ? (
-                <button type="button" onClick={() => shiftMonth(1)} aria-label="다음 달" className={navBtn}>
+                <button
+                  type="button"
+                  onClick={() => shiftMonth(1)}
+                  disabled={
+                    !monthHasAvailableDate(
+                      new Date(view.y, view.m + 1, 1).getFullYear(),
+                      new Date(view.y, view.m + 1, 1).getMonth()
+                    )
+                  }
+                  aria-label="다음 달"
+                  className={navBtn}
+                >
                   <ChevronRight size={16} />
                 </button>
               ) : (
@@ -235,12 +287,13 @@ function DatePicker({
                     <button
                       key={y}
                       type="button"
+                      disabled={!yearHasAvailableDate(y)}
                       onClick={() => {
                         setView((v) => ({ ...v, y }))
                         setPicker(null)
                       }}
                       aria-pressed={y === view.y || undefined}
-                      className={cellBtn(y === view.y)}
+                      className={`${cellBtn(y === view.y)} disabled:cursor-not-allowed disabled:opacity-40`}
                     >
                       {y}
                     </button>
@@ -261,24 +314,25 @@ function DatePicker({
                     aria-label="연도 입력"
                     onChange={(e) => {
                       const y = Number(e.target.value)
-                      if (y >= 1900 && y <= 2200) setView((v) => ({ ...v, y }))
+                      if (y >= 1900 && y <= 2200 && yearHasAvailableDate(y)) setView((v) => ({ ...v, y }))
                     }}
-                    className="w-96 rounded-sm border border-border-subtle bg-bg-panel px-8 py-4 text-center font-mono text-small-m text-text-pri outline-none focus:border-border-strong"
+                    className="w-96 rounded-sm border border-border-subtle bg-bg-panel px-8 py-4 text-center font-mono text-small-m text-text-pri outline-none transition-colors duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
                   />
                 </div>
               </div>
             ) : picker === 'month' ? (
               <div className="mt-12 grid grid-cols-3 gap-4">
                 {MONTHS.map((label, mi) => (
-                  <button
-                    key={label}
-                    type="button"
+                    <button
+                      key={label}
+                      type="button"
+                      disabled={!monthHasAvailableDate(view.y, mi)}
                     onClick={() => {
                       setView((v) => ({ ...v, m: mi }))
                       setPicker(null)
                     }}
                     aria-pressed={mi === view.m || undefined}
-                    className={cellBtn(mi === view.m)}
+                      className={`${cellBtn(mi === view.m)} disabled:cursor-not-allowed disabled:opacity-40`}
                   >
                     {label}
                   </button>
@@ -303,18 +357,22 @@ function DatePicker({
                   today.getFullYear() === view.y &&
                   today.getMonth() === view.m &&
                   today.getDate() === d
+                const unavailable = !inRange(view.y, view.m, d)
                 return (
                   <button
                     key={d}
                     type="button"
                     onClick={() => pickDay(d)}
+                    disabled={unavailable}
                     aria-pressed={isSelected || undefined}
                     className={`flex h-32 cursor-pointer items-center justify-center rounded-sm text-small-m transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus ${
-                      isSelected
-                        ? 'bg-purple-primary font-semibold text-text-invert'
-                        : isToday
-                          ? 'text-purple-light hover:bg-glass-strong'
-                          : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
+                      unavailable
+                        ? 'cursor-not-allowed text-text-disabled'
+                        : isSelected
+                          ? 'bg-purple-primary font-semibold text-text-invert'
+                          : isToday
+                            ? 'text-purple-light hover:bg-glass-strong'
+                            : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
                     }`}
                   >
                     {d}
@@ -338,7 +396,7 @@ function DatePicker({
                   onChange={(e) =>
                     setTime(Math.min(23, Math.max(0, Number(e.target.value) || 0)), parsed?.mm ?? 0)
                   }
-                  className="w-56 rounded-sm border border-border-subtle bg-bg-panel px-8 py-4 text-center font-mono text-small-m text-text-pri outline-none focus:border-border-strong"
+                  className="w-56 rounded-sm border border-border-subtle bg-bg-panel px-8 py-4 text-center font-mono text-small-m text-text-pri outline-none transition-colors duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
                 />
                 <span aria-hidden="true" className="text-text-meta">
                   :
@@ -352,7 +410,7 @@ function DatePicker({
                   onChange={(e) =>
                     setTime(parsed?.hh ?? 0, Math.min(59, Math.max(0, Number(e.target.value) || 0)))
                   }
-                  className="w-56 rounded-sm border border-border-subtle bg-bg-panel px-8 py-4 text-center font-mono text-small-m text-text-pri outline-none focus:border-border-strong"
+                  className="w-56 rounded-sm border border-border-subtle bg-bg-panel px-8 py-4 text-center font-mono text-small-m text-text-pri outline-none transition-colors duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
                 />
                 <button
                   type="button"

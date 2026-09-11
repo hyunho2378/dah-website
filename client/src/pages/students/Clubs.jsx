@@ -7,6 +7,7 @@ import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
 import Reveal from '../../components/common/Reveal'
+import StateMessage from '../../components/common/StateMessage'
 import Tag from '../../components/common/Tag'
 import { DragHandle, useDragSort } from '../../components/common/DragHandle'
 import InlineEditBar from '../../components/content/InlineEditBar'
@@ -103,7 +104,7 @@ function Clubs() {
   const { t } = useLang()
   useTitle(t('titles.clubs'))
   // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
-  const { data, loading, error, offline } = useApi('/content/club', {
+  const { data, loading, error, offline, refetch } = useApi('/content/club', {
     params: { pageSize: 100 },
   })
 
@@ -148,13 +149,13 @@ function Clubs() {
           onToggleSort={() => setSorting((s) => !s)}
         />
         {hidden ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.empty')}</p>
+          <StateMessage state="empty">{t('common.empty')}</StateMessage>
         ) : loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
+          <StateMessage state="loading">{t('common.loading')}</StateMessage>
         ) : items.length === 0 ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">
+          <StateMessage state={error && !offline ? 'error' : 'empty'} onRetry={error && !offline ? refetch : undefined}>
             {error && !offline ? t('common.error') : t('common.empty')}
-          </p>
+          </StateMessage>
         ) : (
           <ul className="mt-32 grid grid-cols-1 gap-16 sm:grid-cols-2 md:gap-24 lg:grid-cols-4">
             {/* J8: 데스크탑 4열 — 로고 크게, 스크롤 없이 한눈에 4개 */}

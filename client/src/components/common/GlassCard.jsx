@@ -13,7 +13,7 @@ function GlassCard({ as: Tag = 'div', hover = false, glow = false, className = '
     <Tag
       className={`relative rounded-glass border border-glass-line bg-glass-bg ${base} backdrop-blur-glass-mobile md:backdrop-blur-glass ${
         hover
-          ? `group/glass overflow-hidden transition-[colors,box-shadow] duration-base ease-out hover:border-border-purple hover:bg-glass-strong ${hoverShadow}`
+          ? `group/glass overflow-hidden transition-[colors,box-shadow] duration-base ease-out hover:border-border-purple hover:bg-glass-strong focus-within:border-border-focus focus-within:bg-glass-strong ${hoverShadow}`
           : ''
       } ${className}`}
       {...rest}

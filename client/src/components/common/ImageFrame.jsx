@@ -5,7 +5,7 @@
 // - bg=false(기본): 사진·포스터 → object-cover로 프레임을 여백 없이 꽉 채움
 // - bg=true: 투명 PNG 로고 → object-contain + bg-bg-frame(중성 배경) 위에 로고 전체 노출
 // - src 없으면(또는 로드 실패 시) placeholder(노드) 또는 기본 캡션. 색·간격은 토큰 클래스만.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 function ImageFrame({
   src,
@@ -24,24 +24,36 @@ function ImageFrame({
   // 26_CI: 정적 슬롯(/ci/*.png 등) 파일 부재 시 깨진 이미지 대신 placeholder 노출.
   // src별로 실패를 추적해 어드민이 새 src를 넣으면 다시 시도한다.
   const [erroredSrc, setErroredSrc] = useState(null)
+  const [loadedSrc, setLoadedSrc] = useState(null)
   const showImg = src && erroredSrc !== src
+  const loadingImage = showImg && loadedSrc !== src
+
+  useEffect(() => {
+    setLoadedSrc(null)
+  }, [src])
+
   return (
     <div
+      aria-busy={loadingImage || undefined}
       className={`relative w-full overflow-hidden rounded-md ${
         bg ? 'bg-bg-frame' : 'bg-bg-elev'
       } ${className}`.trim()}
       style={{ aspectRatio: ratio }}
     >
       {showImg ? (
-        <img
-          src={src}
-          alt={alt}
-          loading={loading}
-          onError={() => setErroredSrc(src)}
-          className={`absolute inset-0 h-full w-full ${
-            isContain ? 'object-contain p-12' : 'object-cover'
-          } ${imgClassName}`.trim()}
-        />
+        <>
+          {loadingImage && <span aria-hidden="true" className="absolute inset-0 bg-bg-panel" />}
+          <img
+            src={src}
+            alt={alt}
+            loading={loading}
+            onLoad={() => setLoadedSrc(src)}
+            onError={() => setErroredSrc(src)}
+            className={`absolute inset-0 h-full w-full transition-opacity duration-base ease-out ${
+              loadingImage ? 'opacity-0' : 'opacity-100'
+            } ${isContain ? 'object-contain p-12' : 'object-cover'} ${imgClassName}`.trim()}
+          />
+        </>
       ) : (
         <span className="absolute inset-0 flex items-center justify-center px-12 text-center font-mono text-caption-m text-text-meta">
           {placeholder}

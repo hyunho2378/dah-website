@@ -29,12 +29,12 @@ import { en } from '../i18n/en'
 import { formatPhone, isValidEmail, isValidPhone } from '../utils/format'
 
 const inputCls =
-  'w-full min-w-0 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri placeholder:text-text-meta transition-colors duration-fast ease-out focus:border-border-purple focus:outline-none md:text-body-d'
+  'w-full min-w-0 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri placeholder:text-text-meta transition-colors duration-fast ease-out enabled:hover:border-border-strong focus:border-border-purple focus:outline-none disabled:cursor-not-allowed disabled:bg-bg-elev disabled:text-text-disabled aria-[invalid=true]:border-state-error md:text-body-d'
 const labelCls = 'text-small-m font-semibold text-text-pri md:text-small-d'
 // X2 Primary 질감(보라 채움 + inset 하이라이트 + 퍼플 글로우)을 submit 버튼에도 동일 적용.
 // 공용 Button은 링크 전용이라 form submit에는 쓸 수 없어 같은 토큰으로 구성한다.
 const submitCls =
-  'inline-flex h-11 w-full cursor-pointer items-center justify-center whitespace-nowrap rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed disabled:cursor-default disabled:bg-bg-panel disabled:text-text-disabled disabled:shadow-none md:h-48 md:text-body-d'
+  'inline-flex h-11 w-full cursor-pointer items-center justify-center whitespace-nowrap rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-not-allowed disabled:bg-bg-panel disabled:text-text-disabled disabled:shadow-none md:h-48 md:text-body-d'
 
 function Field({ label, required = false, requiredLabel, className = '', children }) {
   return (
@@ -71,6 +71,8 @@ function Consult() {
   const [done, setDone] = useState(false)
   // 에러는 문구가 아니라 사전 키로 들고 있는다 — 언어를 바꿔도 표시 문구가 따라 바뀐다
   const [errorKey, setErrorKey] = useState(null)
+  const canSubmit =
+    Boolean(form.name.trim()) && isValidEmail(form.email) && isValidPhone(form.contact) && agreed
 
   const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
   // 숫자만 남기고 3-4-4로 하이픈을 삽입한다 — 그 외 문자는 상태에 반영되지 않는다
@@ -248,7 +250,7 @@ function Consult() {
                 </p>
               )}
 
-              <button type="submit" disabled={!agreed || submitting} className={submitCls}>
+              <button type="submit" disabled={!canSubmit || submitting} aria-busy={submitting || undefined} className={submitCls}>
                 {submitting ? c.submitting : c.submit}
               </button>
             </GlassCard>

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import PageBanner from '../../components/layout/PageBanner'
 import ImageFrame from '../../components/common/ImageFrame'
+import StateMessage from '../../components/common/StateMessage'
 import Container from '../../components/layout/Container'
 import { ACCENT } from '../../styles/accents'
 import { AddButton, EditPencil } from '../../components/content/EditControls'
@@ -96,7 +97,7 @@ function Council() {
   const { lang, t } = useLang()
   useTitle(t('titles.council'))
   // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
-  const { data, loading, error, offline } = useApi('/content/council', {
+  const { data, loading, error, offline, refetch } = useApi('/content/council', {
     params: { pageSize: 100 },
   })
   const remote = data?.items ?? []
@@ -177,11 +178,11 @@ function Council() {
         </div>
 
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
+          <StateMessage state="loading">{t('common.loading')}</StateMessage>
         ) : !active ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">
+          <StateMessage state={error && !offline ? 'error' : 'empty'} onRetry={error && !offline ? refetch : undefined}>
             {error && !offline ? t('common.error') : t('common.empty')}
-          </p>
+          </StateMessage>
         ) : (
           <div className="mt-48 flex min-w-0 flex-col gap-48">
             {/* T4 헤더 (K2-4): 로고(박스 없이 이미지만, 1.5배 h-144) + 타이틀 한 줄 수직 중앙 정렬.
@@ -233,9 +234,7 @@ function Council() {
                 </h3>
               </div>
               {members.length === 0 ? (
-                <p className="py-32 font-mono text-caption-m text-text-meta">
-                  {t('common.empty')}
-                </p>
+                <StateMessage className="min-h-0 py-24" state="empty">{t('common.empty')}</StateMessage>
               ) : (
                 <dl className="border-t border-border-subtle">
                   {groupByRole(members).map((row) => (

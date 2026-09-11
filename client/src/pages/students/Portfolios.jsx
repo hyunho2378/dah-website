@@ -3,6 +3,7 @@ import PageBanner from '../../components/layout/PageBanner'
 import Container from '../../components/layout/Container'
 import SectionLabel from '../../components/common/SectionLabel'
 import Reveal from '../../components/common/Reveal'
+import StateMessage from '../../components/common/StateMessage'
 import InlineEditBar from '../../components/content/InlineEditBar'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
@@ -52,7 +53,13 @@ function Portfolios() {
             <InlineEditBar type="portfolios" addTo="/admin/careers" manageTo="/admin/careers" />
           </div>
         </Reveal>
-        {items.length === 0 ? <p className="py-64 font-mono text-caption-m text-text-meta">{result.loading ? t('common.loading') : t('common.empty')}</p> : <div className="mt-48 divide-y divide-border-subtle">{items.map((item) => <PortfolioItem key={item.id} item={item} />)}</div>}
+        {items.length === 0 ? (
+          <StateMessage state={result.loading ? 'loading' : result.error && !fallback ? 'error' : 'empty'} onRetry={result.error && !fallback ? result.refetch : undefined}>
+            {result.loading ? t('common.loading') : result.error && !fallback ? t('common.error') : t('common.empty')}
+          </StateMessage>
+        ) : (
+          <div className="mt-48 divide-y divide-border-subtle">{items.map((item) => <PortfolioItem key={item.id} item={item} />)}</div>
+        )}
       </Container>
     </>
   )

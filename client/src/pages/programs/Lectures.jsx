@@ -4,6 +4,7 @@ import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
 import Reveal from '../../components/common/Reveal'
+import StateMessage from '../../components/common/StateMessage'
 import { AddButton } from '../../components/content/EditControls'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
@@ -40,7 +41,7 @@ function Lectures() {
   const isEn = lang === 'en'
   useTitle(t('titles.lectures'))
   // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
-  const { data, loading, error, offline } = useApi('/content/lecture', {
+  const { data, loading, error, offline, refetch } = useApi('/content/lecture', {
     params: { pageSize: 100 },
   })
   const items = data?.items ?? []
@@ -54,11 +55,11 @@ function Lectures() {
           <AddButton type="lecture" to="/admin/posts/lecture/new" />
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
+          <StateMessage state="loading">{t('common.loading')}</StateMessage>
         ) : items.length === 0 ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">
+          <StateMessage state={error && !offline ? 'error' : 'empty'} onRetry={error && !offline ? refetch : undefined}>
             {error && !offline ? t('common.error') : t('common.empty')}
-          </p>
+          </StateMessage>
         ) : (
           <ul className="mt-32 grid gap-16 [grid-template-columns:repeat(auto-fill,minmax(min(220px,40vw),1fr))] md:gap-24">
             {/* K2-14: 포스터 그리드 유동화 — 220px = 기존 lg 4열 카드폭 근사 하한, 40vw로 모바일 2열 유지 */}

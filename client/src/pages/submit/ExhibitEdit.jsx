@@ -97,9 +97,18 @@ function EntryForm({ entry, canEdit, exhibition, email, copy, showBack, onBack, 
     setForm((prev) => ({ ...prev, [key]: event.target.value }))
   const setValue = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }))
   const isTeam = entry.entry_type === 'team'
+  const identityComplete = isTeam
+    ? Boolean(form.teamName.trim()) && members.every((m) => m.name.trim() && m.studentNo.trim() && m.major.trim())
+    : Boolean(form.name.trim() && form.studentNo.trim() && form.major.trim())
+  const canSave =
+    canEdit &&
+    identityComplete &&
+    isValidPhone(form.phone) &&
+    Boolean(form.workTitle.trim() && form.workDesc.trim())
 
   const handleSave = async (event) => {
     event.preventDefault()
+    if (!canSave || busy) return
     if (!isValidPhone(form.phone)) {
       setError('연락처를 010-0000-0000 형식으로 모두 입력해 주세요')
       return
@@ -290,7 +299,7 @@ function EntryForm({ entry, canEdit, exhibition, email, copy, showBack, onBack, 
           </p>
         )}
         <div>
-          <SubmitButton busy={busy || !canEdit}>
+          <SubmitButton busy={busy} disabled={!canSave}>
             {busy ? '저장 중' : '수정 저장'}
           </SubmitButton>
         </div>

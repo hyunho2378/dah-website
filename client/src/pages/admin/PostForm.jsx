@@ -605,10 +605,22 @@ function PostForm() {
     template === 'achievement'
       ? `발행하려면 다음을 입력하세요: ${missingFields.join(', ')}`
       : EN_GATE_MSG
+  const isPosts = template === 't1' || template === 't2' || template === 'achievement'
+  // 새 콘텐츠의 기본 상태에서는 제목/이름이 없으면 저장할 수 없다. 다만 선택형 설정값은
+  // 비워 저장하는 것이 유효한 편집이므로 이 게이트에 넣지 않는다.
+  const requiredIdentityComplete = isPosts
+    ? !isEmptyVal(form.title_ko)
+    : template === 'exhibition'
+      ? !isEmptyVal(form.title)
+      : template === 'portfolio'
+        ? !isEmptyVal(form.name)
+        : true
+  const canSave =
+    requiredIdentityComplete && !busy && uploading === 0 && (isNew || hydrated) && !enGateBlocked
 
   const save = async (e) => {
     e.preventDefault()
-    if (uploading > 0) return // 업로드 완료 전 저장 차단 — 빈 URL 저장 방지
+    if (!canSave) return
     // R1/U2-2: 발행 게이트 — 필수 필드 미입력 시 게시 차단(게시 끄면 임시저장 가능)
     if (enGateBlocked) {
       setSaveError(gateMsg)
@@ -627,8 +639,6 @@ function PostForm() {
       setBusy(false)
     }
   }
-
-  const isPosts = template === 't1' || template === 't2' || template === 'achievement'
 
   return (
     <section className="flex flex-col gap-24">
@@ -997,7 +1007,7 @@ function PostForm() {
         <div className="flex items-center gap-8">
           <PrimaryButton
             type="submit"
-            disabled={busy || uploading > 0 || (!isNew && !hydrated) || enGateBlocked}
+            disabled={!canSave}
           >
             {busy ? '저장 중' : uploading > 0 ? '업로드 완료 대기' : '저장'}
           </PrimaryButton>

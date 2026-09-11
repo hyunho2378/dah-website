@@ -12,7 +12,7 @@ import { Check, ChevronDown } from 'lucide-react'
 // 모션(apple-design 1·14절): 열림은 duration-fast 전환, reduced-motion은 index.css 전역이 무효화.
 
 const FIELD =
-  'flex w-full cursor-pointer items-center justify-between gap-8 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-left text-body-m text-text-pri outline-none transition duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40'
+  'flex w-full cursor-pointer items-center justify-between gap-8 rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-left text-body-m text-text-pri outline-none transition duration-fast ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-not-allowed disabled:border-border-subtle disabled:bg-bg-elev disabled:text-text-disabled aria-[invalid=true]:border-state-error'
 
 function Select({
   options = [],
@@ -22,6 +22,9 @@ function Select({
   disabled = false,
   id,
   'aria-label': ariaLabel,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
+  'aria-errormessage': ariaErrorMessage,
   className = '',
 }) {
   const reactId = useId()
@@ -154,6 +157,9 @@ function Select({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-label={ariaLabel}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
+        aria-errormessage={ariaErrorMessage}
         onClick={() => (open ? close() : openList())}
         onKeyDown={onKeyDown}
         className={`${FIELD} ${className}`.trim()}
@@ -202,9 +208,9 @@ function Select({
                   className={`flex cursor-pointer items-center justify-between gap-8 rounded-sm px-12 py-8 text-body-m transition-colors duration-fast ease-out ${
                     opt.disabled
                       ? 'cursor-default text-text-disabled'
-                      : i === activeIndex
-                        ? 'bg-glass-strong text-text-pri'
-                        : 'text-text-sec'
+                  : i === activeIndex
+                    ? 'bg-glass-strong text-text-pri'
+                    : 'text-text-sec hover:bg-glass-strong hover:text-text-pri'
                   }`}
                 >
                   <span className="min-w-0 truncate">{opt.label}</span>

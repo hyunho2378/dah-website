@@ -3,12 +3,13 @@
 
 import CommonSelect from '../common/Select'
 import CommonDatePicker from '../common/DatePicker'
+import StateMessage from '../common/StateMessage'
 
 const INPUT =
-  'w-full rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri outline-none transition duration-fast ease-out placeholder:text-text-meta focus:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus'
+  'w-full rounded-md border border-border-subtle bg-bg-panel px-16 py-12 text-body-m text-text-pri outline-none transition duration-fast ease-out placeholder:text-text-meta enabled:hover:border-border-strong focus:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-not-allowed disabled:border-border-subtle disabled:bg-bg-elev disabled:text-text-disabled disabled:placeholder:text-text-disabled read-only:cursor-default read-only:bg-bg-elev read-only:text-text-meta aria-[invalid=true]:border-state-error'
 
 const BUTTON_BASE =
-  'inline-flex h-11 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm px-24 text-body-m font-semibold transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-default disabled:opacity-40'
+  'inline-flex h-11 cursor-pointer items-center justify-center gap-8 whitespace-nowrap rounded-sm px-24 text-body-m font-semibold transition duration-fast ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40'
 
 /** 페이지 상단 — 제목(명사형) + 액션 + 오프라인 배지 */
 export function PageHead({ title, desc, actions, offline = false }) {
@@ -121,7 +122,7 @@ export function PrimaryButton({ children, type = 'button', ...rest }) {
     <button
       type={type}
       {...rest}
-      className={`${BUTTON_BASE} bg-button-primary text-button-primaryText hover:bg-button-primaryHover active:bg-button-primaryPressed ${rest.className || ''}`.trim()}
+      className={`${BUTTON_BASE} bg-button-primary text-button-primaryText hover:bg-button-primaryHover active:bg-button-primaryPressed disabled:bg-bg-panel disabled:text-text-disabled disabled:shadow-none ${rest.className || ''}`.trim()}
     >
       {children}
     </button>
@@ -133,7 +134,7 @@ export function GhostButton({ children, type = 'button', ...rest }) {
     <button
       type={type}
       {...rest}
-      className={`${BUTTON_BASE} border border-border-subtle bg-transparent text-text-pri hover:border-border-strong ${rest.className || ''}`.trim()}
+      className={`${BUTTON_BASE} border border-border-subtle bg-transparent text-text-pri hover:border-border-strong disabled:border-border-subtle disabled:text-text-disabled ${rest.className || ''}`.trim()}
     >
       {children}
     </button>
@@ -147,7 +148,7 @@ export function ErrorText({ children }) {
 
 /** 빈 상태 — P6: mono caption 1줄 + 여백 */
 export function EmptyNote({ children = '등록된 항목이 없습니다' }) {
-  return <p className="py-32 font-mono text-caption-m text-text-meta">{children}</p>
+  return <StateMessage state="empty">{children}</StateMessage>
 }
 
 /** KPC 게시판 문법 페이지네이션 — mono 숫자 */

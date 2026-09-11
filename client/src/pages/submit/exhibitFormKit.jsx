@@ -29,12 +29,13 @@ export function Field({ as: Tag = 'label', label, required = false, hint, childr
  * 폼 제출 버튼 — Button 컴포넌트는 링크 전용이라 submit에는 쓸 수 없다.
  * 시각은 X2 Primary 위계와 동일한 토큰(bg-button-primary + shadow-btn)만 사용한다.
  */
-export function SubmitButton({ busy = false, children, ...rest }) {
+export function SubmitButton({ busy = false, disabled = false, children, ...rest }) {
   return (
     <button
       type="submit"
-      disabled={busy}
-      className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed disabled:cursor-not-allowed disabled:opacity-50 md:h-48 md:text-body-d"
+      disabled={busy || disabled}
+      aria-busy={busy || undefined}
+      className="inline-flex h-11 cursor-pointer items-center justify-center rounded-sm bg-button-primary px-24 text-body-m font-semibold text-button-primaryText shadow-btn transition duration-fast ease-out hover:bg-button-primaryHover hover:shadow-btn-hover active:bg-button-primaryPressed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:cursor-not-allowed disabled:bg-bg-panel disabled:text-text-disabled disabled:shadow-none md:h-48 md:text-body-d"
       {...rest}
     >
       {children}

@@ -7,6 +7,7 @@ import Container from '../../components/layout/Container'
 import GlassCard from '../../components/common/GlassCard'
 import ImageFrame from '../../components/common/ImageFrame'
 import Reveal from '../../components/common/Reveal'
+import StateMessage from '../../components/common/StateMessage'
 import InlineEditBar from '../../components/content/InlineEditBar'
 import { useApi } from '../../hooks/useApi'
 import { useTitle } from '../../hooks/useTitle'
@@ -80,7 +81,7 @@ function Contests() {
   useTitle(t('titles.contests'))
   const isEn = lang === 'en'
   // G1.3: 페이지네이션 UI 없는 목록은 전량 요청(서버 기본 12건 상한 회피)
-  const { data, loading, error, offline } = useApi('/content/contest', {
+  const { data, loading, error, offline, refetch } = useApi('/content/contest', {
     params: { pageSize: 100 },
   })
   const items = data?.items ?? []
@@ -100,11 +101,11 @@ function Contests() {
           />
         </div>
         {loading ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">{t('common.loading')}</p>
+          <StateMessage state="loading">{t('common.loading')}</StateMessage>
         ) : items.length === 0 ? (
-          <p className="py-64 font-mono text-caption-m text-text-meta">
+          <StateMessage state={error && !offline ? 'error' : 'empty'} onRetry={error && !offline ? refetch : undefined}>
             {error && !offline ? t('common.error') : t('common.empty')}
-          </p>
+          </StateMessage>
         ) : (
           <div className="mt-32 flex min-w-0 flex-col gap-48">
             {sections.map((section) => (
